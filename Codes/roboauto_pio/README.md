@@ -28,6 +28,31 @@ Geschrieben mit **VS Code + PlatformIO**, Schritt für Schritt aufgebaut.
 
 Alle Pins stehen in [`include/config.h`](include/config.h).
 
+### Schaltplan (vorläufig)
+
+![Schaltplan](docs/schaltplan.svg)
+
+| ESP32-S3 | Anschluss an | Funktion |
+|---|---|---|
+| GPIO1 | Motortreiber IN1 | Motoren links vorwärts (PWM) |
+| GPIO4 | Motortreiber IN2 | Motoren links rückwärts (PWM) |
+| GPIO13 | Motortreiber IN3 | Motoren rechts vorwärts (PWM) |
+| GPIO2 | Motortreiber IN4 | Motoren rechts rückwärts (PWM) |
+| GPIO5 | LED-Ring DIN | 8 × WS2812B |
+| GPIO7 | Frontlicht DIN | 2 × WS2812B (LED 0 links, LED 1 rechts) |
+| GPIO10 | Rücklicht DIN | 2 × WS2812B (LED 1 = Rückfahrlicht) |
+| GPIO6 | Buzzer + | passiver Buzzer, Ton und Lautstärke per PWM |
+| GPIO8 | MPU6050 SDA | I²C, Adresse 0x68 |
+| GPIO9 | MPU6050 SCL | I²C |
+| GPIO3 | Spannungsteiler-Mitte | Akkuspannung (ADC) |
+| 5V | Akku (nach Schalter) | Versorgung ESP |
+| 3V3 | MPU6050 VCC | 3,3 V vom ESP |
+
+Die Motoren einer Seite hängen parallel am selben Ausgang. LEDs und Motortreiber laufen direkt am Akku,
+alle Massen sind verbunden. **Vorläufig:** Die Werte des Spannungsteilers (R1/R2) und die genaue
+Versorgung sind noch nicht nachgemessen. Sind die Motoren falsch herum angeschlossen, hilft der
+Motortest-Assistent in der Weboberfläche.
+
 ## ⚡ Firmware aufspielen
 
 ### Ohne Programmieren – Online-Flasher
