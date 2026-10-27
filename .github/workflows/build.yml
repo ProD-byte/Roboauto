@@ -61,6 +61,9 @@ jobs:
             --flash_mode dio --flash_size 4MB \
             0x0 $B/bootloader.bin 0x8000 $B/partitions.bin 0xe000 "$BOOT_APP0" 0x10000 $B/firmware.bin
           cp $B/firmware.bin ausgabe/roboauto-update.bin
+          # Einzelteile fuer das Flasher-Update (ueberschreibt die gespeicherten Einstellungen NICHT)
+          mkdir -p ausgabe/teile
+          cp $B/bootloader.bin $B/partitions.bin "$BOOT_APP0" $B/firmware.bin ausgabe/teile/
           ls -la ausgabe
 
       - name: Ergebnis aufheben
@@ -85,7 +88,8 @@ jobs:
           cp docs/* seite/
           cp ausgabe/roboauto-komplett.bin seite/
           cp ausgabe/roboauto-update.bin seite/
-          sed -i "s/__VERSION__/Build ${GITHUB_RUN_NUMBER} (${GITHUB_SHA::7})/" seite/manifest.json seite/index.html
+          cp ausgabe/teile/* seite/
+          sed -i "s/__VERSION__/Build ${GITHUB_RUN_NUMBER} (${GITHUB_SHA::7})/" seite/manifest-*.json seite/index.html
           # version.json: danach schaut das Auto beim Auto-Update
           GROESSE=$(stat -c %s seite/roboauto-update.bin)
           MD5=$(md5sum seite/roboauto-update.bin | cut -d' ' -f1)

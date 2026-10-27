@@ -1,5 +1,5 @@
 {
-  "name": "Roboauto",
+  "name": "Roboauto (Neuinstallation)",
   "version": "__VERSION__",
   "new_install_prompt_erase": true,
   "builds": [

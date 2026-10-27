@@ -18,6 +18,15 @@
   .knopf{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
   esp-web-install-button button[slot=activate]{height:56px;padding:0 34px;border:0;border-radius:16px;color:#fff;font:650 18px system-ui,sans-serif;cursor:pointer;
        background:linear-gradient(90deg,var(--akzent),var(--akzent2));box-shadow:0 10px 26px -10px #4f9cff}
+  .wahl{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;text-align:left}
+  @media(max-width:560px){.wahl{grid-template-columns:1fr}}
+  .option{display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:16px;background:#12161c;border:1px solid var(--rand2)}
+  .option .titel{font-weight:700;font-size:17px}
+  .option p{margin:0;color:var(--leise);font-size:14px;flex:1}
+  .option p b{color:var(--text)}
+  .option esp-web-install-button button[slot=activate]{width:100%;height:50px;padding:0 14px;font-size:16px}
+  .option.loeschen{border-color:#5a2a2a;background:#1c1214}
+  .option.loeschen esp-web-install-button button[slot=activate]{background:linear-gradient(90deg,#c2413b,#a8326e);box-shadow:0 10px 26px -12px #ef5350}
   .chip{display:inline-block;font:600 12px ui-monospace,monospace;padding:4px 10px;border-radius:999px;background:#1b2a44;color:#9cc4ff;border:1px solid #2d4a7a}
   .warn{border-color:#5a4318;background:linear-gradient(180deg,#2a2112,#1e1910)}
   .leise{color:var(--leise);font-size:14px}
@@ -30,28 +39,43 @@
 
   <div class="karte knopf">
     <span class="chip">Version __VERSION__</span>
-    <esp-web-install-button manifest="manifest.json">
-      <button slot="activate">&#9889; Roboauto installieren</button>
-      <span slot="unsupported"><b>Dieser Browser kann das leider nicht.</b><br><span class="leise">Bitte Chrome oder Edge am PC/Mac verwenden (nicht am Handy, nicht Firefox/Safari).</span></span>
-      <span slot="not-allowed"><b>Nur &uuml;ber https m&ouml;glich.</b></span>
-    </esp-web-install-button>
-    <span class="leise">Funktioniert mit Chrome und Edge am Computer.</span>
+    <div class="wahl">
+      <div class="option">
+        <div class="titel">&#128260; Update</div>
+        <p>Neue Firmware aufspielen &ndash; <b>WLANs, Einstellungen und Fahrweg bleiben erhalten.</b></p>
+        <esp-web-install-button manifest="manifest-update.json">
+          <button slot="activate">&#9889; Update installieren</button>
+          <span slot="unsupported"><b>Dieser Browser kann das leider nicht.</b><br><span class="leise">Bitte Chrome oder Edge am PC/Mac verwenden.</span></span>
+          <span slot="not-allowed"><b>Nur &uuml;ber https m&ouml;glich.</b></span>
+        </esp-web-install-button>
+      </div>
+      <div class="option loeschen">
+        <div class="titel">&#129529; Neuinstallation</div>
+        <p>Speicher komplett l&ouml;schen und neu aufspielen &ndash; f&uuml;r <b>neue Autos</b> oder wenn gar nichts mehr geht. <b>WLANs und Einstellungen sind danach weg.</b></p>
+        <esp-web-install-button manifest="manifest-neu.json">
+          <button slot="activate">&#128465;&#65039; L&ouml;schen &amp; neu installieren</button>
+          <span slot="unsupported"><b>Dieser Browser kann das leider nicht.</b></span>
+          <span slot="not-allowed"><b>Nur &uuml;ber https m&ouml;glich.</b></span>
+        </esp-web-install-button>
+      </div>
+    </div>
+    <span class="leise">Funktioniert mit Chrome und Edge am Computer &middot; Auto per USB-C anschlie&szlig;en.</span>
   </div>
 
   <div class="karte">
     <h2>So geht&rsquo;s</h2>
     <ol>
       <li>Auto per <b>USB-C-Kabel</b> mit dem Computer verbinden.</li>
-      <li>Auf <b>&bdquo;Roboauto installieren&ldquo;</b> klicken und den Anschluss ausw&auml;hlen (z.&nbsp;B. &bdquo;USB JTAG/serial debug unit&ldquo;).</li>
+      <li><b>&bdquo;Update installieren&ldquo;</b> oder <b>&bdquo;L&ouml;schen &amp; neu installieren&ldquo;</b> klicken und den Anschluss ausw&auml;hlen (z.&nbsp;B. &bdquo;USB JTAG/serial debug unit&ldquo;).</li>
       <li>Wird kein Anschluss gefunden: am Auto <b>BOOT</b> gedr&uuml;ckt halten, kurz <b>RESET</b> dr&uuml;cken, BOOT loslassen &ndash; dann nochmal versuchen.</li>
       <li>Nach dem Aufspielen einmal <b>RESET</b> dr&uuml;cken.</li>
-      <li>Mit dem Handy ins WLAN <b>&bdquo;Roboauto-Setup&ldquo;</b> gehen und dein WLAN eintragen. Danach: <b>http://roboauto.local</b></li>
+      <li>Nur bei Neuinstallation: mit dem Handy ins WLAN <b>&bdquo;Roboauto-Setup&ldquo;</b> gehen und dein WLAN eintragen. Danach: <b>http://roboauto.local</b></li>
     </ol>
   </div>
 
   <div class="karte warn">
     <h2>&#9888;&#65039; Gut zu wissen</h2>
-    <p class="leise" style="margin:0">Bei einer Neuinstallation wird der Speicher gel&ouml;scht &ndash; gespeicherte WLANs und Einstellungen sind dann weg. F&uuml;r normale Updates einfach <b>WLAN-Update</b> aus VS&nbsp;Code nehmen, da bleibt alles erhalten.</p>
+    <p class="leise" style="margin:0">Normalerweise brauchst du den Flasher gar nicht: Das Auto holt sich neue Versionen <b>automatisch per WLAN</b> (Einstellungen &rarr; Updates). Der Flasher ist f&uuml;r neue Autos, f&uuml;r Freunde, die nachbauen, oder als Rettung, wenn ein Auto nicht mehr startet.</p>
   </div>
 
   <div class="karte">
