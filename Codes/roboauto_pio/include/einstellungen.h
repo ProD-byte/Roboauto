@@ -33,7 +33,8 @@ const Einstellungen& einst();                // aktuelle Werte lesen
 // Einen Wert setzen (Name wie im JSON). Rueckgabe false = unbekannter Name.
 bool einstellungSetzen(const String& name, const String& wert);
 void einstellungenSpeichern();
-void einstellungenStandard();                // alles auf Standard zuruecksetzen (und speichern)
+void einstellungenStandard();                // alles ausser Motoren auf Standard (und speichern)
+void einstellungenMotorStandard();           // nur Motor-Umkehr/Tausch auf Standard (und speichern)
 String einstellungenJson();
 
 // Wird aufgerufen, wenn sich eine Helligkeit aendert (setzen die Module selbst)

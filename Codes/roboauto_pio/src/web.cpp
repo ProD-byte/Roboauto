@@ -431,6 +431,8 @@ void webStarten() {
   server.on("/einstellungen", HTTP_GET, []() {
     if (server.hasArg("standard")) {
       einstellungenStandard();
+    } else if (server.hasArg("motorStandard")) {
+      einstellungenMotorStandard();
     } else if (server.args() > 0) {
       for (int i = 0; i < server.args(); i++) einstellungSetzen(server.argName(i), server.arg(i));
       einstellungenSpeichern();

@@ -5,6 +5,13 @@
 
 static Einstellungen e;
 
+// Motor-Verdrahtung hat ein eigenes "Standard" - sie haengt am Auto, nicht am Geschmack
+static void motorStandardwerte() {
+  e.motorLInv    = MOTOR_L_INVERTIERT;
+  e.motorRInv    = MOTOR_R_INVERTIERT;
+  e.motorTausch  = false;
+}
+
 static void standardwerte() {
   e.tempo        = MAX_TEMPO;
   e.lenkung      = MAX_LENKUNG;
@@ -16,9 +23,6 @@ static void standardwerte() {
   e.lichtHell    = LICHT_HELLIGKEIT;
   e.toene        = TOENE_ALLE;
   e.figurGroesse = 100;
-  e.motorLInv    = MOTOR_L_INVERTIERT;
-  e.motorRInv    = MOTOR_R_INVERTIERT;
-  e.motorTausch  = false;
   e.lautstaerke  = 100;
   e.autoUpdate   = true;
   e.disco        = true;
@@ -28,6 +32,7 @@ const Einstellungen& einst() { return e; }
 
 void einstellungenLaden() {
   standardwerte();
+  motorStandardwerte();
   Preferences p;
   p.begin("einstellung", true);
   e.tempo        = p.getInt("tempo", e.tempo);
@@ -76,7 +81,13 @@ void einstellungenStandard() {
   einstellungenSpeichern();
   ringHelligkeit(e.ringHell);
   lichtHelligkeit(e.lichtHell);
-  Serial.println(">> Einstellungen auf Standard zurueckgesetzt");
+  Serial.println(">> Einstellungen auf Standard zurueckgesetzt (Motoren bleiben)");
+}
+
+void einstellungenMotorStandard() {
+  motorStandardwerte();
+  einstellungenSpeichern();
+  Serial.println(">> Motoren auf Standard zurueckgesetzt");
 }
 
 // Jeder Wert wird auf einen sinnvollen Bereich begrenzt - kaputte Werte sind so nicht moeglich
