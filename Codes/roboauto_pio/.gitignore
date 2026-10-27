@@ -15,3 +15,5 @@ archiv/
 Thumbs.db
 .DS_Store
 _zu_loeschen/
+# wird beim Build automatisch erzeugt
+include/webseite_gz.h

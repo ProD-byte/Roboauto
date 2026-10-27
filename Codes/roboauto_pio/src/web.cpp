@@ -11,6 +11,7 @@
 #include "buzzer.h"
 #include "web.h"
 #include "webseite.h"
+#include "webseite_gz.h"   // gepackte Weboberflaeche (erzeugt von scripts/webseite_gz.py)
 #include "wlan_zugang.h"
 #include "akku.h"
 #include "antrieb.h"
@@ -340,7 +341,9 @@ void webStarten() {
     else {
       // Browser soll die Seite nicht zwischenspeichern - sonst laeuft nach einem Update noch die alte
       server.sendHeader("Cache-Control", "no-store, no-cache, must-revalidate");
-      server.send_P(200, "text/html", WEBSEITE);
+      // gzip-gepackt: der Browser entpackt selbst, spart ca. 70 KB Flash
+      server.sendHeader("Content-Encoding", "gzip");
+      server.send_P(200, "text/html", (const char*)WEBSEITE_GZ, WEBSEITE_GZ_LAENGE);
     }
   });
   server.on("/wlan", HTTP_GET, sendeEinrichtungsSeite);
