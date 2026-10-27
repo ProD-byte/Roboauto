@@ -21,6 +21,7 @@ struct Einstellungen {
   int  figurGroesse;     // Figuren in Prozent (50..200)
   bool motorLInv;        // linke Seite dreht falsch herum -> umkehren
   bool motorRInv;        // rechte Seite dreht falsch herum -> umkehren
+  bool autoUpdate;       // automatisch neue Versionen von GitHub installieren
   int  lautstaerke;      // Buzzer-Lautstaerke in Prozent (5..100)
   bool motorTausch;      // Motoren an den falschen Ausgaengen -> links/rechts tauschen
 };

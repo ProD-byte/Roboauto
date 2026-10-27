@@ -124,7 +124,16 @@ constexpr unsigned long WLAN_VERGESSEN_HALTEN_MS = 3000;    // Start + Select so
 constexpr unsigned long WEB_TOTMANN_MS = 400;   // ohne neuen Fahrbefehl so lange -> Stopp
 constexpr unsigned long WEB_GETRENNT_MS = 6000;  // so lange ohne Lebenszeichen der Seite -> "Webseite getrennt"
 constexpr unsigned long WLAN_NEUVERSUCH_MS = 30000; // im Einrichtungsmodus alle 30 s erneut das Heim-WLAN probieren
-constexpr unsigned long WLAN_TIMEOUT_MS = 15000; // so lange auf das WLAN warten, dann Fehlermeldung
+constexpr unsigned long WLAN_TIMEOUT_MS = 15000;
+
+// --- Auto-Update von GitHub (siehe autoupdate.h) ---
+constexpr const char* UPDATE_URL = "https://prod-byte.github.io/Roboauto/";   // GitHub-Pages-Adresse (mit / am Ende)
+constexpr unsigned long UPDATE_ERSTE_SUCHE_MS = 60000;       // so lange nach dem WLAN-Verbinden warten, dann nachsehen
+constexpr unsigned long UPDATE_INTERVALL_MS = 6UL * 3600000; // danach alle 6 Stunden
+constexpr unsigned long UPDATE_RUHE_MS = 120000;             // so lange muss das Auto unbenutzt stehen, bevor es sich aktualisiert
+constexpr unsigned long UPDATE_BESTAETIGEN_MS = 60000;       // so lange muss eine neue Version laufen, dann gilt sie als gut
+constexpr int UPDATE_PROBE_STARTS = 3;                       // so viele Starts ohne Bestaetigung -> zurueck zur alten Version
+constexpr int UPDATE_MIN_AKKU = 30;                          // Akku-Prozent, ab dem automatisch aktualisiert wird (USB immer) // so lange auf das WLAN warten, dann Fehlermeldung
 
 // --- Figuren fahren (Quadrat, Acht, Slalom) ---
 // Klein eingestellt: alle Figuren sollen in ca. 50 x 50 cm passen.

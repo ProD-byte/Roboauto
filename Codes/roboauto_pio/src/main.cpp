@@ -31,6 +31,7 @@
 #include "akku.h"
 #include "gyro.h"
 #include "klick.h"
+#include "autoupdate.h"
 #include "musik.h"
 #include "web.h"
 #include "sicherheit.h"
@@ -82,6 +83,7 @@ void setup() {
   Serial.setTxTimeoutMs(0);
   delay(1000);
 
+  autoUpdateStart();                      // nach einem Auto-Update: startet die neue Version sauber? sonst zurueck
   einstellungenLaden();                   // gespeicherte Einstellungen (vor allem anderen)
   antriebStarten();
   ringStarten();
@@ -95,7 +97,7 @@ void setup() {
   aufnahmeStarten();                      // gespeicherten Fahrweg laden
 
   Serial.println();
-  Serial.println("=== Roboauto - Schritt 28: mehrere WLANs merken ===");
+  Serial.println("=== Roboauto - Schritt 29: Auto-Update von GitHub ===");
   Serial.printf("Grund fuer Neustart: %d (1=Einschalten, 4=Absturz, 9=Spannungseinbruch)\n",
                 (int)esp_reset_reason());
 }
@@ -112,6 +114,11 @@ void loop() {
     case 1: ringSignal(0x00B4FF); buzzerWlanOk();     break;   // tuerkis + drei steigende Blips
     case 2: ringSignal(0xFF2000); buzzerWlanFehler(); break;   // rot + tiefer Ton
     case 3: ringSignal(0xFF8000); buzzerWarnung();    break;   // orange: Einrichtung offen
+  }
+  static bool rueckfallGemeldet = false;
+  if (autoUpdateZurueckgesetzt() && !rueckfallGemeldet && millis() > 3000) {   // Auto-Update ging schief -> alte Version laeuft
+    rueckfallGemeldet = true;
+    ringSignal(0xFF8000); buzzerWarnung();
   }
 
   // --- Verbindung ueberwachen ---
@@ -304,6 +311,14 @@ void loop() {
   if (wt & WEB_BLINK_R) tasten.kreis   = true;
   // Beim Balancieren zappeln die Motoren staendig -> fuer Brems-/Rueckfahrlicht als 'steht' werten
   lichtUpdate(verbunden, tasten, balanceAktiv() ? 0 : antriebLinks(), balanceAktiv() ? 0 : antriebRechts(), akkuEco());
+
+  // --- Auto-Update: nur wenn das Auto eine Weile unbenutzt steht und der Akku reicht ---
+  static unsigned long letzteNutzung = 0;
+  if (ble || webFaehrt() || antriebLinks() != 0 || antriebRechts() != 0 || figurAktiv() || balanceAktiv() ||
+      musikNummer() >= 0 || aufnahmeLaeuft() || abspielenLaeuft() || !sicherheitFahrenErlaubt())
+    letzteNutzung = millis();
+  bool ruhig = millis() - letzteNutzung > UPDATE_RUHE_MS && (akkuUsb() || akkuProzent() >= UPDATE_MIN_AKKU);
+  autoUpdateLoop(webWlanDa(), ruhig);
 
   // --- Debug-Ausgabe alle 250 ms ---
   static unsigned long letzteAusgabe = 0;

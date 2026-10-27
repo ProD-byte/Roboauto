@@ -260,6 +260,12 @@ const char WEBSEITE[] PROGMEM = R"==(<!doctype html>
   .wahl button{height:38px;flex:1;font-size:13px;border-radius:10px}
   .hinweis{color:var(--leise);font-size:12.5px;margin-top:-6px}
   #e-status{color:var(--gut);font-size:13px;min-height:18px}
+  .updinfo{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  @media(max-width:600px){.updinfo{grid-template-columns:1fr 1fr}}
+  .updinfo div{background:#12161c;border:1px solid var(--rand);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+  .updinfo b{font-size:15px}
+  button.upd-neu{border-color:var(--gut);background:#12301f;box-shadow:0 0 18px -6px var(--gut)}
+  .pille.upd{border-color:var(--gut);color:#7fe0a3;cursor:pointer}
   /* ---- Jukebox ---- */
   .jukebox{display:grid;grid-template-columns:minmax(260px,340px) 1fr;gap:14px}
   @media(max-width:860px){.jukebox{grid-template-columns:1fr}}
@@ -289,6 +295,7 @@ const char WEBSEITE[] PROGMEM = R"==(<!doctype html>
     <div class="pille"><span class="t">Akku</span><b id="akku">-</b><div class="akkuleiste"><div id="akkubalken"></div></div></div>
     <div class="pille"><span class="t">WLAN</span><b id="wlan">-</b></div>
     <div class="pille"><span class="t">Motoren L / R</span><b id="mot">-</b></div>
+    <div class="pille upd" id="upd-pille" hidden>&#11014;&#65039; <span>Update</span></div>
   </div>
   <button id="b-einst" title="Einstellungen">&#9881;&#65039; <span>Einstellungen</span></button>
   <button id="b-sprache" title="Sprache / Language">&#127760; <span id="sprache-name">English</span></button>
@@ -429,6 +436,20 @@ const char WEBSEITE[] PROGMEM = R"==(<!doctype html>
       <button id="b-mtest" class="klein">&#128295; Motortest-Assistent starten</button>
       <p class="hinweis" style="margin:0">Der Assistent dreht nacheinander kurz jede Seite und fragt, was passiert ist. Die richtigen Schalter stellt er dann selbst ein. Auto dazu am besten hochheben.</p>
     </div>
+    <div class="karte" style="grid-column:1/-1">
+      <h3 style="margin:0">&#128260; Updates</h3>
+      <div class="updinfo">
+        <div><span class="leise">Installiert</span><b id="fw-ist">&ndash;</b></div>
+        <div><span class="leise">Auf GitHub</span><b id="fw-neu">&ndash;</b></div>
+        <div><span class="leise">Status</span><b id="upd-status">&ndash;</b></div>
+      </div>
+      <label class="schalter">Automatisch aktualisieren <input type="checkbox" id="e-autoUpdate"></label>
+      <div class="reihe">
+        <button id="upd-suchen" class="klein">&#128269; Nach Updates suchen</button>
+        <button id="upd-install" class="klein upd-neu" hidden>&#11015;&#65039; Jetzt installieren</button>
+      </div>
+      <p class="hinweis" id="upd-text" style="margin:0">Neue Versionen kommen automatisch von GitHub. Installiert wird nur, wenn das Auto 2 Minuten unbenutzt steht und der Akku reicht. Startet eine neue Version nicht sauber, schaltet das Auto von selbst auf die alte zur&uuml;ck.</p>
+    </div>
     <div class="karte" style="grid-column:1/-1;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:space-between">
       <h3 style="margin:0">&#128421;&#65039; System</h3>
       <span id="e-status"></span>
@@ -442,7 +463,7 @@ const char WEBSEITE[] PROGMEM = R"==(<!doctype html>
 
 <footer class="fuss">
   <div><span>Tastatur:</span> <kbd>L</kbd> <span>Licht</span> &middot; <kbd>F</kbd> <span>Fernlicht</span> &middot; <kbd>B</kbd> <span>Warnblinker</span> &middot; <kbd>U</kbd> <span>Wende</span> &middot; <kbd>Q</kbd>/<kbd>E</kbd> <span>Blinker</span> &middot; <kbd>H</kbd> <span>Hupe</span> &middot; <kbd>T</kbd> <span>Tank</span> &middot; <kbd>P</kbd> <span>Modus</span></div>
-  <div id="version"><span>Software: Schritt</span> 28</div>
+  <div id="version"><span>Software: Schritt</span> 29<span id="version-build"></span></div>
 </footer>
 </main>
 
@@ -641,7 +662,7 @@ function zeigeEinst(e){
   }
   document.getElementById('e-geradeaus').checked = !!e.geradeaus;
   document.getElementById('e-crash').checked = !!e.crash;
-  for (const k of ['motorL', 'motorR', 'motorTausch']) document.getElementById('e-' + k).checked = !!e[k];
+  for (const k of ['motorL', 'motorR', 'motorTausch', 'autoUpdate']) document.getElementById('e-' + k).checked = !!e[k];
   document.querySelectorAll('[data-toene]').forEach(b => b.classList.toggle('an', +b.dataset.toene === e.toene));
 }
 let speicherTimer = null;
@@ -738,6 +759,28 @@ function mtStart(){
 }
 document.getElementById('b-mtest').addEventListener('click', mtStart);
 
+// ---------- Auto-Update ----------
+let updZustand = 0;
+document.getElementById('e-autoUpdate').addEventListener('change', e => speichere({autoUpdate: e.target.checked ? 1 : 0}));
+document.getElementById('upd-suchen').addEventListener('click', () => { fetch('/update?a=suchen').catch(() => {}); document.getElementById('upd-status').textContent = t('sucht\u2026'); });
+document.getElementById('upd-install').addEventListener('click', () => {
+  if (!confirm(t('Update jetzt installieren? Das Auto l\u00e4dt ca. 1 Minute und startet dann neu.'))) return;
+  fetch('/update?a=installieren').catch(() => {});
+  document.getElementById('upd-text').textContent = t('Das Auto l\u00e4dt das Update und startet neu \u2013 die Seite verbindet sich danach von selbst wieder.');
+});
+document.getElementById('upd-pille').addEventListener('click', () => { const d = document.getElementById('einst'); d.open = true; document.getElementById('upd-suchen').scrollIntoView({behavior: 'smooth', block: 'center'}); });
+function zeigeUpdate(s){
+  if (s.fw === undefined) return;
+  updZustand = s.upd;
+  document.getElementById('fw-ist').textContent = s.fw ? 'Build ' + s.fw : t('selbst gebaut');
+  document.getElementById('fw-neu').textContent = s.fwneu ? 'Build ' + s.fwneu : '\u2013';
+  const text = {0: '\u2013', 1: t('sucht\u2026'), 2: t('l\u00e4dt\u2026') + ' ' + s.updp + ' %', 3: t('\u2713 aktuell'), 4: t('nicht erreichbar'), 5: t('Update verf\u00fcgbar!')};
+  document.getElementById('upd-status').textContent = text[s.upd] || '\u2013';
+  document.getElementById('upd-install').hidden = s.upd !== 5;
+  document.getElementById('upd-pille').hidden = s.upd !== 5;
+  document.getElementById('version-build').textContent = s.fw ? ' \u00b7 Build ' + s.fw : '';
+}
+
 // ---------- Jukebox ----------
 const LIEDER = [["\ud83e\uddf1", "Tetris-Melodie", "Korobeiniki \u00b7 russisches Volkslied"], ["\u26f0\ufe0f", "In der Halle des Bergk\u00f6nigs", "Edvard Grieg \u00b7 wird immer schneller"], ["\ud83c\udfb9", "F\u00fcr Elise", "Ludwig van Beethoven"], ["\ud83c\udf89", "Ode an die Freude", "Ludwig van Beethoven"], ["\ud83c\udfa9", "The Entertainer", "Scott Joplin \u00b7 Ragtime"], ["\ud83e\udd16", "Roboauto-Theme", "Eigene Komposition"], ["\ud83d\udc7e", "Boss-Level", "Eigene Komposition"], ["\ud83c\udfc6", "Level geschafft", "Eigene Komposition"]];
 let liedAktiv = -1, liedTon = 0;
@@ -796,6 +839,7 @@ Object.assign(EN, {"Steuerung": "Controls", "Loslassen = Stopp": "Release = stop
 Object.assign(EN, {'Tempo, Lenkung, Sicherheit, Licht & Ton, Motoren, WLAN': 'Speed, steering, safety, lights & sound, motors, Wi-Fi'});
 Object.assign(EN, {"Steuerung": "Controls", "Programme": "Programs", "\ud83c\udfb5 Musik": "\ud83c\udfb5 Music", "Jukebox": "Jukebox", "Jetzt l\u00e4uft": "Now playing", "\u25a0 Stopp": "\u25a0 Stop", "Spielt \u00fcber den Buzzer im Auto, der LED-Ring macht die Lichtshow dazu. Nochmal auf das Lied klicken = Stopp.": "Plays through the buzzer in the car, the LED ring adds a light show. Click the song again = stop.", "Tetris-Melodie": "Tetris theme", "Korobeiniki \u00b7 russisches Volkslied": "Korobeiniki \u00b7 Russian folk song", "In der Halle des Bergk\u00f6nigs": "In the Hall of the Mountain King", "Edvard Grieg \u00b7 wird immer schneller": "Edvard Grieg \u00b7 keeps getting faster", "F\u00fcr Elise": "F\u00fcr Elise", "Ode an die Freude": "Ode to Joy", "Eigene Komposition": "Original composition", "Level geschafft": "Level complete", "nichts": "nothing", "\u2013": "\u2013"});
 Object.assign(EN, {'\ud83d\udd0a Lautst\u00e4rke': '\ud83d\udd0a Volume'});
+Object.assign(EN, {"\ud83d\udd04 Updates": "\ud83d\udd04 Updates", "Installiert": "Installed", "Auf GitHub": "On GitHub", "Status": "Status", "Automatisch aktualisieren": "Update automatically", "\ud83d\udd0d Nach Updates suchen": "\ud83d\udd0d Check for updates", "\u2b07\ufe0f Jetzt installieren": "\u2b07\ufe0f Install now", "Update": "Update", "Neue Versionen kommen automatisch von GitHub. Installiert wird nur, wenn das Auto 2 Minuten unbenutzt steht und der Akku reicht. Startet eine neue Version nicht sauber, schaltet das Auto von selbst auf die alte zur\u00fcck.": "New versions come automatically from GitHub. They are only installed when the car has been idle for 2 minutes and the battery is good. If a new version does not start properly, the car automatically switches back to the old one.", "sucht\u2026": "checking\u2026", "l\u00e4dt\u2026": "downloading\u2026", "\u2713 aktuell": "\u2713 up to date", "nicht erreichbar": "not reachable", "Update verf\u00fcgbar!": "Update available!", "selbst gebaut": "self-built", "Update jetzt installieren? Das Auto l\u00e4dt ca. 1 Minute und startet dann neu.": "Install the update now? The car downloads for about 1 minute and then restarts.", "Das Auto l\u00e4dt das Update und startet neu \u2013 die Seite verbindet sich danach von selbst wieder.": "The car is downloading the update and will restart \u2013 the page reconnects by itself afterwards."});
 let sprache = 'de';
 try { sprache = localStorage.getItem('sprache') || (/^de/i.test(navigator.language || 'de') ? 'de' : 'en'); } catch(e){}
 // t('Text', a, b) -> Text in der gewaehlten Sprache, {0} {1} werden ersetzt
@@ -868,6 +912,7 @@ async function status(){
     zeigeLiveAuto(s);
     motL = s.links; motR = s.rechts; motTest = s.mt || 0;
     zeigeMusik(s);
+    zeigeUpdate(s);
     document.getElementById('t-nicken').textContent = (s.nicken > 0 ? '+' : '') + s.nicken.toFixed(0) + '°';
     // Heckansicht: nach rechts kippen (Sensorwert positiv) = rechte Seite runter -> Zeichnung spiegeln
     zeichneNeigung('g-rollen', -s.rollen, true);

@@ -6,6 +6,7 @@
 #include <DNSServer.h>
 #include <Preferences.h>
 #include "config.h"
+#include "autoupdate.h"
 #include "musik.h"
 #include "buzzer.h"
 #include "web.h"
@@ -408,18 +409,19 @@ void webStarten() {
     for (int i = 0; i < LED_RING_ANZAHL && i < 8; i++)
       snprintf(ringText + strlen(ringText), sizeof(ringText) - strlen(ringText), i ? ",%06lx" : "%06lx",
                (unsigned long)ringAnzeigeFarbe(i));
-    char json[820];
+    char json[900];
     snprintf(json, sizeof(json),
              "{\"akku\":%d,\"prozent\":%d,\"usb\":%d,\"eco\":%d,\"links\":%d,\"rechts\":%d,\"rssi\":%d,"
              "\"licht\":%d,\"fern\":%d,\"warn\":%d,\"wende\":%d,\"modus\":%d,\"figur\":%d,"
              "\"rec\":%d,\"play\":%d,\"reclen\":%.1f,\"playpos\":%.1f,\"balance\":%d,"
-             "\"nicken\":%.1f,\"rollen\":%.1f,\"kurs\":%.1f,\"dreh\":%.0f,\"kal\":%d,\"mt\":%d,\"lied\":%d,\"liedpos\":%d,\"ton\":%d,"
+             "\"nicken\":%.1f,\"rollen\":%.1f,\"kurs\":%.1f,\"dreh\":%.0f,\"kal\":%d,\"mt\":%d,\"lied\":%d,\"liedpos\":%d,\"ton\":%d,\"fw\":%d,\"fwneu\":%d,\"upd\":%d,\"updp\":%d,"
              "\"lampen\":\"%06lx,%06lx,%06lx,%06lx\",\"ring\":\"%s\"}",
              akkuWert(), akkuProzent(), akkuUsb(), akkuEco(), antriebLinks(), antriebRechts(), WiFi.RSSI(),
              lichtIstAn(), lichtIstFernlicht(), lichtIstWarnblinker(), antriebWendeAktiv(), modus, figurNummer(),
              aufnahmeLaeuft(), abspielenLaeuft(), aufnahmeSekunden(), abspielenSekunden(), balanceAktiv(),
              -gyroNeigungY(), gyroNeigungX(), kurs(), gyroDrehrate(),   // nicken: Schnauze hoch = positiv
              gyroKalibriertGerade(), antriebTestSeite() + 1, musikNummer(), musikFortschritt(), musikTon(),
+             autoUpdateBuild(), autoUpdateNeu(), autoUpdateZustand(), autoUpdateProzent(),
              (unsigned long)lichtAnzeigeFarbe(0), (unsigned long)lichtAnzeigeFarbe(1),
              (unsigned long)lichtAnzeigeFarbe(2), (unsigned long)lichtAnzeigeFarbe(3), ringText);
     server.send(200, "application/json", json);
@@ -436,6 +438,15 @@ void webStarten() {
       Serial.println(">> Einstellungen gespeichert: " + einstellungenJson());
     }
     server.send(200, "application/json", einstellungenJson());
+  });
+
+  // Auto-Update: /update?a=suchen  oder  /update?a=installieren
+  server.on("/update", HTTP_GET, []() {
+    String a = server.arg("a");
+    if (a == "suchen") autoUpdateSuchen();
+    if (a == "installieren") { autoUpdateSuchen(); autoUpdateInstallieren(); }
+    letzteAbfrage = millis();
+    server.send(200, "text/plain", "ok");
   });
 
   server.on("/verlauf", HTTP_GET, []() {
@@ -535,6 +546,7 @@ void webUpdate() {
 }
 
 bool webEinrichtung() { return setupAktiv; }
+bool webWlanDa()      { return staVerbunden && !setupAktiv && WiFi.status() == WL_CONNECTED; }
 
 bool webVerbunden() { return (serverLaeuft || setupAktiv) && letzteAbfrage != 0 && millis() - letzteAbfrage < WEB_GETRENNT_MS; }
 int  webEreignis()  { int e = ereignis; ereignis = 0; return e; }

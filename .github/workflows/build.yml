@@ -47,7 +47,9 @@ jobs:
           cp geheim.beispiel.ini geheim.ini
           cp include/wlan_zugang.beispiel.h include/wlan_zugang.h
 
-      - name: Firmware bauen
+      - name: Firmware bauen (mit Build-Nummer fuer das Auto-Update)
+        env:
+          PLATFORMIO_BUILD_FLAGS: -DFIRMWARE_BUILD=${{ github.run_number }}
         run: pio run -e roboauto
 
       - name: Alles in eine Datei packen (fuer den Online-Flasher)
@@ -82,7 +84,13 @@ jobs:
           mkdir -p seite
           cp docs/* seite/
           cp ausgabe/roboauto-komplett.bin seite/
-          sed -i "s/__VERSION__/${GITHUB_REF_NAME}-${GITHUB_SHA::7}/" seite/manifest.json seite/index.html
+          cp ausgabe/roboauto-update.bin seite/
+          sed -i "s/__VERSION__/Build ${GITHUB_RUN_NUMBER} (${GITHUB_SHA::7})/" seite/manifest.json seite/index.html
+          # version.json: danach schaut das Auto beim Auto-Update
+          GROESSE=$(stat -c %s seite/roboauto-update.bin)
+          MD5=$(md5sum seite/roboauto-update.bin | cut -d' ' -f1)
+          echo "{\"build\":${GITHUB_RUN_NUMBER},\"datei\":\"roboauto-update.bin\",\"groesse\":${GROESSE},\"md5\":\"${MD5}\",\"commit\":\"${GITHUB_SHA::7}\"}" > seite/version.json
+          cat seite/version.json
 
       - name: Flasher-Seite hochladen
         if: github.ref == 'refs/heads/main'

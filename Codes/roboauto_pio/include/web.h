@@ -19,6 +19,9 @@ int webEreignis();
 // true, solange das Einrichtungs-WLAN offen ist
 bool webEinrichtung();
 
+// true, solange das Auto mit einem WLAN (mit Internet) verbunden ist
+bool webWlanDa();
+
 // Gespeicherte WLAN-Daten loeschen und im Einrichtungsmodus neu starten
 void webWlanVergessen();
 
