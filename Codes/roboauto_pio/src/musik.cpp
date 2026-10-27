@@ -70,8 +70,60 @@ static const char LIED_GESCHAFFT[] =
   "T140 g5:8 c6:8 e6:8 g6:4 e6:8 g6:2 p:8 a5:8 d6:8 f6:8 a6:4 f6:8 a6:2 p:8 "
   "b5:8 d6:8 g6:8 b6:8 a6:8 b6:8 [c6e6g6c7]:2.";
 
+
+// ---------- Neue Stuecke (Update) ----------
+// Neon-Jagd: C64-Stil - Bass und Akkord wechseln sich im 16tel-Takt ab, darueber die Melodie
+#define NEON_A "e5:16 e6:16 [e6g6b6]:8 e5:16 e6:16 [e6g6b6]:8 e5:16 e6:16 [e6g6b6]:8 d6:16 e6:16 g6:8 " \
+               "c5:16 c6:16 [c6e6g6]:8 c5:16 c6:16 [c6e6g6]:8 c5:16 c6:16 [c6e6g6]:8 b5:16 c6:16 e6:8 " \
+               "d5:16 d6:16 [d6f#6a6]:8 d5:16 d6:16 [d6f#6a6]:8 d5:16 d6:16 [d6f#6a6]:8 a5:16 d6:16 f#6:8 " \
+               "b4:16 b5:16 [b5d#6f#6]:8 b4:16 b5:16 [b5d#6f#6]:8 b4:16 b5:16 [b5d#6f#6]:8 f#6:16 a6:16 b6:8 "
+#define NEON_B "b6:8 b6:16 a6:16 g6:8 f#6:8 g6:8 a6:8 b6:4 c7:8 b6:16 a6:16 g6:8 e6:8 g6:4 e6:4 " \
+               "d6:8 f#6:16 a6:16 d7:8 c7:8 b6:8 a6:8 f#6:4 d#6:8 f#6:8 b6:8 a6:8 g6:8 f#6:8 d#6:4 "
+static const char LIED_NEON[] =
+  "T170 " NEON_A NEON_B "T175 " NEON_A
+  "e7:8 e7:16 d7:16 b6:8 g6:8 a6:8 b6:8 e7:4 c7:8 c7:16 b6:16 g6:8 e6:8 g6:8 b6:8 c7:4 "
+  "d7:8 d7:16 c7:16 a6:8 f#6:8 a6:8 d7:8 f#7:4 [b6d#7f#7]:4 b7:8 a7:8 f#7:8 d#7:8 b6:4 "
+  "T190 " NEON_A "[e6g6b6e7]:4 p:8 e5:8 [e6g6b6e7]:2";
+
+// Pixel-Galaxie: episch und weit - schimmernde Akkorde, singende Melodie mit Vibrato
+#define GALAXIE "[a5c6e6]:8 e6:4 d6:8 c6:8 b5:8 c6:4 [f5a5c6]:8 a6:4 g6:8 f6:8 e6:8 c6:4 " \
+                "[c6e6g6]:8 g6:4 f6:8 e6:8 d6:8 e6:4 [g5b5d6]:8 d6:4 c6:8 b5:8 a5:8 b5:4 "
+static const char LIED_GALAXIE[] =
+  "T120 [a5c6e6]:2 [f5a5c6]:2 [c6e6g6]:2 [g5b5d6]:2 " GALAXIE GALAXIE
+  "e6:8 a6:8 c7:4 b6:8 g6:8 e6:4 f6:8 a6:8 c7:4 d7:4 c7:4 "
+  "b6:8 g6:8 e6:8 g6:8 c7:4 b6:4 [a5c6e6a6]:2 [e6a6c7e7]:2 "
+  "T110 " GALAXIE "[a5c6e6a6]:1";
+
+// Turbo-Rennen: Startampel, dann Vollgas - pulsierender Bass im Wechsel mit der Melodie
+#define TURBO_A "a4:16 a5:16 a4:16 g5:16 a4:16 e5:16 a4:16 d5:16 a4:16 c5:16 a4:16 d5:16 a4:16 e5:16 g5:16 a5:16 "
+#define TURBO_D "d5:16 d6:16 d5:16 c6:16 d5:16 a5:16 d5:16 g5:16 d5:16 f5:16 d5:16 g5:16 d5:16 a5:16 c6:16 d6:16 "
+#define TURBO_E "e5:16 e6:16 e5:16 d6:16 e5:16 b5:16 e5:16 a5:16 f5:16 f6:16 f5:16 e6:16 g5:16 g6:16 g#5:16 g#6:16 "
+static const char LIED_TURBO[] =
+  "T120 a5:8 p:4. a5:8 p:4. a5:8 p:4. a6:2 "                              // Startampel: piep - piep - piep - LOS
+  "T200 " TURBO_A TURBO_A TURBO_D TURBO_A TURBO_E TURBO_A TURBO_A TURBO_D TURBO_A TURBO_E
+  "T210 a5:16 c6:16 e6:16 a6:16 e6:16 c6:16 a5:16 c6:16 e6:16 a6:16 c7:16 a6:16 e6:16 a6:16 c7:16 e7:16 "
+  "[a5c#6e6]:8 [a5c#6e6]:8 p:8 [a5c#6e6a6]:2";
+
+// Wilhelm Tell (Rossini, 1829) - der beruehmte Galopp
+#define TELL_1 "e5:16 e5:16 e5:8 e5:16 e5:16 e5:8 e5:16 e5:16 a5:8 b5:8 c#6:8 "
+#define TELL_2 "e5:16 e5:16 e5:8 e5:16 e5:16 a5:8 c#6:16 c#6:16 b5:8 g#5:8 e5:8 "
+#define TELL_3 "a5:8 c#6:8 e6:4 d6:8 c#6:8 b5:8 a5:8 "
+static const char LIED_TELL[] =
+  "T150 " TELL_1 TELL_2 TELL_1 TELL_3 TELL_1 TELL_2 TELL_1
+  "a5:8 c#6:8 e6:8 a6:8 g#6:8 e6:8 b5:8 g#5:8 a5:4 [a5c#6e6]:4 [a5c#6e6a6]:2";
+
+// Hummelflug (Rimski-Korsakow, 1900) - rasende chromatische Laeufe
+#define HUMMEL_RUNTER "e6:16 d#6:16 d6:16 c#6:16 d6:16 c#6:16 c6:16 b5:16 c6:16 b5:16 a#5:16 a5:16 g#5:16 g5:16 f#5:16 f5:16 "
+#define HUMMEL_E "e5:16 d#5:16 d5:16 c#5:16 c5:16 f5:16 e5:16 d#5:16 e5:16 d#5:16 d5:16 c#5:16 c5:16 c#5:16 d5:16 d#5:16 "
+#define HUMMEL_A "a5:16 g#5:16 g5:16 f#5:16 f5:16 a#5:16 a5:16 g#5:16 a5:16 g#5:16 g5:16 f#5:16 f5:16 f#5:16 g5:16 g#5:16 "
+static const char LIED_HUMMEL[] =
+  "T145 " HUMMEL_RUNTER HUMMEL_RUNTER HUMMEL_E HUMMEL_E HUMMEL_A HUMMEL_A HUMMEL_E HUMMEL_E
+  "e5:16 f5:16 f#5:16 g5:16 g#5:16 a5:16 a#5:16 b5:16 c6:16 c#6:16 d6:16 d#6:16 e6:16 f6:16 f#6:16 g6:16 "
+  "g#6:16 a6:16 a#6:16 b6:16 c7:16 c#7:16 d7:16 d#7:16 e7:8 p:8 [a5c6e6a6]:4";
+
 static const char* const LIEDER[] = { LIED_TETRIS, LIED_BERGKOENIG, LIED_ELISE, LIED_FREUDE,
-                                      LIED_ENTERTAINER, LIED_THEMA, LIED_BOSS, LIED_GESCHAFFT };
+                                      LIED_ENTERTAINER, LIED_THEMA, LIED_BOSS, LIED_GESCHAFFT,
+                                      LIED_NEON, LIED_GALAXIE, LIED_TURBO, LIED_TELL, LIED_HUMMEL };
 static const int ANZAHL = sizeof(LIEDER) / sizeof(LIEDER[0]);
 
 // ------------------------------------------------------------
