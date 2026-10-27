@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Roboauto &ndash; Online-Flasher</title>
+<meta name="theme-color" content="#0d0f13">
+<script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+<style>
+  :root{--bg:#0d0f13;--karte:#161a20;--karte2:#1c2129;--rand:#262c35;--rand2:#323a45;--text:#eef1f5;--leise:#8b95a3;--akzent:#4f9cff;--akzent2:#7c6cff;--gut:#3ccf6e;--warn:#f0a030}
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+       background:radial-gradient(900px 500px at 0% -10%,#1a2440 0%,transparent 60%),radial-gradient(800px 500px at 110% 0%,#251c40 0%,transparent 55%),var(--bg);padding:28px 16px}
+  .rahmen{max-width:620px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+  .kopf{display:flex;align-items:center;gap:16px}
+  .kopf h1{margin:0;font-size:28px}
+  .kopf p{margin:2px 0 0;color:var(--leise)}
+  .karte{background:linear-gradient(180deg,var(--karte2),var(--karte));border:1px solid var(--rand);border-radius:20px;padding:22px;box-shadow:0 14px 40px -20px #000}
+  h2{margin:0 0 12px;font-size:17px}
+  ol{margin:0;padding-left:22px;color:var(--leise)} ol li{margin:6px 0} ol b{color:var(--text)}
+  .knopf{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+  esp-web-install-button button[slot=activate]{height:56px;padding:0 34px;border:0;border-radius:16px;color:#fff;font:650 18px system-ui,sans-serif;cursor:pointer;
+       background:linear-gradient(90deg,var(--akzent),var(--akzent2));box-shadow:0 10px 26px -10px #4f9cff}
+  .chip{display:inline-block;font:600 12px ui-monospace,monospace;padding:4px 10px;border-radius:999px;background:#1b2a44;color:#9cc4ff;border:1px solid #2d4a7a}
+  .warn{border-color:#5a4318;background:linear-gradient(180deg,#2a2112,#1e1910)}
+  .leise{color:var(--leise);font-size:14px}
+  a{color:var(--akzent)}
+  .merkmale{display:grid;grid-template-columns:1fr 1fr;gap:8px;color:var(--leise);font-size:14px}
+  @media(max-width:520px){.merkmale{grid-template-columns:1fr}}
+</style></head><body>
+<div class="rahmen">
+  <div class="kopf"><svg viewBox="-66 -18 132 60" width="90" height="42" aria-hidden="true"><rect x="-40" y="-14" width="80" height="4" fill="#e6e6e6" stroke="#222" stroke-width=".6"/><rect x="-40" y="-10" width="80" height="12" fill="#ffd54f" stroke="#222" stroke-width=".6"/><rect x="-40" y="2" width="80" height="17" fill="#404040" stroke="#222" stroke-width=".6"/><circle cx="-33" cy="10" r="27" fill="#404040" stroke="#111" stroke-width=".8"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(0 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(20 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(40 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(60 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(80 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(100 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(120 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(140 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(160 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(180 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(200 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(220 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(240 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(260 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(280 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(300 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(320 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(340 -33 10)"/><circle cx="-33" cy="10" r="17" fill="#383838" stroke="#1e1e1e" stroke-width="1.2"/><circle cx="-33" cy="10" r="14" fill="none" stroke="#2a2a2a" stroke-width="1"/><line x1="-29.5" y1="12.0" x2="-20.9" y2="17.0" stroke="#222" stroke-width="1.6"/><line x1="-33.0" y1="14.0" x2="-33.0" y2="24.0" stroke="#222" stroke-width="1.6"/><line x1="-36.5" y1="12.0" x2="-45.1" y2="17.0" stroke="#222" stroke-width="1.6"/><line x1="-36.5" y1="8.0" x2="-45.1" y2="3.0" stroke="#222" stroke-width="1.6"/><line x1="-33.0" y1="6.0" x2="-33.0" y2="-4.0" stroke="#222" stroke-width="1.6"/><line x1="-29.5" y1="8.0" x2="-20.9" y2="3.0" stroke="#222" stroke-width="1.6"/><circle cx="-33" cy="10" r="4.5" fill="#c8cde0" stroke="#222" stroke-width=".8"/><circle cx="33" cy="10" r="27" fill="#404040" stroke="#111" stroke-width=".8"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(0 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(20 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(40 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(60 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(80 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(100 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(120 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(140 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(160 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(180 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(200 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(220 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(240 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(260 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(280 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(300 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(320 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(340 33 10)"/><circle cx="33" cy="10" r="17" fill="#383838" stroke="#1e1e1e" stroke-width="1.2"/><circle cx="33" cy="10" r="14" fill="none" stroke="#2a2a2a" stroke-width="1"/><line x1="36.5" y1="12.0" x2="45.1" y2="17.0" stroke="#222" stroke-width="1.6"/><line x1="33.0" y1="14.0" x2="33.0" y2="24.0" stroke="#222" stroke-width="1.6"/><line x1="29.5" y1="12.0" x2="20.9" y2="17.0" stroke="#222" stroke-width="1.6"/><line x1="29.5" y1="8.0" x2="20.9" y2="3.0" stroke="#222" stroke-width="1.6"/><line x1="33.0" y1="6.0" x2="33.0" y2="-4.0" stroke="#222" stroke-width="1.6"/><line x1="36.5" y1="8.0" x2="45.1" y2="3.0" stroke="#222" stroke-width="1.6"/><circle cx="33" cy="10" r="4.5" fill="#c8cde0" stroke="#222" stroke-width=".8"/></svg><div><h1>Roboauto</h1><p>Online-Flasher &middot; Firmware direkt aus dem Browser aufspielen</p></div></div>
+
+  <div class="karte knopf">
+    <span class="chip">Version __VERSION__</span>
+    <esp-web-install-button manifest="manifest.json">
+      <button slot="activate">&#9889; Roboauto installieren</button>
+      <span slot="unsupported"><b>Dieser Browser kann das leider nicht.</b><br><span class="leise">Bitte Chrome oder Edge am PC/Mac verwenden (nicht am Handy, nicht Firefox/Safari).</span></span>
+      <span slot="not-allowed"><b>Nur &uuml;ber https m&ouml;glich.</b></span>
+    </esp-web-install-button>
+    <span class="leise">Funktioniert mit Chrome und Edge am Computer.</span>
+  </div>
+
+  <div class="karte">
+    <h2>So geht&rsquo;s</h2>
+    <ol>
+      <li>Auto per <b>USB-C-Kabel</b> mit dem Computer verbinden.</li>
+      <li>Auf <b>&bdquo;Roboauto installieren&ldquo;</b> klicken und den Anschluss ausw&auml;hlen (z.&nbsp;B. &bdquo;USB JTAG/serial debug unit&ldquo;).</li>
+      <li>Wird kein Anschluss gefunden: am Auto <b>BOOT</b> gedr&uuml;ckt halten, kurz <b>RESET</b> dr&uuml;cken, BOOT loslassen &ndash; dann nochmal versuchen.</li>
+      <li>Nach dem Aufspielen einmal <b>RESET</b> dr&uuml;cken.</li>
+      <li>Mit dem Handy ins WLAN <b>&bdquo;Roboauto-Setup&ldquo;</b> gehen und dein WLAN eintragen. Danach: <b>http://roboauto.local</b></li>
+    </ol>
+  </div>
+
+  <div class="karte warn">
+    <h2>&#9888;&#65039; Gut zu wissen</h2>
+    <p class="leise" style="margin:0">Bei einer Neuinstallation wird der Speicher gel&ouml;scht &ndash; gespeicherte WLANs und Einstellungen sind dann weg. F&uuml;r normale Updates einfach <b>WLAN-Update</b> aus VS&nbsp;Code nehmen, da bleibt alles erhalten.</p>
+  </div>
+
+  <div class="karte">
+    <h2>Was das Auto kann</h2>
+    <div class="merkmale">
+      <span>&#127918; Steuerung per Dabble-App (Bluetooth)</span><span>&#127760; Steuerung im Browser per WLAN</span>
+      <span>&#129517; Gyro-Geradeauslauf &amp; 180&deg;-Wende</span><span>&#128680; Polizei- und Team-Modi</span>
+      <span>&#10024; Figuren &amp; Fahrweg-Aufnahme</span><span>&#127925; Jukebox mit Lichtshow</span>
+      <span>&#128165; Crash- und Umkipp-Erkennung</span><span>&#128246; Updates &uuml;ber WLAN</span>
+    </div>
+  </div>
+  <p class="leise" style="text-align:center">ESP32-S3 Super Mini &middot; gebaut mit PlatformIO &middot; Online-Flasher: <a href="https://esphome.github.io/esp-web-tools/">ESP Web Tools</a></p>
+</div>
+</body></html>

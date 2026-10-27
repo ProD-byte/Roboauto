@@ -1,0 +1,31 @@
+# ============================================================
+#  Roboauto - was NICHT zu GitHub hochgeladen wird
+# ============================================================
+
+# --- GEHEIM: Passwoerter / WLAN-Daten (egal in welchem Ordner) ---
+**/geheim.ini
+**/wlan_zugang.h
+
+# --- Build-Dateien und Zwischenkram ---
+**/.pio/
+**/archiv/
+**/_zu_loeschen/
+*.skb
+*.bak
+Thumbs.db
+desktop.ini
+.DS_Store
+~$*
+
+# --- Fremde 3D-Modelle (aus dem Internet geladen, nicht von mir) ---
+ActiveBuzzer_TMB12A05.skp
+hex_socket_cylindrical_head_*
+M2.5_threaded_insert*
+N20 Wheel*
+Quarter Inch 20 D-Ring Mount/
+Seeed Studio XIAO ESP32-C6.skp
+WCMCU-2812B-8-32mm.*
+WS2812B*
+WS2812b Single.skp
+Renderings/
+Untitled Project (2).jpg
