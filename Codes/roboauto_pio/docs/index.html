@@ -89,4 +89,8 @@
   </div>
   <p class="leise" style="text-align:center">ESP32-S3 Super Mini &middot; gebaut mit PlatformIO &middot; Online-Flasher: <a href="https://esphome.github.io/esp-web-tools/">ESP Web Tools</a></p>
 </div>
+<script>
+/* Flasher-Einstellungen immer frisch laden (nie aus dem Browser-Zwischenspeicher) */
+document.querySelectorAll('esp-web-install-button').forEach(function(b){ var m=b.getAttribute('manifest').split('?')[0]; b.setAttribute('manifest', m+'?t='+Date.now()); });
+</script>
 </body></html>

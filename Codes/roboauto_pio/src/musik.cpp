@@ -143,9 +143,28 @@ static const char LIED_TRAUM[] =
   "T165 " TRAUM_A TRAUM_B TRAUM_GROOVE
   "[d6f6a6d7]:4 p:8 d5:8 [d6f6a6d7]:2";
 
+
+// Weisse Taube (ProDMusicKI) - Chiptune-Fassung, aus der MP3 herausgehoert (172 BPM, cis-Moll / E-Dur)
+#define TAUBE_INTRO "g#4:8 [g#5b5d#6]:4. g#4:8 [g#5b5d#6]:4. e4:8 [e5g#5b5]:4. e4:8 [e5g#5b5]:4. " \
+                    "b4:8 [f#5b5d#6]:4. b4:8 [f#5b5d#6]:4. c#5:8 [e5g#5c#6]:4. c#5:8 [e5g#5c#6]:4. "
+#define TAUBE_HOOK  "c#6:4 d#6:2. d#6:8 c#6:8 d#6:4. c#6:8 g#5:4 d#6:8 e6:8 d#6:8 b5:8 c#6:4 d#6:4 p:8 b5:8 g#5:2. " \
+                    "e5:4 g#5:8 b5:8 g#5:2 g#5:4 e6:8 d#6:8 b5:2 e6:4 p:8 f#6:8 d#6:2 " \
+                    "d#6:8 f#5:8 d#6:8 f#5:8 e6:8 b5:8 f#5:8 d#6:8 b5:8 f#6:8 d#6:8 b5:8 p:8 d#6:8 e6:4 "
+#define TAUBE_REFRAIN "g#5:8 d#6:4 c#6:8 g#5:2 c#6:2 c#7:4 c#6:4 p:8 c#6:4. b5:8 e6:4. e6:4. d#6:4. d#6:4 " \
+                      "d#6:4 p:4 e6:4 p:4 p:2 a5:4 a5:4 p:8 c#6:8 c#6:8 b5:4 b5:8 b5:8 e6:8 e6:2 d#6:2 " \
+                      "d#6:4. b5:8 d#6:8 b5:4. b5:8 f#5:8 b5:4 c#6:2 d#6:8 e6:8 d#6:8 c#6:2 p:8 "
+#define TAUBE_GROOVE "c#5:16 c#6:16 [c#6e6g#6]:8 c#5:16 c#6:16 [c#6e6g#6]:8 c#5:16 g#5:16 c#6:16 e6:16 g#6:16 e6:16 c#6:16 g#5:16 " \
+                     "a4:16 a5:16 [a5c#6e6]:8 a4:16 a5:16 [a5c#6e6]:8 a4:16 e5:16 a5:16 c#6:16 e6:16 c#6:16 a5:16 e5:16 " \
+                     "e5:16 e6:16 [e6g#6b6]:8 e5:16 e6:16 [e6g#6b6]:8 e5:16 b5:16 e6:16 g#6:16 b6:16 g#6:16 e6:16 b5:16 " \
+                     "b4:16 b5:16 [b5d#6f#6]:8 b4:16 b5:16 [b5d#6f#6]:8 b4:16 f#5:16 b5:16 d#6:16 f#6:16 d#6:16 b5:16 f#5:16 "
+static const char LIED_TAUBE[] =
+  "T172 " TAUBE_INTRO TAUBE_HOOK TAUBE_INTRO TAUBE_REFRAIN TAUBE_GROOVE
+  "T176 " TAUBE_HOOK TAUBE_REFRAIN TAUBE_GROOVE
+  "c#6:4 d#6:2. [g#5b5d#6g#6]:1";
+
 static const char* const LIEDER[] = { LIED_TETRIS, LIED_BERGKOENIG, LIED_ELISE, LIED_FREUDE,
                                       LIED_ENTERTAINER, LIED_THEMA, LIED_BOSS, LIED_GESCHAFFT,
-                                      LIED_NEON, LIED_GALAXIE, LIED_TURBO, LIED_TELL, LIED_HUMMEL, LIED_TRAUM };
+                                      LIED_NEON, LIED_GALAXIE, LIED_TURBO, LIED_TELL, LIED_HUMMEL, LIED_TRAUM, LIED_TAUBE };
 static const int ANZAHL = sizeof(LIEDER) / sizeof(LIEDER[0]);
 
 // ------------------------------------------------------------

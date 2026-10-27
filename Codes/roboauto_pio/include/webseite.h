@@ -465,7 +465,7 @@ const char WEBSEITE[] PROGMEM = R"==(<!doctype html>
 
 <footer class="fuss">
   <div><span>Tastatur:</span> <kbd>L</kbd> <span>Licht</span> &middot; <kbd>F</kbd> <span>Fernlicht</span> &middot; <kbd>B</kbd> <span>Warnblinker</span> &middot; <kbd>U</kbd> <span>Wende</span> &middot; <kbd>Q</kbd>/<kbd>E</kbd> <span>Blinker</span> &middot; <kbd>H</kbd> <span>Hupe</span> &middot; <kbd>T</kbd> <span>Tank</span> &middot; <kbd>P</kbd> <span>Modus</span></div>
-  <div id="version"><span>Software: Schritt</span> 32<span id="version-build"></span></div>
+  <div id="version"><span>Software: Schritt</span> 33<span id="version-build"></span></div>
 </footer>
 </main>
 
@@ -785,7 +785,7 @@ function zeigeUpdate(s){
 }
 
 // ---------- Jukebox ----------
-const LIEDER = [["\ud83e\uddf1", "Tetris-Melodie", "Korobeiniki \u00b7 russisches Volkslied"], ["\u26f0\ufe0f", "In der Halle des Bergk\u00f6nigs", "Edvard Grieg \u00b7 wird immer schneller"], ["\ud83c\udfb9", "F\u00fcr Elise", "Ludwig van Beethoven"], ["\ud83c\udf89", "Ode an die Freude", "Ludwig van Beethoven"], ["\ud83c\udfa9", "The Entertainer", "Scott Joplin \u00b7 Ragtime"], ["\ud83e\udd16", "Roboauto-Theme", "Eigene Komposition"], ["\ud83d\udc7e", "Boss-Level", "Eigene Komposition"], ["\ud83c\udfc6", "Level geschafft", "Eigene Komposition"], ["\ud83c\udf06", "Neon-Jagd", "Eigene Komposition \u00b7 C64-Stil"], ["\ud83c\udf0c", "Pixel-Galaxie", "Eigene Komposition \u00b7 episch"], ["\ud83c\udfce\ufe0f", "Turbo-Rennen", "Eigene Komposition \u00b7 mit Startampel"], ["\ud83c\udff9", "Wilhelm Tell", "Gioachino Rossini \u00b7 Galopp"], ["\ud83d\udc1d", "Hummelflug", "Nikolai Rimski-Korsakow \u00b7 rasend schnell"], ["\ud83c\udf08", "Traumwelt", "Eigene Komposition \u00b7 C64-Titelmelodie"]];
+const LIEDER = [["\ud83e\uddf1", "Tetris-Melodie", "Korobeiniki \u00b7 russisches Volkslied"], ["\u26f0\ufe0f", "In der Halle des Bergk\u00f6nigs", "Edvard Grieg \u00b7 wird immer schneller"], ["\ud83c\udfb9", "F\u00fcr Elise", "Ludwig van Beethoven"], ["\ud83c\udf89", "Ode an die Freude", "Ludwig van Beethoven"], ["\ud83c\udfa9", "The Entertainer", "Scott Joplin \u00b7 Ragtime"], ["\ud83e\udd16", "Roboauto-Theme", "Eigene Komposition"], ["\ud83d\udc7e", "Boss-Level", "Eigene Komposition"], ["\ud83c\udfc6", "Level geschafft", "Eigene Komposition"], ["\ud83c\udf06", "Neon-Jagd", "Eigene Komposition \u00b7 C64-Stil"], ["\ud83c\udf0c", "Pixel-Galaxie", "Eigene Komposition \u00b7 episch"], ["\ud83c\udfce\ufe0f", "Turbo-Rennen", "Eigene Komposition \u00b7 mit Startampel"], ["\ud83c\udff9", "Wilhelm Tell", "Gioachino Rossini \u00b7 Galopp"], ["\ud83d\udc1d", "Hummelflug", "Nikolai Rimski-Korsakow \u00b7 rasend schnell"], ["\ud83c\udf08", "Traumwelt", "Eigene Komposition \u00b7 C64-Titelmelodie"], ["\ud83d\udd4a\ufe0f", "Wei\u00dfe Taube", "ProDMusicKI \u00b7 Chiptune-Fassung"]];
 let liedAktiv = -1, liedTon = 0;
 function zeigeLieder(){
   const box = document.getElementById('lieder'); box.innerHTML = '';
@@ -846,6 +846,7 @@ Object.assign(EN, {"\ud83d\udd04 Updates": "\ud83d\udd04 Updates", "Installiert"
 Object.assign(EN, {"Neon-Jagd": "Neon Chase", "Eigene Komposition \u00b7 C64-Stil": "Original composition \u00b7 C64 style", "Pixel-Galaxie": "Pixel Galaxy", "Eigene Komposition \u00b7 episch": "Original composition \u00b7 epic", "Turbo-Rennen": "Turbo Race", "Eigene Komposition \u00b7 mit Startampel": "Original composition \u00b7 with start lights", "Wilhelm Tell": "William Tell", "Gioachino Rossini \u00b7 Galopp": "Gioachino Rossini \u00b7 Gallop", "Hummelflug": "Flight of the Bumblebee", "Nikolai Rimski-Korsakow \u00b7 rasend schnell": "Nikolai Rimsky-Korsakov \u00b7 blazing fast"});
 Object.assign(EN, {"Traumwelt": "Dreamworld", "Eigene Komposition \u00b7 C64-Titelmelodie": "Original composition \u00b7 C64 title theme"});
 Object.assign(EN, {"\ud83c\udf89 Disco-Lichter zur Musik": "\ud83c\udf89 Disco lights with music", "Spielt \u00fcber den Buzzer im Auto, LED-Ring und Lichter machen die Disco dazu. Nochmal auf das Lied klicken = Stopp.": "Plays through the buzzer in the car, LED ring and lights throw the disco party. Click the song again = stop."});
+Object.assign(EN, {"Wei\u00dfe Taube": "White Dove", "ProDMusicKI \u00b7 Chiptune-Fassung": "ProDMusicKI \u00b7 chiptune version"});
 let sprache = 'de';
 try { sprache = localStorage.getItem('sprache') || (/^de/i.test(navigator.language || 'de') ? 'de' : 'en'); } catch(e){}
 // t('Text', a, b) -> Text in der gewaehlten Sprache, {0} {1} werden ersetzt
