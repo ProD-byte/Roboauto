@@ -97,7 +97,7 @@ void setup() {
   aufnahmeStarten();                      // gespeicherten Fahrweg laden
 
   Serial.println();
-  Serial.println("=== Roboauto - Schritt 35: Jukebox zuklappbar ===");
+  Serial.println("=== Roboauto - Schritt 36: Jukebox ausgemistet (Taube + 6 CC0) ===");
   Serial.printf("Grund fuer Neustart: %d (1=Einschalten, 4=Absturz, 9=Spannungseinbruch)\n",
                 (int)esp_reset_reason());
 }
