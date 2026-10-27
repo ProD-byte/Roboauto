@@ -266,9 +266,97 @@ static const char LIED_BOSS5[] =
   "a5:16 c#6:16 a5:16 c#6:16 d6:16 f#6:16 b5:16 f#6:16 b5:16 e6:16 f#6:16 b5:16 g6:16 b5:16 e6:16 g6:16 b5:16 "
   "f#6:16 b5:16 e6:16 f#6:16 d6:16 g5:16 d6:16 g5:16 c#6:16 d6:16 g5:16 e6:8 e6:16 e6:16 e6:16 [a6e7]:4";
 
+// ---------- Melancholisch & traumhaft (OpenGameArt.org, frei) ----------
+// Quellen: opengameart.org/content/4-music-box-tracks, /15-melodic-rpg-chiptunes, /jrpg-collection, /lullaby-1, /destiny-formation
+// Traurige Spieluhr - "Music Box: Sad Tune" (Aureolus Omicron, CC0)
+static const char LIED_SPIELUHR_TRAURIG[] =
+  "T80 [c6d#6]:4. [c6g6]:4. f6:8 d#6:8 [b5g#6]:4. [g#6b6]:4. a#6:8 g#6:8 [a#5f6]:4. [a#5f6g#6]:4. f#6:8 f6:8 "
+  "[a5f#6]:4. [f#6a6]:4. [a5c#6]:4 [g#5d#6]:4. [f#5g#5f6]:4. [g#5c#6f#6]:4 g#6:4. [f#5g#5c6]:4. [g#5c6d#6]:4 "
+  "[g5f6]:4. [f5g5c6]:4. [g5c6f6]:4 [g5f6]:4. [f5g5b5]:4. [g5b5f6]:4 [c6d#6]:4. [c6g6]:4. f6:8 d#6:8 [b5g#6]:4. "
+  "[g#6b6]:4. a#6:8 g#6:8 [a#5f6]:4. [a#5f6g#6]:4. f#6:8 f6:8 [a5f#6]:4. [f#6a6]:4. [a5c#6]:4 [g#5d#6]:4. "
+  "[f#5g#5f6]:4. [g#5c#6f#6]:4 g#6:4. [f#5g#5c6]:4. [g#5c6d#6]:4 [g5f6]:4. [f5g5c6]:4. [g5c6f6]:4 [g5f6]:4. "
+  "[f5g5b5]:4. [g5b5f6]:4 [c6d#6]:2 p:8 d#6:8 d6:8 d#6:8 [g#5f6]:4 c6:8 a#5:8 [f5g#5]:4 [g#5c6]:4 [a#5d6]:2 p:8 "
+  "d6:8 c6:8 d6:8 [g5d#6]:4 a#5:8 g#5:8 [d#5g5]:4 [g5a#5]:4 [g#5c6]:2 p:8 c6:8 a#5:8 c6:8 d6:8 g#5:8 g5:8 g#5:8 "
+  "d6:8 g#5:8 g5:8 g#5:8 c6:8 a5:8 g#5:8 a5:8 c6:8 a5:8 g#5:8 a5:8 c6:8 g5:8 f#5:8 g5:8 c6:8 g5:8 f#5:8 g5:8 b4:8 "
+  "d5:8 g5:8 b5:8 d6:8 b5:8 d5:8 b4:8 g5:2.";
+// Bittersuesse Geschichte - "Bittersweet Story" (Aureolus Omicron, CC0)
+static const char LIED_BITTERSUESS[] =
+  "T72 [d5f#5]:2 p:16 a4:16 f#5:16 g5:16 a5:8 b5:8 [f#5a5c#6]:2 p:16 c#5:16 c#5:16 d5:16 e5:8 f#5:8 [g4b4d5]:4 "
+  "[g5b5d6]:2 g5:8 a5:8 [d5e5g5a#5]:2 p:16 d5:16 e5:16 f#5:16 g5:8 a#5:8 [e5a#5c6]:2 p:8. c5:16 [c5e5a#5]:4 "
+  "[d5f5a5]:4 [a4d5f5g5]:4 [a4d5f5]:4 [d5f5a5]:4 [b4d5g5]:4 [g4b4d5e5]:4 [g4b4d5f5]:4. g5:8 [g4a4c#5e5]:2 p:8. "
+  "g4:16 [g4a4c#5f5]:4 [d5f#5]:2 p:16 a4:16 f#5:16 g5:16 a5:8 b5:8 [f#5a5c#6]:2 p:16 c#5:16 c#5:16 d5:16 e5:8 "
+  "f#5:8 [g4b4d5]:4 [g5b5d6]:2 g5:8 a5:8 [d5e5g5a#5]:2 p:16 d5:16 e5:16 f#5:16 g5:8 a#5:8 [e5a#5c6]:2 p:8. c5:16 "
+  "[c5e5a#5]:4 [d5f5a5]:4 [a4d5f5g5]:4 [a4d5f5]:4 [d5f5a5]:4 g5:8 f5:8 [g4b4d5e5]:4 [g4b4d5f5]:4. g5:8 "
+  "[g4a4c#5e5]:2 p:8. g4:16 f5:16 e5:16 d5:16 e5:16 [a4d5f5]:2 p:16 d5:16 f5:16 g5:16 a5:8 c6:8 [f#5a5c6d6]:4 "
+  "[c5f#5a5]:2 [a4c5f#5g#5]:4 [a#4g5]:2 p:16 d5:16 g5:16 a5:16 a#5:8 c6:8 [f5g5b5d6]:2 p:8. b4:16 [f4g4b4d5]:4 "
+  "[g4c5d#5]:2 p:16 c5:16 d#5:16 f5:16 g5:8 a#5:8 [e5g5a#5c6]:4 [a#4e5g5]:2 [g4a#4e5f#5]:4 [g#4f5]:2 p:16 c5:16 "
+  "f5:16 g5:16 g#5:8 a#5:8 [d#5f5a5c6]:2 p:8. a4:16 [a4d#5f5]:4 [c#5f5a#5]:2 [a#4c#5f5g#5]:2 [c5d#5g5]:2 "
+  "[g4c5d#5f#5]:2 [a4d5f5]:2 [d5f5a5]:2 [a#4d#5g5]:2 [d#5g5a#5]:2 [d5f5a5]:2 [a4d5f5g5]:2 [a4d5f5]:2 [a4d5f5g5]:2 "
+  "[c#5e5a5]:2 p:8. e4:16 [a4c#5e5]:4 [a4c#5e5]:2.";
+// Prinzessin - "JRPG Princess" (Yubatake, CC-BY 4.0)
+static const char LIED_PRINZESSIN[] =
+  "T110 p:2. f#5:8 g#5:8 [c#5f#5a#5]:4 [f#5c#6]:4 [c#5f5g#5]:4 [c#5f5a#5]:4 [a#4d#5f#5]:2 [a#4c#5]:4 g#5:8 a#5:8 "
+  "[d#5f#5b5]:4 [f#5d#6]:4 [b4d#5a#5]:4 [d#5b5]:4 [f5g#5]:2 [f4c#5]:4 a#5:8 b5:8 [f#5a#5c#6]:2 [c#5f5b5]:4 "
+  "[f5c#6]:4 [c#5e5b5]:4 [c#5e5a#5]:4 [e5g5a5]:4 [e5g5a#5]:4 [d#5g#5b5]:2 [d#5f#5a#5]:4 [d#5f#5b5]:4 [c#5f5g#5]:2 "
+  "[f4c#5]:4 f#5:8 g#5:8 [c#5f#5a#5]:4 [f#5c#6]:4 [c#5f5g#5]:4 [c#5f5a#5]:4 [a#4d#5f#5]:2 [a#4c#5]:4 g#5:8 a#5:8 "
+  "[d#5f#5b5]:4 [f#5d#6]:4 [b4d#5a#5]:4 [d#5b5]:4 [f5g#5]:2 [f4c#5]:4 a#5:8 b5:8 [f#5a#5c#6]:2 [c#5f5b5]:4 "
+  "[f5c#6]:4 [c#5e5b5]:4 [c#5e5a#5]:4 [e5g5a5]:4 [e5g5a#5]:4 [d#5g#5b5]:2 [f#5b5d#6]:4 [f#5b5]:4 [c#5f5g#5]:2 "
+  "[f4c#5]:4 f#5:8 f5:8 [a4d5f#5]:2 [b4e5g#5]:4 [b4e5]:4 [a4e5]:2 [g#4c#5]:4 f#5:8 f5:8 [a4d5f#5]:2 [b4e5g#5]:4 "
+  "[e5b5]:4 [c#5f#5a#5]:2 [c#5f#5]:4 g#5:8 a#5:8 [d5g5b5]:2 [g5b5d6]:4 [g5b5]:4 [f#5a5]:4 [a4f#5g5]:4 [d5a5]:4 "
+  "[d5a5]:4 [e5b5]:4 [b4e5a5]:4 [e5g#5b5]:4 [e5g#5d6]:4 [f#5c#6]:4 [a#4c#5]:4 [f#5a#5]:4 b5:8 c#6:8 [f#5b5d#6]:4 "
+  "[b5f#6]:4 [f#5a#5c#6]:4 [f#5a#5d#6]:4 [d#5g#5b5]:2 [f#4d#5]:4 c#6:8 d#6:8 [g#5b5e6]:4 [b5g#6]:4 [e5g#5d#6]:4 "
+  "[g#5e6]:4 [a#5c#6]:2 [a#4f#5]:4 d#6:8 e6:8 [b5d#6f#6]:2 [f#5a#5e6]:4 [a#5f#6]:4 [f#5a5e6]:4 [f#5a5d#6]:4 "
+  "[a5c6d6]:4 [a5c6d#6]:4 [g#5c#6e6]:2 [g#5b5d#6]:4 [g#5b5e6]:4 [f#5a#5c#6]:2 [a#4f#5]:4 b5:8 c#6:8 [f#5b5d#6]:4 "
+  "[b5f#6]:4 [f#5a#5c#6]:4 [f#5a#5d#6]:4 [d#5g#5b5]:2 [f#4d#5]:4 c#6:8 d#6:8 [g#5b5e6]:4 [b5g#6]:4 [e5g#5d#6]:4 "
+  "[g#5e6]:4 [a#5c#6]:2 [a#4f#5]:4 d#6:8 e6:8 [b5d#6f#6]:2 [a#5d#6g6]:4 [d#6a#6]:4 [e6g#6c#7]:4 [e6g#6b6]:4 "
+  "[b5e6a#6]:4 [b5e6g#6]:4 [g#5e6f#6]:4 [g#5e6]:4 [c#5e5g#5]:4 p:16 [c#5e5a#5]:4 p:16 [g#5b5c#6]:2 p:8 "
+  "[d#5f#5g#5b5]:1";
+// Wiegenlied - "Lullaby" (Yubatake, CC-BY 4.0)
+static const char LIED_WIEGENLIED[] =
+  "T38 p:2 p:8 a#5:8 c6:8 c5:8 a#5:16 g#5:16 g5:8 f4:8 f5:8 d#5:8 c5:8 g#4:8 d#5:8 p:8 d#5:16 f5:16 g5:8 g5:8 "
+  "g5:8 a#5:8 a#4:16 g#5:16 g5:16 f5:16 e5:8 f5:8 g5:8 g#5:8 c5:8 f5:8 d5:8 d#5:8 f5:8 a#5:8 f4:16 c6:16 a#5:16 "
+  "g#5:16 g#5:8 g5:8 d#5:8 f5:8 a#4:8 f#5:8 g5:8 g5:8 g5:8 a#5:8 a#4:16 g#5:16 g5:16 f5:16 e5:8 f5:8 g5:8 g#5:8 "
+  "c5:8 c6:8 a#5:8 d6:8 c6:8 a#5:8 f4:16 g#5:16 g5:16 f5:16 d#5:8 c5:8 g#4:8 d#5:8 a#4:8 d#5:16 f5:16 g5:8 g5:8 "
+  "g5:8 a#5:8 a#4:16 g#5:16 g5:16 f5:16 e5:8 f5:8 g5:8 g#5:8 c5:8 f5:8 d5:8 d#5:8 f5:8 a#5:8 f4:16 c6:16 a#5:16 "
+  "g#5:16 g#5:8 g5:8 d#5:8 f5:8 a#4:8 f#5:8 g5:8 g5:8 g5:8 a#5:8 a#4:16 g#5:16 g5:16 f5:16 e5:8 f5:8 g5:8 g#5:8 "
+  "c5:8 c6:8 a#5:8 d6:8 c6:8 a#5:8 f4:16 g#5:16 g5:16 f5:16 d#5:8 c5:8 g#4:8 d#5:8 a#4:8 d#5:8 c6:8 d#5:8 c6:8 "
+  "c6:8 d6:8 c6:8 c6:8 a#5:8 a5:8 a#5:8 a#4:8 d#5:8 b5:8 d#5:8 b5:8 b5:8 c#6:8 g#4:16 b5:16 a#5:8 a#4:8 g4:8 "
+  "d#5:8 a#4:8 d#5:8 c6:8 d#5:8 c6:8 c6:8 d6:8 c6:8 c6:8 a#5:8 a5:8 a#5:8 d5:8 a#5:8 a5:8 a#5:8 c6:8 d6:8 d#6:8 "
+  "e6:8 g6:8 f6:8 f5:16 e6:16 f6:8 a#5:8 d#6:16 f6:16 g6:8 g6:8 g6:8 a#6:8 a#5:16 g#6:16 g6:16 f6:16 e6:8 f6:8 "
+  "g6:8 g#6:8 c6:8 f6:8 d6:8 d#6:8 f6:8 a#6:8 f5:16 c7:16 a#6:16 g#6:16 g#6:8 g6:8 d#6:8 f6:8 a#5:8 f#6:8 g6:8 "
+  "g6:8 g6:8 a#6:8 a#5:16 g#6:16 g6:16 f6:16 e6:8 c#7:8 c7:8 g#6:8 c6:8 a6:8 a#6:8 d7:8 c7:8 a#6:8 f5:8 d7:8 "
+  "d#7:8 c6:8 g#5:8 d#5:8 g5:8 a#5:8 c6:8 c5:8 a#5:16 g#5:16 a#4:16 g5:8 f4:8 f5:8 g#4:16 d#5:8 p:16 c5:8 p:8 "
+  "g#4:8 p:8. d#5:16 g5:8 p:8 d#6:8";
+// Schicksal - "Destiny Formation" (Bobjt, CC0)
+static const char LIED_SCHICKSAL[] =
+  "T103 f#5:2. f#5:8 f#5:8 f5:2. d#5:8 f5:8 d#5:1 [a#4d#5]:2 [g#4f5]:2 [f#4d#5]:4 a#4:8 d#5:16 p:16 d#5:8 d#5:16 "
+  "p:16 a#4:8 g#4:8 [f4c#5]:4 g#4:8 c#5:8 f5:4 [f4c#5]:4 d#5:8 b4:8 f#4:8 d#5:8 f#5:8 d#5:8 b4:8 a#4:8 [f#4a#4]:4 "
+  "a#4:16 p:16 d#5:16 p:16 g#4:4 [f4g#4]:4 [f#4d#5]:4 a#4:8 d#5:16 p:16 b4:8 c#5:8 b4:8 a#4:8 [f4g#4c#5]:4 f#4:8 "
+  "f4:8 d#5:8 f4:8 f#4:8 g#4:8 [f#4b4d#5]:4 d#5:8 c#5:8 b4:8 d#5:16 p:16 a#4:8 g#4:8 [f#4a#4]:4 [f#4a#4]:4 g#4:8 "
+  "a#4:8 g#4:8 f#4:8 [d#5f#5]:4 a#4:8 d#5:16 p:16 d#5:8 d#5:16 p:16 f#5:8 f#5:8 f5:4 g#4:8 c#5:8 f5:4 d#5:8 f5:8 "
+  "d#5:8 b4:8 f#4:8 d#5:8 f#5:8 d#5:8 b4:8 a#4:8 [a#4d#5]:2 [g#4f5]:4 [f4g#4]:4 [d#5f#5]:4 a#5:8 d#5:16 p:16 b5:8 "
+  "c#6:8 b5:8 a#5:8 [c#5f5g#5]:4 f#5:8 f5:8 d#5:8 f5:8 f#5:8 g#5:8 [b4d#5f#5]:4 d#5:8 c#5:8 b4:8 d#5:16 p:16 "
+  "a#4:8 g#4:8 [f#4a#4d#5]:4 a#4:4 f5:8 a#4:8 g#4:8 f#4:8 [a#4f#5]:2. f#5:16 p:16 d#5:16 p:16 f#5:16 p:16 d#5:16 "
+  "p:16 f#4:16 p:16 d#5:16 p:16 f#5:16 p:16 d#5:16 p:16 f#4:16 p:16 f#4:16 p:16 f4:16 p:16 c#5:16 p:16 g#5:16 "
+  "p:16 c#5:16 p:16 f4:16 p:16 c#5:16 p:16 d#5:16 p:16 f4:16 p:16 d#5:16 p:16 b4:16 p:16 b5:16 p:16 b4:16 p:16 "
+  "d#5:16 p:16 b4:16 p:16 d#5:16 p:16 b4:16 p:16 a#4:16 p:16 d#5:16 p:16 a#4:16 p:16 d#5:16 p:16 g#5:16 p:8. "
+  "g#4:16 p:16 f4:16";
+// Spieluhr-Walzer - "Music Box: Spooky Waltz" (Aureolus Omicron, CC0)
+static const char LIED_WALZER[] =
+  "T108 e5:8 b4:8 e5:8 f#5:8 g5:8 e5:8 g5:8 f5:8 d#5:8 f5:8 g5:8 d#5:8 g5:8 f#5:8 g5:8 a5:8 b5:8 g5:8 f5:8 c#6:8 "
+  "[c#5a#5]:2 e5:8 b4:8 e5:8 f#5:8 g5:8 e5:8 g5:8 f5:8 d#5:8 f5:8 g5:8 d#5:8 g5:8 f#5:8 g5:8 a5:8 b5:8 g5:8 "
+  "[c#5a#5]:4 [a#4c#5]:2 e5:8 b4:8 e5:8 f#5:8 g5:8 e5:8 g5:8 f5:8 d#5:8 f5:8 g5:8 d#5:8 g5:8 f#5:8 g5:8 a5:8 b5:8 "
+  "g5:8 f5:8 c#6:8 [c#5a#5]:2 e5:8 b4:8 e5:8 f#5:8 g5:8 e5:8 g5:8 f5:8 d#5:8 f5:8 g5:8 d#5:8 g5:8 f#5:8 g5:8 a5:8 "
+  "b5:8 g5:8 [c#5a#5]:4 [a#4c#5]:2 a#5:8 a5:8 a#5:8 a5:8 a#5:8 a5:8 [d#5a#5]:4 [g4d#5]:2 d#6:8 d6:8 d#6:8 d6:8 "
+  "d#6:8 d6:8 [g#5d#6]:4 [f#5g#5]:2 g#5:8 g5:8 g#5:8 g5:8 g#5:8 g5:8 [c#5g#5]:4 [f4c#5]:4 [b5c#6]:4 c#6:8 c6:8 "
+  "c#6:8 c6:8 c#6:8 c6:8 [f#5c#6]:4 [e5f#5]:4 g5:16 g#5:16 a5:16 a#5:16 b5:4. d5:8 d5:8 b5:8 [b4a#5]:4. d5:8 d5:8 "
+  "a#5:8 [b4a5]:4. d5:8 d5:8 a5:8 [b4g#5]:4. d5:8 d5:8 g#5:8 g5:8 d5:8 b4:8 d5:8 d5:8 g5:8 f#5:8 b5:8 b5:8 f#5:8 "
+  "d5:8 f#5:8 f#5:8 a5:8 a5:8 f#5:8 d#5:8 a5:8 [b4a5]:4 [a4b4d#5]:4 [e5g5b5e6]:2";
+
 static const char* const LIEDER[] = { LIED_TAUBE, LIED_RPG_TITEL, LIED_LUFTSCHIFF, LIED_ENDKAMPF,
                                       LIED_STADT, LIED_HYMNE, LIED_LEAP,
-                                      LIED_JRPG_THEMA, LIED_JRPG_KAMPF, LIED_HEIMWEG, LIED_BOSS2, LIED_BOSS5 };
+                                      LIED_JRPG_THEMA, LIED_JRPG_KAMPF, LIED_HEIMWEG, LIED_BOSS2, LIED_BOSS5,
+                                      LIED_SPIELUHR_TRAURIG, LIED_BITTERSUESS, LIED_PRINZESSIN, LIED_WIEGENLIED, LIED_SCHICKSAL, LIED_WALZER };
 static const int ANZAHL = sizeof(LIEDER) / sizeof(LIEDER[0]);
 
 // ------------------------------------------------------------

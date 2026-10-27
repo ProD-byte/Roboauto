@@ -73,4 +73,7 @@ Zusätzlich enthalten (Lizenz **CC0**, aus MIDI umgerechnet):
 - „Theme Song [8-bit]“ und „Leap 8-bit“ von **nene** – [OpenGameArt](https://opengameart.org/content/theme-song-8-bit), [OpenGameArt](https://opengameart.org/content/leap-8bit)
 - „Long Away Home [8bit]“, „Boss Battle #2“ und „Boss Battle #5“ von **nene** (CC0) – [OpenGameArt](https://opengameart.org/content/long-away-home-8bit), [OpenGameArt](https://opengameart.org/content/boss-battle-2-8-bit), [OpenGameArt](https://opengameart.org/content/boss-battle-5-8-bit)
 - „JRPG Collection“ (Main Theme, Battle) von **Yubatake** – Lizenz [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/), [OpenGameArt](https://opengameart.org/content/jrpg-collection); für den Buzzer umgerechnet und gekürzt
+- „4 Music Box Tracks“ (Sad Tune, Spooky Waltz) und „Bittersweet Story“ von **Aureolus Omicron** (CC0) – [OpenGameArt](https://opengameart.org/content/4-music-box-tracks)
+- „Princess“ und „Lullaby“ von **Yubatake** – [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/), [OpenGameArt](https://opengameart.org/content/lullaby-1)
+- „Destiny Formation“ von **Bobjt** (CC0) – [OpenGameArt](https://opengameart.org/content/destiny-formation)
 - „Weiße Taube“ – © ProDMusicKI (eigener Song)
