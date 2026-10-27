@@ -45,12 +45,14 @@ Alle Pins stehen in [`include/config.h`](include/config.h).
 | GPIO8 | MPU6050 SDA | I²C, Adresse 0x68 |
 | GPIO9 | MPU6050 SCL | I²C |
 | GPIO3 | Spannungsteiler-Mitte | Akkuspannung (ADC) |
-| 5V | Akku (nach Schalter) | Versorgung ESP |
+| Akku-Pads (Unterseite) | Akku (nach Schalter) + Motortreiber VCC | Versorgung ESP und Motoren |
+| 5V | LED-Ring, Front- und Rücklicht (+) | Versorgung der LEDs |
 | 3V3 | MPU6050 VCC | 3,3 V vom ESP |
 
-Die Motoren einer Seite hängen parallel am selben Ausgang. LEDs und Motortreiber laufen direkt am Akku,
-alle Massen sind verbunden. **Vorläufig:** Die Werte des Spannungsteilers (R1/R2) und die genaue
-Versorgung sind noch nicht nachgemessen. Sind die Motoren falsch herum angeschlossen, hilft der
+Die Motoren einer Seite hängen parallel am selben Ausgang. Der Akku kommt über den Schalter an die
+Batterie-Pads auf der Unterseite des Super Mini, von dort geht auch der Motortreiber ab. Die LEDs hängen
+am 5V-Pin des ESP. Alle Massen sind verbunden. **Vorläufig:** Die Werte des Spannungsteilers (R1/R2)
+sind noch nicht nachgemessen. Sind die Motoren falsch herum angeschlossen, hilft der
 Motortest-Assistent in der Weboberfläche.
 
 ## ⚡ Firmware aufspielen
