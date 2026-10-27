@@ -85,7 +85,7 @@ jobs:
         if: github.ref == 'refs/heads/main'
         run: |
           mkdir -p seite
-          cp docs/* seite/
+          cp -r docs/* seite/
           cp ausgabe/roboauto-komplett.bin seite/
           cp ausgabe/roboauto-update.bin seite/
           cp ausgabe/teile/* seite/

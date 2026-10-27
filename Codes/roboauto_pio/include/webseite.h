@@ -129,6 +129,7 @@ const char WEBSEITE[] PROGMEM = R"==(<!doctype html>
   :root{--bg:#0d0f13;--karte:#161a20;--karte2:#1c2129;--rand:#262c35;--rand2:#323a45;--text:#eef1f5;--leise:#8b95a3;
         --akzent:#4f9cff;--akzent2:#7c6cff;--gut:#3ccf6e;--warn:#f0a030;--rot:#ef5350;--gelb:#e6b800;--r:18px}
   *{box-sizing:border-box}
+  [hidden]{display:none!important}
   html{scroll-behavior:smooth}
   body{margin:0;min-height:100vh;color:var(--text);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;user-select:none;-webkit-user-select:none;
        background:radial-gradient(1200px 600px at 10% -10%,#1a2440 0%,transparent 60%),radial-gradient(900px 500px at 110% 10%,#251c40 0%,transparent 55%),var(--bg);background-attachment:fixed}
