@@ -1,7 +1,7 @@
 {
   "name": "Roboauto (Update)",
   "version": "__VERSION__",
-  "new_install_prompt_erase": false,
+  "new_install_prompt_erase": true,
   "builds": [
     {
       "chipFamily": "ESP32-S3",
