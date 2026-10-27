@@ -401,7 +401,7 @@ const char WEBSEITE[] PROGMEM = R"==(<!doctype html>
       <canvas id="viz" width="600" height="220"></canvas>
       <div class="laufbalken"><div id="lied-balken"></div></div>
       <button id="lied-stopp" class="klein">&#9632; Stopp</button>
-      <span class="hinweis" style="margin:0">Spielt &uuml;ber den Buzzer im Auto, der LED-Ring macht die Lichtshow dazu. Nochmal auf das Lied klicken = Stopp.</span>
+      <span class="hinweis" style="margin:0">Spielt &uuml;ber den Buzzer im Auto, LED-Ring und Lichter machen die Disco dazu. Nochmal auf das Lied klicken = Stopp.</span>
     </div>
     <div class="lieder" id="lieder"></div>
   </div>
@@ -426,6 +426,7 @@ const char WEBSEITE[] PROGMEM = R"==(<!doctype html>
       <label class="regel"><span>Helligkeit LED-Ring <b id="v-ringHell"></b></span><input type="range" id="e-ringHell" min="5" max="255"></label>
       <label class="regel"><span>Helligkeit Lichter <b id="v-lichtHell"></b></span><input type="range" id="e-lichtHell" min="5" max="255"></label>
       <label class="regel"><span>&#128266; Lautst&auml;rke <b id="v-lautstaerke"></b></span><input type="range" id="e-lautstaerke" min="5" max="100" step="5"></label>
+      <label class="schalter">&#127881; Disco-Lichter zur Musik <input type="checkbox" id="e-disco"></label>
       <div class="regel"><span>T&ouml;ne</span>
         <div class="wahl"><button data-toene="2">Alle</button><button data-toene="1">Nur wichtige</button><button data-toene="0">Stumm</button></div>
       </div>
@@ -464,7 +465,7 @@ const char WEBSEITE[] PROGMEM = R"==(<!doctype html>
 
 <footer class="fuss">
   <div><span>Tastatur:</span> <kbd>L</kbd> <span>Licht</span> &middot; <kbd>F</kbd> <span>Fernlicht</span> &middot; <kbd>B</kbd> <span>Warnblinker</span> &middot; <kbd>U</kbd> <span>Wende</span> &middot; <kbd>Q</kbd>/<kbd>E</kbd> <span>Blinker</span> &middot; <kbd>H</kbd> <span>Hupe</span> &middot; <kbd>T</kbd> <span>Tank</span> &middot; <kbd>P</kbd> <span>Modus</span></div>
-  <div id="version"><span>Software: Schritt</span> 31<span id="version-build"></span></div>
+  <div id="version"><span>Software: Schritt</span> 32<span id="version-build"></span></div>
 </footer>
 </main>
 
@@ -663,7 +664,7 @@ function zeigeEinst(e){
   }
   document.getElementById('e-geradeaus').checked = !!e.geradeaus;
   document.getElementById('e-crash').checked = !!e.crash;
-  for (const k of ['motorL', 'motorR', 'motorTausch', 'autoUpdate']) document.getElementById('e-' + k).checked = !!e[k];
+  for (const k of ['motorL', 'motorR', 'motorTausch', 'autoUpdate', 'disco']) document.getElementById('e-' + k).checked = !!e[k];
   document.querySelectorAll('[data-toene]').forEach(b => b.classList.toggle('an', +b.dataset.toene === e.toene));
 }
 let speicherTimer = null;
@@ -763,6 +764,7 @@ document.getElementById('b-mtest').addEventListener('click', mtStart);
 // ---------- Auto-Update ----------
 let updZustand = 0;
 document.getElementById('e-autoUpdate').addEventListener('change', e => speichere({autoUpdate: e.target.checked ? 1 : 0}));
+document.getElementById('e-disco').addEventListener('change', e => speichere({disco: e.target.checked ? 1 : 0}));
 document.getElementById('upd-suchen').addEventListener('click', () => { fetch('/update?a=suchen').catch(() => {}); document.getElementById('upd-status').textContent = t('sucht\u2026'); });
 document.getElementById('upd-install').addEventListener('click', () => {
   if (!confirm(t('Update jetzt installieren? Das Auto l\u00e4dt ca. 1 Minute und startet dann neu.'))) return;
@@ -843,6 +845,7 @@ Object.assign(EN, {'\ud83d\udd0a Lautst\u00e4rke': '\ud83d\udd0a Volume'});
 Object.assign(EN, {"\ud83d\udd04 Updates": "\ud83d\udd04 Updates", "Installiert": "Installed", "Auf GitHub": "On GitHub", "Status": "Status", "Automatisch aktualisieren": "Update automatically", "\ud83d\udd0d Nach Updates suchen": "\ud83d\udd0d Check for updates", "\u2b07\ufe0f Jetzt installieren": "\u2b07\ufe0f Install now", "Update": "Update", "Neue Versionen kommen automatisch von GitHub. Installiert wird nur, wenn das Auto 2 Minuten unbenutzt steht und der Akku reicht. Startet eine neue Version nicht sauber, schaltet das Auto von selbst auf die alte zur\u00fcck.": "New versions come automatically from GitHub. They are only installed when the car has been idle for 2 minutes and the battery is good. If a new version does not start properly, the car automatically switches back to the old one.", "sucht\u2026": "checking\u2026", "l\u00e4dt\u2026": "downloading\u2026", "\u2713 aktuell": "\u2713 up to date", "nicht erreichbar": "not reachable", "Update verf\u00fcgbar!": "Update available!", "selbst gebaut": "self-built", "Update jetzt installieren? Das Auto l\u00e4dt ca. 1 Minute und startet dann neu.": "Install the update now? The car downloads for about 1 minute and then restarts.", "Das Auto l\u00e4dt das Update und startet neu \u2013 die Seite verbindet sich danach von selbst wieder.": "The car is downloading the update and will restart \u2013 the page reconnects by itself afterwards."});
 Object.assign(EN, {"Neon-Jagd": "Neon Chase", "Eigene Komposition \u00b7 C64-Stil": "Original composition \u00b7 C64 style", "Pixel-Galaxie": "Pixel Galaxy", "Eigene Komposition \u00b7 episch": "Original composition \u00b7 epic", "Turbo-Rennen": "Turbo Race", "Eigene Komposition \u00b7 mit Startampel": "Original composition \u00b7 with start lights", "Wilhelm Tell": "William Tell", "Gioachino Rossini \u00b7 Galopp": "Gioachino Rossini \u00b7 Gallop", "Hummelflug": "Flight of the Bumblebee", "Nikolai Rimski-Korsakow \u00b7 rasend schnell": "Nikolai Rimsky-Korsakov \u00b7 blazing fast"});
 Object.assign(EN, {"Traumwelt": "Dreamworld", "Eigene Komposition \u00b7 C64-Titelmelodie": "Original composition \u00b7 C64 title theme"});
+Object.assign(EN, {"\ud83c\udf89 Disco-Lichter zur Musik": "\ud83c\udf89 Disco lights with music", "Spielt \u00fcber den Buzzer im Auto, LED-Ring und Lichter machen die Disco dazu. Nochmal auf das Lied klicken = Stopp.": "Plays through the buzzer in the car, LED ring and lights throw the disco party. Click the song again = stop."});
 let sprache = 'de';
 try { sprache = localStorage.getItem('sprache') || (/^de/i.test(navigator.language || 'de') ? 'de' : 'en'); } catch(e){}
 // t('Text', a, b) -> Text in der gewaehlten Sprache, {0} {1} werden ersetzt

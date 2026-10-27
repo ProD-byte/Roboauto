@@ -11,5 +11,6 @@ void  musikStopp();
 int   musikNummer();            // -1 = nichts laeuft
 int   musikFortschritt();       // 0..100 %
 int   musikTon();               // aktuelle Frequenz in Hz (0 = Pause)
-int   musikNotenNummer();       // zaehlt jede neue Note hoch (fuer die Lichtshow)
+int   musikNotenNummer();
+float musikViertel();           // Position im Lied in Viertelnoten (fuer Disco-Lichter im Takt)       // zaehlt jede neue Note hoch (fuer die Lichtshow)
 void  musikUpdate();            // in jedem loop-Durchlauf aufrufen

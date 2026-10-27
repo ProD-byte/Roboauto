@@ -29,6 +29,9 @@ bool lichtIstWarnblinker();
 // Polizei-Blitzer vorne (abwechselnd links/rechts), solange true
 void lichtBlitzer(bool an);
 
+// Disco-Lichter zur Musik: an = Musik laeuft, hz = aktueller Ton, note = Notenzaehler, viertel = Taktposition
+void lichtDisco(bool an, int hz, int note, float viertel);
+
 void lichtUpdate(bool verbunden, const LichtTasten& tasten, int links, int rechts, bool eco);
 
 // Aktuelle Farbe einer Lampe (0 = vorne links, 1 = vorne rechts, 2 = hinten links, 3 = hinten rechts)

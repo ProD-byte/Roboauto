@@ -157,6 +157,7 @@ static unsigned long noteStart = 0, noteDauer = 0, klangDauer = 0;
 static int aktTon = 0;
 static int notenZaehler = 0;
 static int gesamtLaenge = 1;
+static float viertelBisher = 0, noteViertel = 0;   // Taktposition fuer die Disco-Lichter
 
 static float frequenz(char name, int vorz, int oktave) {
   static const int HALBTON[7] = {9, 11, 0, 2, 4, 5, 7};   // a b c d e f g
@@ -193,7 +194,10 @@ static bool naechsteNote() {
     int teiler = 4;
     if (*pos == ':') { pos++; teiler = atoi(pos); while (isdigit((unsigned char)*pos)) pos++; }
     float ms = 60000.0f / tempo * 4.0f / max(1, teiler);
-    if (*pos == '.') { ms *= 1.5f; pos++; }
+    float viertel = 4.0f / max(1, teiler);
+    if (*pos == '.') { ms *= 1.5f; viertel *= 1.5f; pos++; }
+    viertelBisher += noteViertel;
+    noteViertel = viertel;
     noteStart = millis();
     noteDauer = (unsigned long)ms;
     // Chiptune-Artikulation: kurze Noten leicht abgesetzt, lange fast gebunden
@@ -207,6 +211,11 @@ int musikAnzahl() { return ANZAHL; }
 int musikNummer() { return nummer; }
 int musikTon() { return nummer >= 0 ? aktTon : 0; }
 int musikNotenNummer() { return notenZaehler; }
+float musikViertel() {
+  if (nummer < 0 || noteDauer == 0) return 0;
+  float anteil = min(1.0f, (millis() - noteStart) / (float)noteDauer);
+  return viertelBisher + anteil * noteViertel;
+}
 int musikFortschritt() {
   if (nummer < 0) return 0;
   return constrain((int)((pos - LIEDER[nummer]) * 100L / gesamtLaenge), 0, 100);
@@ -227,6 +236,7 @@ void musikStarten(int nr) {
   pos = LIEDER[nr];
   gesamtLaenge = max(1, (int)strlen(LIEDER[nr]));
   tempo = 120;
+  viertelBisher = 0; noteViertel = 0;
   Serial.printf(">> Musik: Lied %d\n", nr);
   if (!naechsteNote()) musikStopp();
 }

@@ -97,7 +97,7 @@ void setup() {
   aufnahmeStarten();                      // gespeicherten Fahrweg laden
 
   Serial.println();
-  Serial.println("=== Roboauto - Schritt 31: Traumwelt ===");
+  Serial.println("=== Roboauto - Schritt 32: Disco-Lichter zur Musik ===");
   Serial.printf("Grund fuer Neustart: %d (1=Einschalten, 4=Absturz, 9=Spannungseinbruch)\n",
                 (int)esp_reset_reason());
 }
@@ -310,6 +310,7 @@ void loop() {
   if (wt & WEB_BLINK_L) tasten.viereck = true;   // Blinker von der Webseite (gehalten)
   if (wt & WEB_BLINK_R) tasten.kreis   = true;
   // Beim Balancieren zappeln die Motoren staendig -> fuer Brems-/Rueckfahrlicht als 'steht' werten
+  lichtDisco(musikNummer() >= 0 && einst().disco, musikTon(), musikNotenNummer(), musikViertel());
   lichtUpdate(verbunden, tasten, balanceAktiv() ? 0 : antriebLinks(), balanceAktiv() ? 0 : antriebRechts(), akkuEco());
 
   // --- Auto-Update: nur wenn das Auto eine Weile unbenutzt steht und der Akku reicht ---

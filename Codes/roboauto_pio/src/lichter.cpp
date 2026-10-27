@@ -37,6 +37,11 @@ static unsigned long bremsStart = 0;
 // Jede der 4 LEDs gleitet in ca. 100 ms zur Zielfarbe: Licht "dimmt" an und aus,
 // Blinker faden weich. Nur das Bremslicht geht sofort an (Sicherheit!).
 enum { V_L = 0, V_R, H_L, H_R };
+static bool  discoAn = false;
+static int   discoHz = 0, discoNote = -1, discoNoteVorher = -1;
+static float discoViertel = 0, discoHue = 0;
+static unsigned long discoNoteSeit = 0;
+
 static float lichtIst[4][3];
 static uint32_t lichtZiel[4] = {0, 0, 0, 0};
 static unsigned long letzteLichtAusgabe = 0;
@@ -52,7 +57,7 @@ static void setzeLichter(uint32_t vorneL, uint32_t vorneR, uint32_t hintenL, uin
   bool vorneGeaendert = false, hintenGeaendert = false;
   for (int n = 0; n < 4; n++) {
     float soll[3] = { (float)((lichtZiel[n] >> 16) & 0xFF), (float)((lichtZiel[n] >> 8) & 0xFF), (float)(lichtZiel[n] & 0xFF) };
-    bool sofort = (lichtZiel[n] == FARBE_BREMSLICHT) || blitzer;   // Bremslicht + Polizei-Blitzer ohne Verzoegerung
+    bool sofort = (lichtZiel[n] == FARBE_BREMSLICHT) || blitzer || discoAn;   // Bremslicht + Polizei-Blitzer ohne Verzoegerung
     for (int c = 0; c < 3; c++) {
       float alt = lichtIst[n][c];
       lichtIst[n][c] = sofort ? soll[c] : alt + (soll[c] - alt) * 0.18f;
@@ -106,6 +111,14 @@ static void fernlichtUmschalten() {
 
 void lichtBefehl(LichtBefehl befehl) { offenerBefehl = befehl; }
 void lichtBlitzer(bool an) { blitzer = an; }
+void lichtDisco(bool an, int hz, int note, float viertel) { discoAn = an; discoHz = hz; discoNote = note; discoViertel = viertel; }
+
+// Farbe aus Farbton (0..1) und Helligkeit (0..1)
+static uint32_t discoFarbe(float hue, float hell) {
+  uint32_t c = Adafruit_NeoPixel::ColorHSV((uint16_t)(fmodf(hue + 10.0f, 1.0f) * 65535), 255, 255);
+  hell = constrain(hell, 0.0f, 1.0f);
+  return ((uint32_t)(((c >> 16) & 255) * hell) << 16) | ((uint32_t)(((c >> 8) & 255) * hell) << 8) | (uint32_t)((c & 255) * hell);
+}
 bool lichtIstAn()          { return lichtAn; }
 bool lichtIstFernlicht()   { return fernlicht; }
 bool lichtIstWarnblinker() { return warnblinker; }
@@ -113,7 +126,7 @@ bool lichtIstWarnblinker() { return warnblinker; }
 void lichtUpdate(bool verbunden, const LichtTasten& tasten, int links, int rechts, bool eco) {
   unsigned long jetzt = millis();
 
-  if (!verbunden) {
+  if (!verbunden && !discoAn) {        // ohne Verbindung aus - ausser die Disco laeuft
     setzeLichter(FARBE_AUS, FARBE_AUS, FARBE_AUS, FARBE_AUS);
     fernlicht = false;            // wie V5: nach Verbindung wieder normales Fahrlicht
     warnblinker = false;
@@ -209,6 +222,27 @@ void lichtUpdate(bool verbunden, const LichtTasten& tasten, int links, int recht
   } else if (rueckwaerts) {           // Rueckfahrlicht ebenfalls immer
     if (REAR_LED_RUECKFAHR == REAR_LED_LINKS) hL = FARBE_RUECKFAHR;
     else                                      hR = FARBE_RUECKFAHR;
+  }
+
+  // --- Disco-Lichter: blitzen im Takt der Musik (nur im Stand, beim Fahren normale Lichter) ---
+  if (discoAn && !faehrt && !bremst) {
+    if (discoNote != discoNoteVorher) {               // neue Note -> Farbe nach Tonhoehe, kurzer Funke
+      discoNoteVorher = discoNote;
+      discoNoteSeit = jetzt;
+      if (discoHz > 0) discoHue = fmodf(12.0f * log2f(discoHz / 440.0f) / 12.0f + 10.0f, 1.0f);
+    }
+    int   schlag = (int)discoViertel;                  // Viertel-Schlag im Lied
+    float rest   = discoViertel - schlag;              // 0..1 innerhalb des Schlags
+    float puls   = (1.0f - rest) * (1.0f - rest);      // kraeftig auf dem Schlag, dann abklingen
+    float funke  = discoHz > 0 ? max(0.0f, 1.0f - (jetzt - discoNoteSeit) / 140.0f) : 0.0f;
+    bool  links  = schlag % 2 == 0;                    // Schlaege wechseln links/rechts
+    bool  eins   = schlag % 4 == 0;                    // Taktanfang: alle vier zusammen
+    float hl = eins ? puls : (links ? puls : 0.15f * puls);
+    float hr = eins ? puls : (links ? 0.15f * puls : puls);
+    hl = max(hl, 0.35f * funke); hr = max(hr, 0.35f * funke);
+    vL = discoFarbe(discoHue, hl);         vR = discoFarbe(discoHue + 0.08f, hr);
+    hL = discoFarbe(discoHue + 0.5f, hr);  hR = discoFarbe(discoHue + 0.58f, hl);   // hinten ueber Kreuz, Gegenfarbe
+    if (eins && rest < 0.12f) { vL = vR = 0xFFFFFF; }  // Taktanfang: kurzer weisser Blitz vorne
   }
 
   // --- Polizei-Blitzer: Scheinwerfer blitzen abwechselnd weiss/blau ---

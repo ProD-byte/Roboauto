@@ -21,6 +21,7 @@ static void standardwerte() {
   e.motorTausch  = false;
   e.lautstaerke  = 100;
   e.autoUpdate   = true;
+  e.disco        = true;
 }
 
 const Einstellungen& einst() { return e; }
@@ -44,6 +45,7 @@ void einstellungenLaden() {
   e.motorTausch  = p.getBool("motTausch", e.motorTausch);
   e.lautstaerke  = p.getInt("laut", e.lautstaerke);
   e.autoUpdate   = p.getBool("autoUpd", e.autoUpdate);
+  e.disco        = p.getBool("disco", e.disco);
   p.end();
 }
 
@@ -65,6 +67,7 @@ void einstellungenSpeichern() {
   p.putBool("motTausch", e.motorTausch);
   p.putInt("laut", e.lautstaerke);
   p.putBool("autoUpd", e.autoUpdate);
+  p.putBool("disco", e.disco);
   p.end();
 }
 
@@ -95,6 +98,7 @@ bool einstellungSetzen(const String& name, const String& wert) {
   else if (name == "motorTausch")  e.motorTausch  = i != 0;
   else if (name == "lautstaerke")  e.lautstaerke  = constrain(i, 5, 100);
   else if (name == "autoUpdate")   e.autoUpdate   = i != 0;
+  else if (name == "disco")        e.disco        = i != 0;
   else return false;
   return true;
 }
@@ -104,9 +108,9 @@ String einstellungenJson() {
   snprintf(json, sizeof(json),
            "{\"tempo\":%d,\"lenkung\":%d,\"lenkungStand\":%d,\"geradeaus\":%d,\"crash\":%d,"
            "\"crashG\":%.1f,\"ringHell\":%d,\"lichtHell\":%d,\"toene\":%d,\"figurGroesse\":%d,"
-           "\"motorL\":%d,\"motorR\":%d,\"motorTausch\":%d,\"lautstaerke\":%d,\"autoUpdate\":%d}",
+           "\"motorL\":%d,\"motorR\":%d,\"motorTausch\":%d,\"lautstaerke\":%d,\"autoUpdate\":%d,\"disco\":%d}",
            e.tempo, e.lenkung, e.lenkungStand, e.geradeaus, e.crash,
            e.crashG, e.ringHell, e.lichtHell, e.toene, e.figurGroesse,
-           e.motorLInv, e.motorRInv, e.motorTausch, e.lautstaerke, e.autoUpdate);
+           e.motorLInv, e.motorRInv, e.motorTausch, e.lautstaerke, e.autoUpdate, e.disco);
   return String(json);
 }
