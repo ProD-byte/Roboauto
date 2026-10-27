@@ -267,7 +267,14 @@ const char WEBSEITE[] PROGMEM = R"==(<!doctype html>
   .updinfo b{font-size:15px}
   button.upd-neu{border-color:var(--gut);background:#12301f;box-shadow:0 0 18px -6px var(--gut)}
   .pille.upd{border-color:var(--gut);color:#7fe0a3;cursor:pointer}
-  /* ---- Jukebox ---- */
+  /* ---- Jukebox (zuklappbar wie die Einstellungen) ---- */
+  details.musik{margin-bottom:14px;scroll-margin-top:110px}
+  .musikleiste{background:linear-gradient(120deg,#2a1b48,#3a1d44);border-color:#6a3f86;box-shadow:0 10px 30px -14px #ff4fd888}
+  .musikleiste:hover{border-color:#ff4fd8;box-shadow:0 10px 34px -10px #ff4fd8aa}
+  .musikleiste .zahnrad{background:linear-gradient(135deg,#7c6cff,#ff4fd8);box-shadow:0 6px 16px -6px #ff4fd8}
+  .musikleiste .pfeilauf{color:#ff8fe6}
+  .musik-jetzt{display:block;font-size:13px;color:#ff8fe6;margin-top:2px}
+  .musik-jetzt:empty{display:none}
   .jukebox{display:grid;grid-template-columns:minmax(260px,340px) 1fr;gap:14px}
   @media(max-width:860px){.jukebox{grid-template-columns:1fr}}
   .player{display:flex;flex-direction:column;gap:12px;background:radial-gradient(400px 200px at 50% 0%,#2a1f55,transparent 70%),linear-gradient(180deg,var(--karte2),var(--karte))}
@@ -392,8 +399,8 @@ const char WEBSEITE[] PROGMEM = R"==(<!doctype html>
   </div>
 </section>
 
-<section id="musik">
-  <h2>Jukebox</h2>
+<details class="einst musik" id="musik">
+  <summary class="einstleiste musikleiste"><span class="zahnrad">&#127925;</span><span><b>Jukebox</b><span class="leise">21 Chiptunes &middot; Disco-Lichter im Takt</span><span class="musik-jetzt" id="musik-jetzt"></span></span><span class="pfeilauf">&#9662;</span></summary>
   <div class="jukebox">
     <div class="karte player">
       <span class="leise">Jetzt l&auml;uft</span>
@@ -405,7 +412,7 @@ const char WEBSEITE[] PROGMEM = R"==(<!doctype html>
     </div>
     <div class="lieder" id="lieder"></div>
   </div>
-</section>
+</details>
 
 <details class="einst" id="einst">
   <summary class="einstleiste"><span class="zahnrad">&#9881;&#65039;</span><span><b>Einstellungen</b><span class="leise">Tempo, Lenkung, Sicherheit, Licht &amp; Ton, Motoren, WLAN</span></span><span class="pfeilauf">&#9662;</span></summary>
@@ -465,7 +472,7 @@ const char WEBSEITE[] PROGMEM = R"==(<!doctype html>
 
 <footer class="fuss">
   <div><span>Tastatur:</span> <kbd>L</kbd> <span>Licht</span> &middot; <kbd>F</kbd> <span>Fernlicht</span> &middot; <kbd>B</kbd> <span>Warnblinker</span> &middot; <kbd>U</kbd> <span>Wende</span> &middot; <kbd>Q</kbd>/<kbd>E</kbd> <span>Blinker</span> &middot; <kbd>H</kbd> <span>Hupe</span> &middot; <kbd>T</kbd> <span>Tank</span> &middot; <kbd>P</kbd> <span>Modus</span></div>
-  <div id="version"><span>Software: Schritt</span> 34<span id="version-build"></span></div>
+  <div id="version"><span>Software: Schritt</span> 35<span id="version-build"></span></div>
 </footer>
 </main>
 
@@ -804,6 +811,7 @@ function zeigeMusik(s){
     liedAktiv = s.lied;
     LIEDER.forEach((_, i) => document.getElementById('lied-' + i).classList.toggle('an', i === liedAktiv));
     document.getElementById('lied-titel').textContent = liedAktiv >= 0 ? LIEDER[liedAktiv][0] + '  ' + t(LIEDER[liedAktiv][1]) : '\u2013';
+    document.getElementById('musik-jetzt').textContent = liedAktiv >= 0 ? '\u266a ' + t(LIEDER[liedAktiv][1]) : '';
   }
   document.getElementById('lied-balken').style.width = (liedAktiv >= 0 ? s.liedpos : 0) + '%';
   liedTon = s.ton || 0;
@@ -839,6 +847,7 @@ requestAnimationFrame(vizSchleife);
 const EN = {"keine Verbindung": "not connected", "verbinde...": "connecting...", "verbunden": "connected", "Akku": "Battery", "Motoren L / R": "Motors L / R", "Licht": "Lights", "Fernlicht": "High beam", "Warnblinker": "Hazards", "180\u00b0 Wende": "180\u00b0 turn", "\u25c0 Blinker": "\u25c0 Indicator", "Blinker \u25b6": "Indicator \u25b6", "Q halten": "hold Q", "E halten": "hold E", "Hupe": "Horn", "Sirene": "Siren", "H / Leertaste": "H / Space", "Tank": "Battery gauge", "WLAN": "Wi-Fi", "T halten": "hold T", "Normal": "Normal", "Polizei": "Police", "Team Blau": "Team Blue", "Team Gr\u00fcn": "Team Green", "Team Gelb": "Team Yellow", "Team Rot": "Team Red", "Live-Ansicht von oben \u00b7 Lichter und Ring leuchten wie am Auto": "Live top view \u00b7 lights and ring glow just like on the car", "vorne": "front", "\ud83d\udd27 Motortest-Assistent": "\ud83d\udd27 Motor test wizard", "Richtung": "Heading", "Neigung vorn/hinten": "Pitch (front/back)", "Neigung seitlich": "Roll (sideways)", "Motorleistung": "Motor power", "Akkuverlauf (letzte Stunde)": "Battery history (last hour)", "Figuren:": "Figures:", "\u25a2 Quadrat": "\u25a2 Square", "\u221e Acht": "\u221e Figure eight", "\u223f Slalom": "\u223f Slalom", "Fahrweg:": "Route:", "\u25cf Aufnahme": "\u25cf Record", "\u25b6 Abspielen": "\u25b6 Play", "Experiment:": "Experiment:", "\u2696 Balancieren": "\u2696 Balance", "Auto am Balancierpunkt halten, dann klicken. Nochmal klicken = aus.": "Hold the car at its balance point, then click. Click again = off.", "Modus wechseln: Knopf anklicken oder": "Change mode: click a button or press", "(n\u00e4chster Modus)": "(next mode)", "WLAN \u00e4ndern": "Change Wi-Fi", "\u2699 Einstellungen": "\u2699 Settings", "H\u00f6chstgeschwindigkeit": "Top speed", "Figurengr\u00f6\u00dfe": "Figure size", "Lenkung beim Fahren": "Steering while driving", "Drehen auf der Stelle": "Turning on the spot", "Helligkeit LED-Ring": "LED ring brightness", "Helligkeit Lichter": "Light brightness", "Crash-Empfindlichkeit": "Crash sensitivity", "Gyro-Geradeauslauf": "Gyro straight-line assist", "Crash- und Umkipp-Erkennung": "Crash and tip-over detection", "\ud83c\udfaf Gyro neu kalibrieren": "\ud83c\udfaf Recalibrate gyro", "Auto dazu auf den Boden stellen und 1 Sekunde nicht ber\u00fchren. Setzt auch den Kompass auf 0\u00b0.": "Place the car on the floor and don\u2019t touch it for 1 second. Also resets the compass to 0\u00b0.", "T\u00f6ne": "Sounds", "Alle": "All", "Nur wichtige": "Important only", "Stumm": "Mute", "\u2699\ufe0f Motoren \u2013 falls falsch angeschlossen": "\u2699\ufe0f Motors \u2013 if wired the wrong way", "Linke Seite umkehren": "Reverse left side", "Rechte Seite umkehren": "Reverse right side", "Links und rechts tauschen": "Swap left and right", "\ud83d\udd27 Motortest-Assistent starten": "\ud83d\udd27 Start motor test wizard", "Der Assistent dreht nacheinander kurz jede Seite und fragt, was passiert ist. Die richtigen Schalter stellt er dann selbst ein. Auto dazu am besten hochheben.": "The wizard briefly spins each side in turn and asks what happened. It then sets the right switches by itself. Best lift the car up for this.", "Standard wiederherstellen": "Restore defaults", "Software: Schritt": "Software: step", "Fahren:": "Drive:", "Pfeiltasten": "arrow keys", "oder den blauen Knopf ziehen. Loslassen = Stopp.": "or drag the blue knob. Release = stop.", "r\u00fcckw\u00e4rts": "reverse", "vorw\u00e4rts": "forward", "steht": "stopped", "sammelt Daten... (alle {0} s ein Punkt)": "collecting data... (one point every {0} s)", "jetzt": "now", "vor {0} min": "{0} min ago", "(sehr empfindlich)": "(very sensitive)", "(normal)": "(normal)", "(unempfindlich)": "(less sensitive)", "(nur heftige St\u00f6\u00dfe)": "(hard hits only)", "speichert...": "saving...", "\u2713 gespeichert": "\u2713 saved", "Fehler beim Speichern": "Error while saving", "Alle Einstellungen auf Standard zur\u00fccksetzen?": "Reset all settings to defaults?", "Messwert {0}": "Raw value {0}", "nimmt auf...": "recording...", "gespeichert: {0} s": "saved: {0} s", "noch keine Aufnahme": "no recording yet", "rechts": "right", "links": "left", "dreht {0}\u00b0/s": "turning {0}\u00b0/s", "mt.los": "Lift the car up or place it so the wheels can spin freely. Then let\u2019s start.", "mt.start": "Let\u2019s go", "Abbrechen": "Cancel", "mt.schritt0": "Step 1 of 2: The car now spins the <b>LEFT wheels forward for 1.5 seconds</b> &ndash; as shown by the green arrow above. What did you see?", "mt.schritt1": "Step 2 of 2: The car now spins the <b>RIGHT wheels forward for 1.5 seconds</b> &ndash; as shown by the green arrow above. What did you see?", "mt.vor0": "Left wheels forward \u2713", "mt.vor1": "Right wheels forward \u2713", "mt.rueck0": "Left wheels backward", "mt.rueck1": "Right wheels backward", "mt.andere0": "The right wheels turned", "mt.andere1": "The left wheels turned", "Nichts / nochmal zeigen": "Nothing / show again", "mt.passtnicht": "Hmm, that doesn\u2019t match step 1. Please check the wiring and restart the test.", "Neu starten": "Restart", "Schlie\u00dfen": "Close", "Richtung umgedreht.": "Direction reversed.", "Links und rechts getauscht.": "Left and right swapped.", "mt.nochmal": "Testing again in a moment&hellip;", "mt.fertig": "&#127881; <b>Done!</b> Both sides spin the right way. The setting is saved in the car. To check, just drive forward."};
 const DE_TEXT = {"mt.los": "Heb das Auto hoch oder stell es so hin, dass sich die R&auml;der frei drehen k&ouml;nnen. Dann geht es los.", "mt.start": "Los geht\u2019s", "mt.schritt0": "Schritt 1 von 2: Das Auto dreht jetzt <b>1,5 Sekunden die LINKEN R&auml;der vorw&auml;rts</b> &ndash; so wie der gr&uuml;ne Pfeil oben zeigt. Was hast du gesehen?", "mt.schritt1": "Schritt 2 von 2: Das Auto dreht jetzt <b>1,5 Sekunden die RECHTEN R&auml;der vorw&auml;rts</b> &ndash; so wie der gr&uuml;ne Pfeil oben zeigt. Was hast du gesehen?", "mt.vor0": "Linke R\u00e4der vorw\u00e4rts \u2713", "mt.vor1": "Rechte R\u00e4der vorw\u00e4rts \u2713", "mt.rueck0": "Linke R\u00e4der r\u00fcckw\u00e4rts", "mt.rueck1": "Rechte R\u00e4der r\u00fcckw\u00e4rts", "mt.andere0": "Die rechten R\u00e4der haben sich gedreht", "mt.andere1": "Die linken R\u00e4der haben sich gedreht", "mt.passtnicht": "Hmm, das passt nicht zu Schritt 1. Bitte die Verkabelung pr&uuml;fen und den Test neu starten.", "mt.nochmal": "Gleich wird nochmal getestet&hellip;", "mt.fertig": "&#127881; <b>Fertig!</b> Beide Seiten drehen richtig herum. Die Einstellung ist im Auto gespeichert. Zum Pr&uuml;fen einfach mal vorw&auml;rts fahren."};
 Object.assign(EN, {"Steuerung": "Controls", "Loslassen = Stopp": "Release = stop", "Beleuchtung": "Lighting", "Signale": "Signals", "Man\u00f6ver & Anzeige": "Manoeuvres & display", "\ud83c\udfaf Kalibrieren": "\ud83c\udfaf Calibrate", "Gyro": "Gyro", "Modus \u00b7": "Mode \u00b7", "= n\u00e4chster": "= next", "Live": "Live", "Programme": "Programs", "\u2728 Figuren": "\u2728 Figures", "Nochmal klicken oder lenken = Stopp.": "Click again or steer = stop.", "\ud83c\udfac Fahrweg": "\ud83c\udfac Route", "\ud83e\uddea Experiment": "\ud83e\uddea Experiment", "Einstellungen": "Settings", "\ud83c\udfce\ufe0f Fahren": "\ud83c\udfce\ufe0f Driving", "\ud83d\udee1\ufe0f Sicherheit": "\ud83d\udee1\ufe0f Safety", "Gyro kalibrieren: Auto dazu auf den Boden stellen und 1 Sekunde nicht ber\u00fchren. Setzt auch den Kompass auf 0\u00b0.": "Calibrating the gyro: place the car on the floor and don\u2019t touch it for 1 second. Also resets the compass to 0\u00b0.", "\ud83d\udca1 Licht & Ton": "\ud83d\udca1 Lights & sound", "\u2699\ufe0f Motoren": "\u2699\ufe0f Motors", "\ud83d\udda5\ufe0f System": "\ud83d\udda5\ufe0f System", "\ud83d\udcf6 WLAN \u00e4ndern": "\ud83d\udcf6 Change Wi-Fi", "\u21ba Standard wiederherstellen": "\u21ba Restore defaults", "Tastatur:": "Keyboard:", "Wende": "Turn", "Blinker": "Indicators", "Modus": "Mode"});
+Object.assign(EN, {'21 Chiptunes \u00b7 Disco-Lichter im Takt': '21 chiptunes \u00b7 disco lights to the beat'});
 Object.assign(EN, {'Tempo, Lenkung, Sicherheit, Licht & Ton, Motoren, WLAN': 'Speed, steering, safety, lights & sound, motors, Wi-Fi'});
 Object.assign(EN, {"Steuerung": "Controls", "Programme": "Programs", "\ud83c\udfb5 Musik": "\ud83c\udfb5 Music", "Jukebox": "Jukebox", "Jetzt l\u00e4uft": "Now playing", "\u25a0 Stopp": "\u25a0 Stop", "Spielt \u00fcber den Buzzer im Auto, der LED-Ring macht die Lichtshow dazu. Nochmal auf das Lied klicken = Stopp.": "Plays through the buzzer in the car, the LED ring adds a light show. Click the song again = stop.", "Tetris-Melodie": "Tetris theme", "Korobeiniki \u00b7 russisches Volkslied": "Korobeiniki \u00b7 Russian folk song", "In der Halle des Bergk\u00f6nigs": "In the Hall of the Mountain King", "Edvard Grieg \u00b7 wird immer schneller": "Edvard Grieg \u00b7 keeps getting faster", "F\u00fcr Elise": "F\u00fcr Elise", "Ode an die Freude": "Ode to Joy", "Eigene Komposition": "Original composition", "Level geschafft": "Level complete", "nichts": "nothing", "\u2013": "\u2013"});
 Object.assign(EN, {'\ud83d\udd0a Lautst\u00e4rke': '\ud83d\udd0a Volume'});
@@ -882,6 +891,11 @@ document.getElementById('b-sprache').addEventListener('click', () => {
 });
 uebersetzeSeite();
 
+// Menue-Links auf zugeklappte Bereiche (Musik, Einstellungen) klappen sie auf
+document.querySelectorAll('.nav a').forEach(a => a.addEventListener('click', e => {
+  const z = document.querySelector(a.getAttribute('href'));
+  if (z && z.tagName === 'DETAILS'){ e.preventDefault(); z.open = true; z.scrollIntoView({behavior: 'smooth', block: 'start'}); }
+}));
 document.getElementById('b-einst').addEventListener('click', () => {
   const d = document.getElementById('einst');
   d.open = true;
