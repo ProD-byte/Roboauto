@@ -68,3 +68,7 @@ Bei jedem Hochladen baut GitHub die Firmware automatisch:
 - [ESP Web Tools](https://esphome.github.io/esp-web-tools/) für den Online-Flasher
 
 Die Musikstücke der Jukebox sind gemeinfrei (Volkslied/Klassik) oder eigene Kompositionen.
+Zusätzlich enthalten (Lizenz **CC0**, aus MIDI umgerechnet):
+- „15 Melodic RPG Chiptunes“ von **Aureolus Omicron** – [OpenGameArt](https://opengameart.org/content/15-melodic-rpg-chiptunes) (Title Screen, Airship, Battle 2, Town)
+- „Theme Song [8-bit]“ und „Leap 8-bit“ von **nene** – [OpenGameArt](https://opengameart.org/content/theme-song-8-bit), [OpenGameArt](https://opengameart.org/content/leap-8bit)
+- „Weiße Taube“ – © ProDMusicKI (eigener Song)

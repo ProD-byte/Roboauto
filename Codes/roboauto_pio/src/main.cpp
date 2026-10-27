@@ -97,7 +97,7 @@ void setup() {
   aufnahmeStarten();                      // gespeicherten Fahrweg laden
 
   Serial.println();
-  Serial.println("=== Roboauto - Schritt 33: Weisse Taube ===");
+  Serial.println("=== Roboauto - Schritt 34: 6 freie CC0-Chiptunes ===");
   Serial.printf("Grund fuer Neustart: %d (1=Einschalten, 4=Absturz, 9=Spannungseinbruch)\n",
                 (int)esp_reset_reason());
 }
