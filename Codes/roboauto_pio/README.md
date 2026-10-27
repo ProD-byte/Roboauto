@@ -28,6 +28,12 @@ Geschrieben mit **VS Code + PlatformIO**, Schritt für Schritt aufgebaut.
 
 Alle Pins stehen in [`include/config.h`](include/config.h).
 
+### Verdrahtung für Einsteiger
+
+Kein Schaltplan-Profi? Hier ist jedes Kabel einzeln aufgelistet – einfach von oben nach unten abarbeiten:
+
+![Verdrahtung Schritt für Schritt](docs/verdrahtung.svg)
+
 ### Schaltplan (vorläufig)
 
 ![Schaltplan](docs/schaltplan.svg)
