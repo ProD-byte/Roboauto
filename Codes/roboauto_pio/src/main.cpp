@@ -97,7 +97,7 @@ void setup() {
   aufnahmeStarten();                      // gespeicherten Fahrweg laden
 
   Serial.println();
-  Serial.println("=== Roboauto - Schritt 30: 5 neue Chiptune-Lieder ===");
+  Serial.println("=== Roboauto - Schritt 31: Traumwelt ===");
   Serial.printf("Grund fuer Neustart: %d (1=Einschalten, 4=Absturz, 9=Spannungseinbruch)\n",
                 (int)esp_reset_reason());
 }

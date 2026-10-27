@@ -121,9 +121,31 @@ static const char LIED_HUMMEL[] =
   "e5:16 f5:16 f#5:16 g5:16 g#5:16 a5:16 a#5:16 b5:16 c6:16 c#6:16 d6:16 d#6:16 e6:16 f6:16 f#6:16 g6:16 "
   "g#6:16 a6:16 a#6:16 b6:16 c7:16 c#7:16 d7:16 d#7:16 e7:8 p:8 [a5c6e6a6]:4";
 
+
+// Traumwelt: eigenes Titelmelodie-Intro im Stil der spaeten C64-Aera (d-Moll / F-Dur)
+// Aufbau: schimmerndes Intro -> treibender Groove -> Melodie -> Breakdown -> Aufstieg -> Finale
+#define TRAUM_INTRO "[d6f6a6]:2 [a#5d6f6]:2 [c6f6a6]:2 [c6e6g6]:2 "
+#define TRAUM_GROOVE "d5:16 d6:16 [d6f6a6]:8 d5:16 d6:16 [d6f6a6]:8 d5:16 a5:16 d6:16 f6:16 a6:16 f6:16 d6:16 a5:16 " \
+                     "a#4:16 a#5:16 [a#5d6f6]:8 a#4:16 a#5:16 [a#5d6f6]:8 a#4:16 f5:16 a#5:16 d6:16 f6:16 d6:16 a#5:16 f5:16 " \
+                     "f5:16 f6:16 [f6a6c7]:8 f5:16 f6:16 [f6a6c7]:8 f5:16 c6:16 f6:16 a6:16 c7:16 a6:16 f6:16 c6:16 " \
+                     "c5:16 c6:16 [c6e6g6]:8 c5:16 c6:16 [c6e6g6]:8 c5:16 g5:16 c6:16 e6:16 g6:16 e6:16 c6:16 g5:16 "
+#define TRAUM_A "a6:8 a6:16 g6:16 f6:8 e6:8 f6:4 d6:4 d6:8 f6:8 a#6:4 a6:8 g6:8 f6:4 " \
+                "c7:8 a6:8 f6:8 a6:8 g6:4. f6:8 e6:8 f6:8 g6:8 e6:8 c6:4 p:4 "
+#define TRAUM_B "d7:8 c7:8 a6:8 f6:8 g6:8 a6:8 f6:4 a#6:8 a6:8 g6:8 f6:8 d6:4 f6:4 " \
+                "a6:8 c7:8 f7:4 e7:8 d7:8 c7:4 [c6e6g6c7]:4 c7:8 e7:8 [d6f6a6d7]:2 "
+#define TRAUM_BREAK "d5:8 p:8 d6:16 p:16 [d6f6a6]:8 p:4 a5:8 c6:8 a#4:8 p:8 a#5:16 p:16 [a#5d6f6]:8 p:4 f5:8 a5:8 " \
+                    "f5:8 p:8 f6:16 p:16 [f6a6c7]:8 p:4 c6:8 e6:8 c5:8 p:8 c6:16 p:16 [c6e6g6]:8 p:4 g5:8 c6:8 "
+#define TRAUM_AUFSTIEG "d6:16 e6:16 f6:16 g6:16 a6:16 a#6:16 c7:16 d7:16 e7:16 f7:16 e7:16 d7:16 c7:16 a#6:16 a6:16 g6:16 " \
+                       "[c6e6g6]:2 [c6e6g6c7]:2 "
+static const char LIED_TRAUM[] =
+  "T100 " TRAUM_INTRO TRAUM_INTRO
+  "T150 " TRAUM_GROOVE TRAUM_A TRAUM_B TRAUM_GROOVE TRAUM_BREAK TRAUM_AUFSTIEG
+  "T165 " TRAUM_A TRAUM_B TRAUM_GROOVE
+  "[d6f6a6d7]:4 p:8 d5:8 [d6f6a6d7]:2";
+
 static const char* const LIEDER[] = { LIED_TETRIS, LIED_BERGKOENIG, LIED_ELISE, LIED_FREUDE,
                                       LIED_ENTERTAINER, LIED_THEMA, LIED_BOSS, LIED_GESCHAFFT,
-                                      LIED_NEON, LIED_GALAXIE, LIED_TURBO, LIED_TELL, LIED_HUMMEL };
+                                      LIED_NEON, LIED_GALAXIE, LIED_TURBO, LIED_TELL, LIED_HUMMEL, LIED_TRAUM };
 static const int ANZAHL = sizeof(LIEDER) / sizeof(LIEDER[0]);
 
 // ------------------------------------------------------------
