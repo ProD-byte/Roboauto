@@ -10,18 +10,17 @@ Gesteuert per **Handy-App (Dabble, Bluetooth)** oder im **Browser über WLAN**.
 | Ordner / Dateien | Inhalt |
 |---|---|
 | [`Codes/roboauto_pio`](Codes/roboauto_pio) | **Aktuelle Firmware** (VS Code + PlatformIO) – mit eigener [Anleitung](Codes/roboauto_pio/README.md) |
-| `Codes/roboauto_finalv5`, `Codes/roboauto_finalv6` | Ältere Arduino-Versionen (nur zum Nachschauen) |
-| `Roboauto Unterteil*`, `Oberteil*`, `Wanne*`, `Brücke*`, `Kugel`, `Ledrinhalter`, `Schalter Halter` | **3D-Druckteile** – `.skp` = SketchUp-Modell, `.stl` = zum Drucken |
-| `Roboauto Version 6.skp`, `Roboauto Version Platine.skp` | Komplettes Auto als 3D-Modell |
-| `Robo Auto Platine.skp`, `OBJ_PCB_RoboAutoPlatine.skp`, `3D_PCB_…skp` | Platine als 3D-Modell |
+| [`3D-Druck`](3D-Druck) | **Aktuelle 3D-Druckteile**: Unterteil V5, Wanne V4, Brücke V6, Oberteil 32mm Ledring V.2, Kugel, Ledrinhalter, Schalter-Halter – `.skp` = SketchUp-Modell, `.stl` = zum Drucken |
+| [`3D-Druck/alte Versionen`](3D-Druck/alte%20Versionen) | Frühere Stände der Druckteile (nur zum Nachschauen) |
+| [`Modell`](Modell) | Komplettes Auto als 3D-Modell (`Roboauto Version 6.skp`, mit Platine: `Roboauto Version Platine.skp`) |
+| [`Platine`](Platine) | Platine als 3D-Modell und Pinbelegung (`XIAO_ESP32_C6_Roboter_Pinbelegung.xlsx`) |
 | `Codes/roboauto_pio/docs/bilder` | Screenshots der Weboberfläche |
-| `XIAO_ESP32_C6_Roboter_Pinbelegung.xlsx` | Pinbelegung (Planung) |
 
-> Fremde 3D-Modelle aus dem Internet (Räder, Schrauben, LED-Ring, Boards …) sind hier **nicht** enthalten – die gibt es bei den jeweiligen Herstellern bzw. auf GrabCAD.
+> Fremde 3D-Modelle aus dem Internet (Räder, Schrauben, LED-Ring, Boards …) liegen lokal im Ordner `Fremdteile` und sind hier **nicht** enthalten – die gibt es bei den jeweiligen Herstellern bzw. auf GrabCAD.
 
 ## ⚡ Schnellstart
 
-- **Projektseite:** [daveslab.de/basteln/roboauto](https://daveslab.de/basteln/roboauto/)
+- **Projektseite:** [daveslab.de/basteln](https://daveslab.de/basteln/)
 - **Firmware aufspielen ohne Programmieren:** [Online-Flasher](https://prod-byte.github.io/Roboauto/)
 - **Selbst bauen:** siehe [Firmware-Anleitung](Codes/roboauto_pio/README.md)
 
