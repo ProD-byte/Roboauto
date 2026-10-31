@@ -185,8 +185,14 @@ void loop() {
   else                                           antriebFahren(x, y);
 
   // --- LED-Ring: Verbindungsstatus ---
-  // Regenbogen = App per Bluetooth, tuerkiser Komet = Webseite/App per WLAN, blau = niemand. Tank-Knopf = Tankanzeige
-  RingQuelle quelle = ble ? RING_APP : (web ? RING_WEB : RING_NIEMAND);
+  // Regenbogen = App per Bluetooth, tuerkiser Komet = ueber den Router, gruener Komet = direkt im WLAN des Autos,
+  // blau = niemand. Tank-Knopf = Tankanzeige
+  RingQuelle quelle = ble ? RING_APP : !web ? RING_NIEMAND : webUeberAutoWlan() ? RING_AUTOWLAN : RING_WEB;
+  static RingQuelle quelleVorher = RING_NIEMAND;
+  if (quelle != quelleVorher) {                      // neu verbunden / Weg gewechselt: kurzes Farbsignal, auch bei Polizei/Team
+    ringVerbunden(quelle);
+    quelleVorher = quelle;
+  }
   webSetzeModus(modus);
 
   ringEinrichtung(webEinrichtung());                 // orange atmend = WLAN einrichten

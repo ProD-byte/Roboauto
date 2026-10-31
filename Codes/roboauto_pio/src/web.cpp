@@ -39,6 +39,7 @@ static int aktion = 0;                        // offene Einmal-Aktion
 static int modus = 0;                         // nur fuer die Anzeige
 static unsigned long letzterFahrbefehl = 0;   // Totmann: ohne neue Befehle -> Stopp
 static unsigned long letzteAbfrage = 0;       // Seite offen?
+static bool ueberAutoWlan = false;            // letzte Anfrage kam ueber das eigene WLAN des Autos (nicht den Router)
 static unsigned long wlanStart = 0;
 static int  ereignis = 0;                     // fuer webEreignis()
 static bool fehlerGemeldet = false;
@@ -436,6 +437,7 @@ static void httpSteuerung() {
   Param p[PARAM_MAX];
   int n = min(server.args(), PARAM_MAX);
   for (int i = 0; i < n; i++) p[i] = {server.argName(i), server.arg(i)};
+  ueberAutoWlan = server.client().localIP() == WiFi.softAPIP();   // fuer die Farbe des LED-Rings
   String antwort = steuerBefehl(server.uri(), p, n, false);
   server.send(200, antwort.startsWith("{") ? "application/json" : "text/plain", antwort);
 }
@@ -656,6 +658,7 @@ bool webEinrichtung() { return setupAktiv; }
 bool webWlanDa()      { return staVerbunden && !setupAktiv && WiFi.status() == WL_CONNECTED; }
 
 bool webVerbunden() { return (serverLaeuft || setupAktiv) && letzteAbfrage != 0 && millis() - letzteAbfrage < WEB_GETRENNT_MS; }
+bool webUeberAutoWlan() { return ueberAutoWlan; }
 int  webEreignis()  { int e = ereignis; ereignis = 0; return e; }
 // Fahrbefehle kommen von der Webseite oder der App (auch ohne WLAN ueber Bluetooth) - der Totmann regelt beides
 bool webFaehrt()    { return millis() - letzterFahrbefehl < WEB_TOTMANN_MS && (x != 0 || y != 0); }
