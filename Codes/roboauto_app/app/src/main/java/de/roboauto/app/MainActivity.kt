@@ -7,7 +7,13 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.location.LocationManager
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import android.net.Uri
+import android.net.wifi.WifiNetworkSpecifier
+import android.os.PatternMatcher
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -41,6 +47,8 @@ class MainActivity : ComponentActivity(), BleVerbindung.Ereignisse, WlanVerbindu
     companion object {
         private const val SEITEN = "https://appassets.androidplatform.net/assets/"
         private const val NR_INFO = -1                 // eigene Anfrage nach /info (IP-Adresse merken)
+        private const val AUTO_WLAN = "Roboauto"       // eigenes WLAN des Autos (auch "Roboauto-Setup")
+        private const val AUTO_WLAN_IP = "192.168.4.1"
     }
 
     private lateinit var web: WebView
@@ -51,6 +59,9 @@ class MainActivity : ComponentActivity(), BleVerbindung.Ereignisse, WlanVerbindu
 
     private var art = ""                 // "ble", "wlan" oder "" (Verbinden-Bildschirm)
     private var autoVerbinden = true     // bekanntes Auto beim Finden gleich verbinden (nicht nach "Trennen")
+    private var autoWlanNetz: ConnectivityManager.NetworkCallback? = null   // direkt im WLAN des Autos (Android 10+)
+    private var autoWlanWarten = false   // Android 8/9: Nutzer waehlt "Roboauto" in den WLAN-Einstellungen
+    private val verbindung by lazy { getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager }
 
     private val erlaubnis = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { r ->
         if (r.values.all { it }) suchen() else zustand("erlaubnis")
@@ -113,9 +124,18 @@ class MainActivity : ComponentActivity(), BleVerbindung.Ereignisse, WlanVerbindu
         web.loadUrl(SEITEN + "verbinden.html")
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (autoWlanWarten) {                         // zurueck aus den WLAN-Einstellungen
+            autoWlanWarten = false
+            wlanVerbinden(AUTO_WLAN_IP)
+        }
+    }
+
     override fun onDestroy() {
         ble.trennen()
         ble.suchStopp()
+        autoWlanLoslassen()
         wlan.beenden()
         web.destroy()
         super.onDestroy()
@@ -127,6 +147,7 @@ class MainActivity : ComponentActivity(), BleVerbindung.Ereignisse, WlanVerbindu
         @JavascriptInterface fun suchen() { haupt.post { this@MainActivity.suchen() } }
         @JavascriptInterface fun verbindeBle(adresse: String) { haupt.post { bleVerbinden(adresse) } }
         @JavascriptInterface fun verbindeWlan(host: String) { haupt.post { wlanVerbinden(host.trim()) } }
+        @JavascriptInterface fun verbindeAutoWlan() { haupt.post { autoWlanVerbinden() } }
         @JavascriptInterface fun trennen() { haupt.post { zumVerbinden(manuell = true) } }
         @JavascriptInterface fun art(): String = art
         @JavascriptInterface fun letzteAdresse(): String = speicher.getString("wlan", null) ?: speicher.getString("ip", null) ?: "roboauto.local"
@@ -194,7 +215,7 @@ class MainActivity : ComponentActivity(), BleVerbindung.Ereignisse, WlanVerbindu
             wlan.suchStopp()
             wlan.host = host
             wlan.udpPort = try { JSONObject(info).optInt("udp") } catch (_: Exception) { 0 }
-            speicher.edit().putString("wlan", host).apply()
+            if (host != AUTO_WLAN_IP) speicher.edit().putString("wlan", host).apply()
             art = "wlan"
             web.loadUrl(SEITEN + "index.html")
         }
@@ -205,7 +226,45 @@ class MainActivity : ComponentActivity(), BleVerbindung.Ereignisse, WlanVerbindu
         art = ""
         ble.trennen()
         wlan.host = null
+        autoWlanLoslassen()
         web.loadUrl(SEITEN + "verbinden.html")
+    }
+
+    // Direkt ins WLAN des Autos (ohne Router). Ab Android 10 fragt das Handy selbst nach,
+    // vorher waehlt man "Roboauto" in den WLAN-Einstellungen und kommt zurueck.
+    private fun autoWlanVerbinden() {
+        if (Build.VERSION.SDK_INT < 29) {
+            autoWlanWarten = true
+            zustand("auto_wlan_hand")
+            oeffne(Intent(Settings.ACTION_WIFI_SETTINGS))
+            return
+        }
+        autoWlanLoslassen()
+        zustand("verbinde_wlan", AUTO_WLAN)
+        val anfrage = NetworkRequest.Builder()
+            .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+            .removeCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            .setNetworkSpecifier(WifiNetworkSpecifier.Builder()
+                .setSsidPattern(PatternMatcher(AUTO_WLAN, PatternMatcher.PATTERN_PREFIX)).build())
+            .build()
+        val r = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(netz: Network) {
+                verbindung.bindProcessToNetwork(netz)       // alle Anfragen der App gehen jetzt ueber das Auto-WLAN
+                haupt.post { if (autoWlanNetz === this) wlanVerbinden(AUTO_WLAN_IP) }
+            }
+            override fun onUnavailable() {
+                haupt.post { if (autoWlanNetz === this) { autoWlanNetz = null; zustand("auto_wlan_fehler") } }
+            }
+        }
+        autoWlanNetz = r
+        try { verbindung.requestNetwork(anfrage, r) } catch (_: Exception) { autoWlanNetz = null; zustand("auto_wlan_fehler") }
+    }
+
+    private fun autoWlanLoslassen() {
+        val r = autoWlanNetz ?: return
+        autoWlanNetz = null
+        verbindung.bindProcessToNetwork(null)
+        try { verbindung.unregisterNetworkCallback(r) } catch (_: Exception) {}
     }
 
     private fun wlanEinrichten() {

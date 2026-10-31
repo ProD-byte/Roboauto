@@ -65,6 +65,14 @@ z. B. `0|/fahr?x=3&y=7&t=0`. Das spart den Verbindungsaufbau von HTTP, das Auto 
 Den Stopp (`x=0&y=0&t=0`) schickt die App dreimal. Meldet `/info` keinen `udp`-Port (ältere Firmware),
 fährt die App per HTTP.
 
+### Ohne Router: WLAN des Autos
+
+Das Auto öffnet immer sein eigenes, offenes WLAN **„Roboauto“** (neben dem Heim-WLAN, gleicher Funkkanal
+wie der Router). Im Einrichtungsmodus heißt es „Roboauto-Setup“. Das Auto ist dort unter **192.168.4.1**
+erreichbar – gleiche HTTP- und UDP-Befehle wie oben. Ab Android 10 wechselt die App selbst in dieses WLAN
+(nur für die App, das Handy behält sein Internet über Mobilfunk); bei Android 8/9 wählt man es in den
+WLAN-Einstellungen.
+
 ## Sicherheit
 
 - Kommt **400 ms lang kein `/fahr`**, bleibt das Auto stehen (Totmann).

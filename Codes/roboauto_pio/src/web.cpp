@@ -234,6 +234,15 @@ static void starteEinrichtung() {
                 SETUP_WLAN_NAME, WiFi.softAPIP().toString().c_str());
 }
 
+// Eigenes WLAN "Roboauto" zum Fahren: das Handy verbindet sich direkt mit dem Auto, ohne Router.
+// Laeuft neben dem Heim-WLAN (gleicher Funkkanal wie der Router). Das Auto ist dort 192.168.4.1.
+static void starteFahrWlan() {
+  WiFi.mode(WIFI_AP_STA);
+  WiFi.softAP(FAHR_WLAN_NAME);
+  Serial.printf(">> Eigenes WLAN \"%s\" offen (App direkt verbinden: %s)\n",
+                FAHR_WLAN_NAME, WiFi.softAPIP().toString().c_str());
+}
+
 // HTML-Sonderzeichen in Netzwerknamen entschaerfen
 // Fahrtrichtung fuer den Kompass: 0..360 Grad im Uhrzeigersinn, 0 = Richtung beim Einschalten
 static float kurs() {
@@ -546,7 +555,7 @@ void webStarten() {
     Serial.println(">> WLAN: noch keine Zugangsdaten gespeichert");
     starteEinrichtung();
   } else {
-    WiFi.mode(WIFI_STA);
+    starteFahrWlan();
     starteSuche();                                 // im Hintergrund suchen, dann bekanntes Netz waehlen
   }
   server.begin();
@@ -615,8 +624,7 @@ void webUpdate() {
   if (setupAktiv && netzAnzahl > 0) {
     if (WiFi.status() == WL_CONNECTED) {
       dns.stop();
-      WiFi.softAPdisconnect(true);
-      WiFi.mode(WIFI_STA);
+      starteFahrWlan();                     // Einrichtungs-WLAN wird wieder zum Fahr-WLAN
       setupAktiv = false;
       Serial.println(">> Heim-WLAN doch erreichbar - Einrichtungsmodus beendet");
     } else if (phase == W_AUS && millis() - letzterNeuversuch > WLAN_NEUVERSUCH_MS && WiFi.softAPgetStationNum() == 0) {

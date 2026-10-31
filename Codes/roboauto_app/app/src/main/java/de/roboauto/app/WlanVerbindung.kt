@@ -38,6 +38,8 @@ class WlanVerbindung(ctx: Context, private val ereignis: Ereignisse) {
             field = h
             if (h == null) udpPort = 0
             wlanSchnell(h != null)
+            // Netz kann gewechselt haben (Heim-WLAN <-> Auto-WLAN): UDP-Socket neu anlegen
+            udpFaden.execute { try { udp?.close() } catch (_: Exception) {}; udp = null }
         }
 
     /** UDP-Port fuer Fahrbefehle (aus /info), 0 = aeltere Firmware -> Fahrbefehle per HTTP */
