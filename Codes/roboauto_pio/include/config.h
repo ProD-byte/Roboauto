@@ -122,6 +122,7 @@ constexpr const char* WEB_NAME = "roboauto";   // Adresse im Browser: http://rob
 constexpr const char* SETUP_WLAN_NAME = "Roboauto-Setup";   // eigenes WLAN zum Einrichten (ohne Passwort)
 constexpr unsigned long WLAN_VERGESSEN_HALTEN_MS = 3000;    // Start + Select so lange halten = WLAN neu einrichten
 constexpr unsigned long WEB_TOTMANN_MS = 400;   // ohne neuen Fahrbefehl so lange -> Stopp
+constexpr uint16_t APP_UDP_PORT = 4211;         // App schickt Fahrbefehle im WLAN per UDP (schneller als HTTP)
 constexpr unsigned long WEB_GETRENNT_MS = 6000;  // so lange ohne Lebenszeichen der Seite -> "Webseite getrennt"
 constexpr unsigned long WLAN_NEUVERSUCH_MS = 30000; // im Einrichtungsmodus alle 30 s erneut das Heim-WLAN probieren
 constexpr unsigned long WLAN_TIMEOUT_MS = 15000;

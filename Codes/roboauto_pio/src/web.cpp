@@ -24,6 +24,7 @@
 #include "einstellungen.h"
 
 static WebServer server(80);
+static WiFiUDP appUdp;                        // Fahrbefehle der App im WLAN (gleiches Textformat wie Bluetooth)
 static bool serverLaeuft = false;
 static bool staVerbunden = false;           // im Heim-WLAN
 static bool setupAktiv = false;             // eigenes Einrichtungs-WLAN offen
@@ -416,7 +417,8 @@ static String steuerBefehl(const String& pfad, const Param* p, int n, bool app) 
   if (pfad == "/info") {
     bool da = webWlanDa();
     return String("{\"name\":\"") + WEB_NAME + "\",\"ble\":\"" + BLE_NAME + "\",\"wlan\":" + (da ? 1 : 0) +
-           ",\"ip\":\"" + (da ? WiFi.localIP().toString() : String("")) + "\",\"fw\":" + autoUpdateBuild() + "}";
+           ",\"ip\":\"" + (da ? WiFi.localIP().toString() : String("")) + "\",\"fw\":" + autoUpdateBuild() +
+           ",\"udp\":" + APP_UDP_PORT + "}";
   }
   return "?";
 }
@@ -548,6 +550,27 @@ void webStarten() {
     starteSuche();                                 // im Hintergrund suchen, dann bekanntes Netz waehlen
   }
   server.begin();
+  appUdp.begin(APP_UDP_PORT);
+}
+
+// Ein UDP-Paket = eine Anfrage "<nr>|<pfad>?<params>" wie ueber Bluetooth.
+// Kein Verbindungsaufbau wie bei HTTP -> der Befehl ist sofort beim Auto. nr 0 = keine Antwort.
+static void appUdpUpdate() {
+  while (int laenge = appUdp.parsePacket()) {
+    char text[256];
+    int n = appUdp.read(text, min(laenge, (int)sizeof(text) - 1));
+    if (n <= 0) continue;
+    text[n] = 0;
+    char* strich = strchr(text, '|');
+    if (!strich) continue;
+    long nr = atol(text);
+    String antwort = webAppBefehl(String(strich + 1));
+    if (nr == 0) continue;
+    appUdp.beginPacket(appUdp.remoteIP(), appUdp.remotePort());
+    appUdp.printf("%ld|", nr);
+    appUdp.print(antwort);
+    appUdp.endPacket();
+  }
 }
 
 // Kein bekanntes WLAN erreichbar -> Fehler melden und Einrichtungsmodus oeffnen
@@ -560,6 +583,7 @@ static void wlanFehlschlag() {
 }
 
 void webUpdate() {
+  appUdpUpdate();
   server.handleClient();
   if (setupAktiv) dns.processNextRequest();
 

@@ -193,6 +193,7 @@ class MainActivity : ComponentActivity(), BleVerbindung.Ereignisse, WlanVerbindu
             ble.suchStopp()
             wlan.suchStopp()
             wlan.host = host
+            wlan.udpPort = try { JSONObject(info).optInt("udp") } catch (_: Exception) { 0 }
             speicher.edit().putString("wlan", host).apply()
             art = "wlan"
             web.loadUrl(SEITEN + "index.html")

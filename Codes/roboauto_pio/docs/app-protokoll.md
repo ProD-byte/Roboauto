@@ -53,9 +53,17 @@ aneinander, bis ein `\n` kommt. Der Inhalt selbst enthält nie ein `\n`.
 | `/einstellungen` | keine = lesen; `name=wert` = ändern; `standard`, `motorStandard` | JSON | Einstellungen |
 | `/verlauf` | – | JSON | Akkuverlauf |
 | `/update` | `a=suchen` / `a=installieren` | `ok` | Auto-Update (nur mit WLAN) |
-| `/info` | – | JSON | Name, IP-Adresse, WLAN da?, Firmware-Nummer |
+| `/info` | – | JSON | Name, IP-Adresse, WLAN da?, Firmware-Nummer, `udp` = UDP-Port |
 
 Unbekannter Pfad → Antwort `?`.
+
+## WLAN
+
+Alles geht per HTTP wie im Browser (`http://<ip>/status` …). Nur die **Fahrbefehle** schickt die App
+als **UDP-Paket** an den Port aus `/info` (`udp`, 4211) – gleiches Textformat wie bei Bluetooth,
+z. B. `0|/fahr?x=3&y=7&t=0`. Das spart den Verbindungsaufbau von HTTP, das Auto reagiert schneller.
+Den Stopp (`x=0&y=0&t=0`) schickt die App dreimal. Meldet `/info` keinen `udp`-Port (ältere Firmware),
+fährt die App per HTTP.
 
 ## Sicherheit
 

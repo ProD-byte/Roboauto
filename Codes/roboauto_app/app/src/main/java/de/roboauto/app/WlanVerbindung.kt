@@ -3,9 +3,14 @@ package de.roboauto.app
 import android.content.Context
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
+import android.net.wifi.WifiManager
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import java.net.DatagramPacket
+import java.net.DatagramSocket
 import java.net.HttpURLConnection
+import java.net.InetAddress
 import java.net.URL
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
@@ -29,6 +34,27 @@ class WlanVerbindung(ctx: Context, private val ereignis: Ereignisse) {
 
     /** Adresse des Autos (IP oder Name), null = nicht ueber WLAN verbunden */
     @Volatile var host: String? = null
+        set(h) {
+            field = h
+            if (h == null) udpPort = 0
+            wlanSchnell(h != null)
+        }
+
+    /** UDP-Port fuer Fahrbefehle (aus /info), 0 = aeltere Firmware -> Fahrbefehle per HTTP */
+    @Volatile var udpPort = 0
+
+    // Handy-WLAN nicht in den Stromsparmodus gehen lassen, solange wir fahren (sonst bis zu 100 ms Verzoegerung)
+    @Suppress("DEPRECATION")
+    private val wlanSperre = (ctx.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager).createWifiLock(
+        if (Build.VERSION.SDK_INT >= 29) WifiManager.WIFI_MODE_FULL_LOW_LATENCY else WifiManager.WIFI_MODE_FULL_HIGH_PERF,
+        "roboauto").apply { setReferenceCounted(false) }
+
+    private fun wlanSchnell(an: Boolean) {
+        try { if (an) wlanSperre.acquire() else if (wlanSperre.isHeld) wlanSperre.release() } catch (_: Exception) {}
+    }
+
+    private var udp: DatagramSocket? = null
+    private val udpFaden = Executors.newSingleThreadExecutor()   // ein Faden: Pakete gehen in der richtigen Reihenfolge raus
 
     private fun holen(h: String, pfad: String): String {
         val v = URL("http://$h$pfad").openConnection() as HttpURLConnection
@@ -68,6 +94,7 @@ class WlanVerbindung(ctx: Context, private val ereignis: Ereignisse) {
 
     fun senden(pfad: String) {
         val h = host ?: return
+        if (udpPort > 0) return udpSenden(h, udpPort, pfad)
         naechsteFahrt.set(pfad)
         if (!faehrt.compareAndSet(false, true)) return
         pool.execute {
@@ -79,6 +106,20 @@ class WlanVerbindung(ctx: Context, private val ereignis: Ereignisse) {
             } finally {
                 faehrt.set(false)
             }
+        }
+    }
+
+    // Ein Paket "0|/fahr?..." - ohne Verbindungsaufbau, ohne Antwort. Geht eins verloren, kommt 80 ms
+    // spaeter das naechste. Nur der Stopp wird dreimal geschickt, damit das Auto sicher anhaelt.
+    private fun udpSenden(h: String, port: Int, pfad: String) {
+        val stopp = pfad.contains("x=0&y=0&t=0")
+        udpFaden.execute {
+            try {
+                val s = udp ?: DatagramSocket().also { udp = it }
+                val daten = "0|$pfad".toByteArray()
+                val paket = DatagramPacket(daten, daten.size, InetAddress.getByName(h), port)
+                repeat(if (stopp) 3 else 1) { s.send(paket) }
+            } catch (_: Exception) {}
         }
     }
 
@@ -123,6 +164,9 @@ class WlanVerbindung(ctx: Context, private val ereignis: Ereignisse) {
 
     fun beenden() {
         suchStopp()
+        wlanSchnell(false)
+        udpFaden.shutdownNow()
+        try { udp?.close() } catch (_: Exception) {}
         pool.shutdownNow()
     }
 }
