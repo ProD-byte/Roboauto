@@ -159,6 +159,8 @@ class MainActivity : ComponentActivity(), BleVerbindung.Ereignisse, WlanVerbindu
         @JavascriptInterface fun verbindeWlan(host: String) { haupt.post { wlanVerbinden(host.trim()) } }
         @JavascriptInterface fun verbindeAutoWlan() { haupt.post { autoWlanVerbinden() } }
         @JavascriptInterface fun updateInfo(): String = updateInfo
+        @JavascriptInterface fun version(): String =
+            try { packageManager.getPackageInfo(packageName, 0).versionName ?: "" } catch (_: Exception) { "" }
         @JavascriptInterface fun updateInstallieren() { haupt.post { aktualisierung.installieren() } }
         @JavascriptInterface fun trennen() { haupt.post { zumVerbinden(manuell = true) } }
         @JavascriptInterface fun art(): String = art

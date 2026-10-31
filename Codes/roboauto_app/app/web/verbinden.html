@@ -113,6 +113,7 @@
   </details>
 
   <p class="fuss" data-t="tipp"></p>
+  <p class="fuss" id="version"></p>
 </main>
 
 <script>
@@ -307,6 +308,7 @@ const robo = window.robo = {
   }
 };
 $('update-los').addEventListener('click', () => Roboauto.updateInstallieren());
+if (Roboauto.version) $('version').textContent = 'Roboauto-App ' + Roboauto.version();
 { const u = (Roboauto.updateInfo && Roboauto.updateInfo()) || ''; if (u) robo.update(u.split('|')[0], +u.split('|')[1]); }
 
 function verbinden(a){
