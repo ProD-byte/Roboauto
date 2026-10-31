@@ -36,6 +36,7 @@ als `roboauto.apk` auf die Seite. Bei einem Versions-Tag (`v1.2.0`) kommt sie zu
 **Updates:** Die App schaut beim Start in `app.json` nach einer neueren Version und zeigt dann eine
 grüne Update-Karte (bzw. eine Pille in der Steuerung). Antippen lädt und installiert die neue Version
 (`Aktualisierung.kt`). Klappt nur, wenn alle Versionen mit demselben Schlüssel signiert sind (Secrets unten).
+Ab Android 12 läuft es nach dem ersten Update ohne Nachfrage durch.
 
 ## Signierschlüssel (einmalig einrichten)
 
