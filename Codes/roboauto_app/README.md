@@ -26,9 +26,11 @@ Das zuletzt benutzte Auto verbindet sich beim nächsten Start automatisch. Die P
 
 ## APK bekommen
 
-GitHub baut die App bei jedem Hochladen: **Actions → „App bauen“ → Lauf anklicken → Artifacts → `roboauto-app`**.
-Darin liegt `roboauto.apk` – aufs Handy kopieren und installieren („Unbekannte Quellen“ erlauben).
-Bei einem Versions-Tag (`v1.2.0`) kommt die APK zusätzlich ins Release.
+Am einfachsten: auf der **GitHub-Pages-Seite** des Projekts (dort, wo auch der Online-Flasher ist)
+auf **„App herunterladen“** tippen – am PC gibt es dort einen QR-Code zum Abscannen.
+
+GitHub baut die App zusammen mit der Firmware (Workflow „Firmware bauen“, Job `app`) und legt sie
+als `roboauto.apk` auf die Seite. Bei einem Versions-Tag (`v1.2.0`) kommt sie zusätzlich ins Release.
 
 ## Signierschlüssel (einmalig einrichten)
 

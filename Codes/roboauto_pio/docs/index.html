@@ -33,9 +33,48 @@
   a{color:var(--akzent)}
   .merkmale{display:grid;grid-template-columns:1fr 1fr;gap:8px;color:var(--leise);font-size:14px}
   @media(max-width:520px){.merkmale{grid-template-columns:1fr}}
+  /* ---- Android-App ---- */
+  .app{display:flex;flex-direction:column;gap:16px;border-color:#3a4f80;
+       background:radial-gradient(500px 220px at 0% 0%,#1b2a48,transparent 70%),linear-gradient(180deg,var(--karte2),var(--karte))}
+  .appkopf{display:flex;align-items:center;gap:14px}
+  .appicon{width:58px;height:58px;flex:none;border-radius:16px;display:grid;place-items:center;
+           background:linear-gradient(135deg,var(--akzent),var(--akzent2));box-shadow:0 8px 22px -8px #4f9cff}
+  .appkopf h2{margin:0 0 2px}
+  .appinhalt{display:flex;gap:18px;align-items:center}
+  .appinfo{flex:1;display:flex;flex-direction:column;gap:10px;min-width:0}
+  .laden{display:flex;align-items:center;justify-content:center;gap:10px;height:56px;border-radius:16px;color:#fff;text-decoration:none;
+         font:650 18px system-ui,sans-serif;background:linear-gradient(90deg,var(--akzent),var(--akzent2));box-shadow:0 10px 26px -10px #4f9cff;transition:transform .08s}
+  .laden:active{transform:scale(.98)}
+  .schritte{margin:0;padding-left:22px;color:var(--leise);font-size:14px} .schritte li{margin:3px 0} .schritte b{color:var(--text)}
+  .qr{flex:none;display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--leise);font-size:12.5px}
+  .qr div{background:#fff;padding:10px;border-radius:14px;line-height:0}
+  .qr svg{width:128px;height:128px}
+  @media(max-width:639px){.qr{display:none!important}}
+  .test{margin:0;font-size:13.5px;color:var(--leise);padding:10px 12px;border-radius:12px;background:#12161c;border:1px solid var(--rand2)}
+  .test b{color:var(--text)}
 </style></head><body>
 <div class="rahmen">
   <div class="kopf"><svg viewBox="-66 -18 132 60" width="90" height="42" aria-hidden="true"><rect x="-40" y="-14" width="80" height="4" fill="#e6e6e6" stroke="#222" stroke-width=".6"/><rect x="-40" y="-10" width="80" height="12" fill="#ffd54f" stroke="#222" stroke-width=".6"/><rect x="-40" y="2" width="80" height="17" fill="#404040" stroke="#222" stroke-width=".6"/><circle cx="-33" cy="10" r="27" fill="#404040" stroke="#111" stroke-width=".8"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(0 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(20 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(40 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(60 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(80 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(100 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(120 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(140 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(160 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(180 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(200 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(220 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(240 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(260 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(280 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(300 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(320 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(340 -33 10)"/><circle cx="-33" cy="10" r="17" fill="#383838" stroke="#1e1e1e" stroke-width="1.2"/><circle cx="-33" cy="10" r="14" fill="none" stroke="#2a2a2a" stroke-width="1"/><line x1="-29.5" y1="12.0" x2="-20.9" y2="17.0" stroke="#222" stroke-width="1.6"/><line x1="-33.0" y1="14.0" x2="-33.0" y2="24.0" stroke="#222" stroke-width="1.6"/><line x1="-36.5" y1="12.0" x2="-45.1" y2="17.0" stroke="#222" stroke-width="1.6"/><line x1="-36.5" y1="8.0" x2="-45.1" y2="3.0" stroke="#222" stroke-width="1.6"/><line x1="-33.0" y1="6.0" x2="-33.0" y2="-4.0" stroke="#222" stroke-width="1.6"/><line x1="-29.5" y1="8.0" x2="-20.9" y2="3.0" stroke="#222" stroke-width="1.6"/><circle cx="-33" cy="10" r="4.5" fill="#c8cde0" stroke="#222" stroke-width=".8"/><circle cx="33" cy="10" r="27" fill="#404040" stroke="#111" stroke-width=".8"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(0 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(20 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(40 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(60 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(80 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(100 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(120 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(140 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(160 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(180 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(200 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(220 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(240 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(260 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(280 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(300 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(320 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(340 33 10)"/><circle cx="33" cy="10" r="17" fill="#383838" stroke="#1e1e1e" stroke-width="1.2"/><circle cx="33" cy="10" r="14" fill="none" stroke="#2a2a2a" stroke-width="1"/><line x1="36.5" y1="12.0" x2="45.1" y2="17.0" stroke="#222" stroke-width="1.6"/><line x1="33.0" y1="14.0" x2="33.0" y2="24.0" stroke="#222" stroke-width="1.6"/><line x1="29.5" y1="12.0" x2="20.9" y2="17.0" stroke="#222" stroke-width="1.6"/><line x1="29.5" y1="8.0" x2="20.9" y2="3.0" stroke="#222" stroke-width="1.6"/><line x1="33.0" y1="6.0" x2="33.0" y2="-4.0" stroke="#222" stroke-width="1.6"/><line x1="36.5" y1="8.0" x2="45.1" y2="3.0" stroke="#222" stroke-width="1.6"/><circle cx="33" cy="10" r="4.5" fill="#c8cde0" stroke="#222" stroke-width=".8"/></svg><div><h1>Roboauto</h1><p>Online-Flasher &middot; Firmware direkt aus dem Browser aufspielen</p></div></div>
+
+  <div class="karte app">
+    <div class="appkopf">
+      <div class="appicon"><svg viewBox="24 36 60 36" width="44" height="27" aria-hidden="true"><path fill="#eef1f5" d="M33,40h42v3h-42z"/><path fill="#ffd54f" d="M33,43h42v8h-42z"/><path fill="#2a2f38" d="M33,51h42v11h-42z"/><circle cx="38" cy="58" r="11" fill="#16191f" stroke="#eef1f5" stroke-width="2.5"/><circle cx="70" cy="58" r="11" fill="#16191f" stroke="#eef1f5" stroke-width="2.5"/><circle cx="38" cy="58" r="3" fill="#c8cde0"/><circle cx="70" cy="58" r="3" fill="#c8cde0"/></svg></div>
+      <div><h2>&#128241; Roboauto-App f&uuml;r Android</h2><span class="leise">Fahren per Bluetooth oder WLAN &ndash; mit derselben Oberfl&auml;che wie im Browser.</span></div>
+    </div>
+    <div class="appinhalt">
+      <div class="appinfo">
+        <a class="laden" href="roboauto.apk" download>&#11015;&#65039; App herunterladen</a>
+        <span class="leise" id="app-info" style="text-align:center">Android 8 oder neuer</span>
+        <ol class="schritte">
+          <li><b>Herunterladen</b> und die Datei <b>roboauto.apk</b> &ouml;ffnen.</li>
+          <li>Fragt das Handy, <b>&bdquo;Apps aus dieser Quelle erlauben&ldquo;</b> einschalten.</li>
+          <li>App starten &ndash; sie sucht das Auto von selbst.</li>
+        </ol>
+      </div>
+      <div class="qr" id="app-qr" hidden><div id="qr"></div><span>Mit dem Handy scannen</span></div>
+    </div>
+    <p class="test">&#129514; <b>Testphase:</b> &Uuml;ber <b>WLAN</b> klappt die App mit jedem Auto. F&uuml;r <b>Bluetooth</b> braucht das Auto noch die Test-Firmware <code>roboauto_bletest</code> &ndash; mit einem der n&auml;chsten Updates kommt sie f&uuml;r alle.</p>
+  </div>
 
   <div class="karte knopf">
     <span class="chip">Version __VERSION__</span>
@@ -107,7 +146,7 @@
   <div class="karte">
     <h2>Was das Auto kann</h2>
     <div class="merkmale">
-      <span>&#127918; Steuerung per Dabble-App (Bluetooth)</span><span>&#127760; Steuerung im Browser per WLAN</span>
+      <span>&#128241; Steuerung per Roboauto-App oder Dabble</span><span>&#127760; Steuerung im Browser per WLAN</span>
       <span>&#129517; Gyro-Geradeauslauf &amp; 180&deg;-Wende</span><span>&#128680; Polizei- und Team-Modi</span>
       <span>&#10024; Figuren &amp; Fahrweg-Aufnahme</span><span>&#127925; Jukebox mit Lichtshow</span>
       <span>&#128165; Crash- und Umkipp-Erkennung</span><span>&#128246; Updates &uuml;ber WLAN</span>
@@ -118,5 +157,25 @@
 <script>
 /* Flasher-Einstellungen immer frisch laden (nie aus dem Browser-Zwischenspeicher) */
 document.querySelectorAll('esp-web-install-button').forEach(function(b){ var m=b.getAttribute('manifest').split('?')[0]; b.setAttribute('manifest', m+'?t='+Date.now()); });
+
+/* App: Version und Groesse anzeigen (app.json legt GitHub beim Bauen dazu) */
+fetch('app.json?t=' + Date.now()).then(function(r){ return r.json(); }).then(function(a){
+  var mb = (a.groesse / 1048576).toFixed(1).replace('.', ',');
+  document.getElementById('app-info').textContent = 'Version ' + a.version + ' · ' + mb + ' MB · Android 8 oder neuer';
+}).catch(function(){});
+
+/* Am Computer: QR-Code zum Abscannen mit dem Handy */
+if (matchMedia('(min-width:640px) and (hover:hover)').matches) {
+  var s = document.createElement('script');
+  s.src = 'https://unpkg.com/qrcode-generator@1.4.4/qrcode.js';
+  s.onload = function(){
+    var q = qrcode(0, 'M');
+    q.addData(new URL('roboauto.apk', location.href).href);
+    q.make();
+    document.getElementById('qr').innerHTML = q.createSvgTag(4, 0);
+    document.getElementById('app-qr').hidden = false;
+  };
+  document.head.appendChild(s);
+}
 </script>
 </body></html>
