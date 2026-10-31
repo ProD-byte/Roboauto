@@ -33,6 +33,10 @@ auf **„App herunterladen“** tippen – am PC gibt es dort einen QR-Code zum 
 GitHub baut die App zusammen mit der Firmware (Workflow „Firmware bauen“, Job `app`) und legt sie
 als `roboauto.apk` auf die Seite. Bei einem Versions-Tag (`v1.2.0`) kommt sie zusätzlich ins Release.
 
+**Updates:** Die App schaut beim Start in `app.json` nach einer neueren Version und zeigt dann eine
+grüne Update-Karte (bzw. eine Pille in der Steuerung). Antippen lädt und installiert die neue Version
+(`Aktualisierung.kt`). Klappt nur, wenn alle Versionen mit demselben Schlüssel signiert sind (Secrets unten).
+
 ## Signierschlüssel (einmalig einrichten)
 
 Android installiert ein Update nur, wenn es mit **demselben Schlüssel** signiert ist wie die installierte App.
