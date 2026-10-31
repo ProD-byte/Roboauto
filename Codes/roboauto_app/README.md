@@ -48,7 +48,7 @@ Auf GitHub unter **Settings → Secrets and variables → Actions → New reposi
 | `ROBOAUTO_KEYSTORE_BASE64` | Inhalt von `schluessel/ROBOAUTO_KEYSTORE_BASE64.txt` |
 | `ROBOAUTO_KEYSTORE_PASSWORT` | Inhalt von `schluessel/ROBOAUTO_KEYSTORE_PASSWORT.txt` |
 
-✅ Eingerichtet seit Build 1.0.38 – ab dieser Version klappen die App-Updates ohne Neuinstallation.
+✅ Eingerichtet seit Build 1.0.39 – ab dieser Version klappen die App-Updates ohne Neuinstallation.
 
 🔒 Den Ordner `schluessel/` gut aufheben (z. B. Passwort-Manager). Geht er verloren, muss die App
 einmal deinstalliert und neu installiert werden.
