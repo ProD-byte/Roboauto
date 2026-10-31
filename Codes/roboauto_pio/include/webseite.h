@@ -167,8 +167,10 @@ const char WEBSEITE[] PROGMEM = R"==(<!doctype html>
   .r3{grid-template-columns:repeat(3,1fr)}
   @media(max-width:860px){.r2,.r3{grid-template-columns:1fr}}
   /* ---- Knoepfe ---- */
-  button{font:600 14px system-ui,sans-serif;color:var(--text);background:var(--karte2);border:1px solid var(--rand2);border-radius:14px;height:60px;cursor:pointer;touch-action:none;
+  button{font:600 14px system-ui,sans-serif;color:var(--text);background:var(--karte2);border:1px solid var(--rand2);border-radius:14px;height:60px;cursor:pointer;touch-action:manipulation;
          display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transition:background .15s,border-color .15s,box-shadow .2s,transform .08s}
+  /* Auf Knoepfen darf man scrollen - nur Halte-Knoepfe (Blinker, Hupe, Tank) nicht, sonst bricht Wischen das Halten ab */
+  button[data-halt]{touch-action:none}
   button:hover{border-color:#46505e;background:#222833}
   button:active{transform:scale(.97)}
   button small{color:var(--leise);font-weight:400;font-size:11px}
