@@ -13,7 +13,7 @@ enum RingQuelle { RING_NIEMAND = 0, RING_APP = 1, RING_WEB = 2, RING_AUTOWLAN = 
 //  - niemand: dunkelblau atmend mit langsam kreisendem Lichtpunkt (Bereitschaft)
 //  - App per Bluetooth: drehender Regenbogen
 //  - Webseite / App ueber den Router (Heim-WLAN): tuerkiser Komet, der im Kreis laeuft
-//  - Webseite / App direkt im WLAN "Roboauto" des Autos: gruener Komet
+//  - Webseite / App direkt im WLAN "Roboauto" des Autos: violetter Komet
 //  - tankanzeige=true (Tank-Knopf gehalten): Akkustand statt Regenbogen
 //  - modus (wenn verbunden): Polizei = Blaulicht, Team = Farbspiel in Teamfarbe,
 //    Normal = Regenbogen (Bluetooth) bzw. Komet (WLAN). Beim Verbinden zeigt ringVerbunden()
@@ -24,7 +24,7 @@ void ringStatus(RingQuelle quelle, bool tankanzeige, int akkuWert, int modus);
 // LEDs fuellen sich nacheinander in der Farbe, kurz halten, dann zurueck zur Statusanzeige
 void ringSignal(uint32_t farbe);
 
-// Signal beim Verbinden in der Farbe der Verbindungsart (Bluetooth = Regenbogen, Router = tuerkis, Auto-WLAN = gruen)
+// Signal beim Verbinden in der Farbe der Verbindungsart (Bluetooth = Regenbogen, Router = tuerkis, Auto-WLAN = violett)
 void ringVerbunden(RingQuelle quelle);
 
 // Fortschrittsbalken (0..100 %) sofort anzeigen - fuer das WLAN-Update

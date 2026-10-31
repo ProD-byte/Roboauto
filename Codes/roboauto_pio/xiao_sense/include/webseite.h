@@ -602,7 +602,7 @@ addEventListener('blur', () => {
   loslassen();
 });
 
-// ---------- Senden: alle 80 ms, solange etwas aktiv ist; einmal 0 beim Loslassen ----------
+// ---------- Senden: alle 40 ms, solange etwas aktiv ist; einmal 0 beim Loslassen ----------
 function aktuell(){
   let x = jx, y = jy;
   if (keys.w || keys.s || keys.a || keys.d){
@@ -627,7 +627,7 @@ async function sendeSchleife(){
     try { await fetch('/fahr?x='+x+'&y='+y+'&t='+t); letzteGesendet = wert; } catch(e){}
     unterwegs = false;
   }
-  setTimeout(sendeSchleife, 80);
+  setTimeout(sendeSchleife, 40);
 }
 sendeSchleife();
 
@@ -982,12 +982,15 @@ document.getElementById('b-einst').addEventListener('click', () => {
 // ---------- XIAO Sense: Kamera, Mikrofon, SD-Karte, Lernen ----------
 // Video, Ton und Dateien kommen vom Medien-Server des Autos (eigener Port, damit die Steuerung flott bleibt)
 let medienPort = 81;
-const medien = p => 'http://' + location.hostname + ':' + medienPort + p;
+// In der Roboauto-App ist location.hostname die App selbst - die App nennt die Adresse des Autos
+// (per Bluetooth gibt es keine: dann kein Video/Ton, dafuer ist die Funkverbindung zu duenn)
+const medienHost = (window.Roboauto && Roboauto.host) ? Roboauto.host() : location.hostname;
+const medien = p => 'http://' + medienHost + ':' + medienPort + p;
 const video = document.getElementById('video'), ton = new Audio();
 let videoAn = true, tonAn = false, kamDa = false, sdDa = false, letztesFoto = -1, warLernen = false;
 try { videoAn = localStorage.getItem('video') !== '0'; } catch(e){}
 function zeigeVideo(){
-  const an = videoAn && kamDa;
+  const an = videoAn && kamDa && !!medienHost;
   if (an && video.hidden){ video.src = medien('/stream?t=' + Date.now()); video.hidden = false; }
   if (!an && !video.hidden){ video.hidden = true; video.src = 'data:image/gif;base64,R0lGODlhAQABAAAAACw='; }   // trennt den Stream
   document.getElementById('video-aus').textContent = t(kamDa ? 'Kamera aus' : 'keine Kamera');

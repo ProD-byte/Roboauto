@@ -119,7 +119,7 @@ constexpr unsigned long WENDE_MAX_ZEIT = 4000; // ms Sicherheits-Abbruch
 // --- WLAN / Webseite ---
 constexpr const char* WEB_NAME = "roboauto";   // Adresse im Browser: http://roboauto.local
 constexpr const char* SETUP_WLAN_NAME = "Roboauto-Setup";   // eigenes WLAN zum Einrichten (ohne Passwort)
-constexpr const char* FAHR_WLAN_NAME = "Roboauto";          // eigenes WLAN zum Fahren mit der App, ohne Router (ohne Passwort)
+
 constexpr unsigned long WEB_TOTMANN_MS = 400;   // ohne neuen Fahrbefehl so lange -> Stopp
 constexpr uint16_t APP_UDP_PORT = 4211;         // App schickt Fahrbefehle im WLAN per UDP (schneller als HTTP)
 constexpr unsigned long WEB_GETRENNT_MS = 6000;  // so lange ohne Lebenszeichen der Seite -> "Webseite getrennt"
@@ -172,4 +172,6 @@ constexpr unsigned long CRASH_SPERRE_MS = 1500; // nach einem Aufprall so lange 
 constexpr float UMGEKIPPT_AUFRECHT   = 0.4f;   // darunter (ca. 65 Grad Schraeglage) gilt als umgekippt
 constexpr unsigned long UMGEKIPPT_MS = 600;    // so lange schraeg = wirklich umgekippt (kein Hopser)
 
-constexpr const char* BLE_NAME = "RoboautoV3";
+// Name fuer Bluetooth und eigenes WLAN, dahinter kommt die Chip-Nummer: z. B. "Roboauto-3F2A"
+// (so lassen sich mehrere Autos am selben Ort auseinanderhalten - die App sucht alles, was mit "Roboauto" anfaengt)
+constexpr const char* AUTO_NAME_ANFANG = "Roboauto";

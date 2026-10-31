@@ -40,7 +40,7 @@ class Empfang : public BLECharacteristicCallbacks {
 
 void appBleStarten() {
   warteschlange = xQueueCreate(8, sizeof(Anfrage));
-  BLEDevice::init(BLE_NAME);
+  BLEDevice::init(autoName());
   BLEDevice::setMTU(517);                                 // grosse Pakete: Status passt in 2 Stuecke
   server = BLEDevice::createServer();
   server->setCallbacks(new Verbindung());
@@ -57,7 +57,7 @@ void appBleStarten() {
   werbung->addServiceUUID(UUID_DIENST);                   // App findet das Auto an dieser UUID
   werbung->setScanResponse(true);                         // Name kommt in der Scan-Antwort mit
   werbung->start();
-  Serial.printf(">> Bluetooth fuer die App bereit: \"%s\"\n", BLE_NAME);
+  Serial.printf(">> Bluetooth fuer die App bereit: \"%s\"\n", autoName());
 }
 
 // Antwort in Stuecken passend zur MTU verschicken; '\n' am Ende = fertig

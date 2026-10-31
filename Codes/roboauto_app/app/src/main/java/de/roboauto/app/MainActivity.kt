@@ -22,6 +22,7 @@ import android.provider.Settings
 import android.view.WindowManager
 import android.webkit.JavascriptInterface
 import android.webkit.WebChromeClient
+import android.webkit.WebSettings
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
@@ -106,6 +107,8 @@ class MainActivity : ComponentActivity(), BleVerbindung.Ereignisse, WlanVerbindu
             .build()
         web.settings.javaScriptEnabled = true
         web.settings.domStorageEnabled = true          // Sprache wird im localStorage gemerkt
+        // XIAO: Video, Ton und SD-Dateien kommen per http direkt vom Auto (die Seite selbst ist https)
+        web.settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
         web.webViewClient = object : WebViewClient() {
             override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? =
                 lader.shouldInterceptRequest(request.url)
@@ -164,6 +167,7 @@ class MainActivity : ComponentActivity(), BleVerbindung.Ereignisse, WlanVerbindu
         @JavascriptInterface fun updateInstallieren() { haupt.post { aktualisierung.installieren() } }
         @JavascriptInterface fun trennen() { haupt.post { zumVerbinden(manuell = true) } }
         @JavascriptInterface fun art(): String = art
+        @JavascriptInterface fun host(): String = wlan.host ?: ""   // Adresse des Autos im WLAN ("" = Bluetooth)
         @JavascriptInterface fun letzteAdresse(): String = speicher.getString("wlan", null) ?: speicher.getString("ip", null) ?: "roboauto.local"
         @JavascriptInterface fun wlanEinrichten() { haupt.post { this@MainActivity.wlanEinrichten() } }
         @JavascriptInterface fun btEinschalten() { haupt.post { oeffne(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)) } }
@@ -231,7 +235,7 @@ class MainActivity : ComponentActivity(), BleVerbindung.Ereignisse, WlanVerbindu
             wlan.udpPort = try { JSONObject(info).optInt("udp") } catch (_: Exception) { 0 }
             if (host != AUTO_WLAN_IP) speicher.edit().putString("wlan", host).apply()
             art = "wlan"
-            web.loadUrl(SEITEN + "index.html")
+            steuerungZeigen(info)
         }
     }
 
@@ -312,11 +316,21 @@ class MainActivity : ComponentActivity(), BleVerbindung.Ereignisse, WlanVerbindu
 
     override fun bleBereit() {
         speicher.edit().putString("ble", ble.adresse).apply()      // naechstes Mal automatisch verbinden
-        ble.anfrage(NR_INFO, "/info")                              // IP-Adresse fuer WLAN merken
+        ble.anfrage(NR_INFO, "/info")                              // IP-Adresse merken + welches Board
         if (art != "ble") {
             art = "ble"
-            web.loadUrl(SEITEN + "index.html")
+            seiteGeladen = false
+            // Die Seite kommt mit der /info-Antwort (passend zum Board). Bleibt sie aus: Hauptauto-Seite.
+            haupt.postDelayed({ if (art == "ble" && !seiteGeladen) steuerungZeigen("") }, 2000)
         }
+    }
+
+    // Hauptauto -> index.html, XIAO Sense -> xiao.html (mit Kamera, Mikrofon, SD-Karte)
+    private var seiteGeladen = false
+    private fun steuerungZeigen(info: String) {
+        seiteGeladen = true
+        val board = try { JSONObject(info).optString("board") } catch (_: Exception) { "" }
+        web.loadUrl(SEITEN + if (board == "xiao") "xiao.html" else "index.html")
     }
 
     override fun bleGetrennt() {
@@ -330,6 +344,7 @@ class MainActivity : ComponentActivity(), BleVerbindung.Ereignisse, WlanVerbindu
                 val ip = JSONObject(text).optString("ip")
                 if (ip.isNotEmpty()) speicher.edit().putString("ip", ip).apply()
             } catch (_: Exception) {}
+            if (art == "ble" && !seiteGeladen) steuerungZeigen(text)
             return
         }
         antwortAnSeite(nr, true, text)

@@ -40,7 +40,7 @@ Es gibt zwei Varianten:
 | 🎵 Jukebox | 18 Chiptune-Lieder über den Buzzer, Disco-Lichter im Takt |
 | 🛡️ Sicherheit | Crash-Erkennung (Stoß > 2,5 g) und Umkipp-Erkennung → Motoren aus, Alarm, Warnblinker |
 | 🔋 Akku | Akkustand, Eco-Modus bei schwachem Akku, Akkuverlauf der letzten Stunde |
-| 📶 WLAN | merkt sich bis zu 8 WLANs, Einrichtung per Handy, eigenes WLAN „Roboauto“ zum Fahren ohne Router |
+| 📶 WLAN | merkt sich bis zu 8 WLANs, Einrichtung per Handy, eigenes WLAN „Roboauto-XXXX“ zum Fahren ohne Router |
 | 🔄 Updates | Auto-Update von GitHub (nur wenn das Auto 2 min steht und der Akku reicht, mit automatischem Zurückfallen auf die alte Version, falls die neue nicht sauber startet); Updates per WLAN aus VS Code (OTA) |
 | 🔧 Einstellungen | Tempo, Lenkung, Drehen auf der Stelle, Figurengröße, Helligkeiten, Lautstärke, Töne, Motor-Richtungen mit Motortest-Assistent – alles im Auto gespeichert |
 | 📷 nur XIAO | Live-Video im Browser, Fotos auf SD-Karte, Live-Ton, Lautstärkepegel, zweimal Klatschen = Licht an/aus, „Lernen“ (schreibt Fahrdaten + Bilder auf die SD-Karte) |
@@ -80,7 +80,7 @@ Alle Pins und Einstellwerte stehen in `include/config.h`.
                 │      app.js leitet fetch('/status'), fetch('/fahr?...') an die App  │
                 │   ├─ Bluetooth (BLE, eigener GATT-Dienst)                            │
                 │   ├─ Heim-WLAN (HTTP + UDP, Auto per mDNS „roboauto“ finden)         │
-                │   └─ Auto-WLAN „Roboauto“ direkt (192.168.4.1, ohne Router)          │
+                │   └─ Auto-WLAN „Roboauto-XXXX“ direkt (192.168.4.1, ohne Router)          │
                 └───────────────┬───────────────────────────┬───────────────────────┘
                                 │ BLE                         │ WLAN (HTTP / UDP 4211)
                 ┌───────────────▼───────────────────────────▼───────────────────────┐
@@ -108,7 +108,7 @@ Befehle. Dadurch funktioniert jede neue Funktion sofort überall.
 |---|---|
 | `main.cpp` | Hauptprogramm, verbindet alles |
 | `config.h` | alle Pins, Grenzwerte, Namen, Ports |
-| `web.cpp / web.h` | WLAN (Heim-WLAN, Einrichtung, eigenes WLAN „Roboauto“), Webserver, Befehlsverteiler, UDP, OTA |
+| `web.cpp / web.h` | WLAN (Heim-WLAN, Einrichtung, eigenes WLAN „Roboauto-XXXX“), Webserver, Befehlsverteiler, UDP, OTA |
 | `webseite.h` | komplette Weboberfläche (HTML/CSS/JS in einer Datei), Deutsch/Englisch/Spanisch/Französisch |
 | `app_ble.cpp / .h` | Bluetooth-Dienst für die App |
 | `antrieb.cpp` | Motoren, Panzerlenkung, Geradeauslauf, Wende, Motortest |
@@ -151,14 +151,14 @@ Aktionsnummern: 1 Licht · 2 Fernlicht · 3 Warnblinker · 4 Wende · 5 nächste
   - Service `8d3a1000-5b7e-4f2a-9c61-2e4b7a9d0c11`
   - Befehl (write) `8d3a1001-…`, Antwort (notify) `8d3a1002-…`
   - Anfrage `"<nr>|<pfad>?<params>"`, Antwort `"<nr>|<text>\n"` (in MTU-Stücken), `nr = 0` = keine Antwort
-  - MTU 517, Gerätename „RoboautoV3“ (XIAO: „RoboautoXiao“)
+  - MTU 517, Gerätename „Roboauto-XXXX“ (XXXX = Chip-Nummer, XIAO: „RoboautoXiao-XXXX“) – so sind mehrere Autos unterscheidbar
   - Reißt Bluetooth ab, stoppt das Auto sofort.
 - Ausführlich: `docs/app-protokoll.md`.
 
 ### 4.4 WLAN-Verhalten
 
 1. Beim Start sucht das Auto bekannte WLANs (bis zu 8 gespeichert) und verbindet sich mit dem stärksten.
-2. **Gleichzeitig** öffnet es sein eigenes offenes WLAN **„Roboauto“** (Adresse 192.168.4.1) – zum Fahren ohne Router.
+2. **Gleichzeitig** öffnet es sein eigenes offenes WLAN **„Roboauto-XXXX“** (Adresse 192.168.4.1) – zum Fahren ohne Router.
 3. Findet es kein bekanntes WLAN, wird daraus der **Einrichtungsmodus** „Roboauto-Setup“: Handy verbinden,
    die Einrichtungsseite öffnet sich von selbst, WLAN auswählen, Passwort eingeben.
 4. Im Heim-WLAN ist das Auto unter `http://roboauto.local` erreichbar (mDNS).
@@ -209,7 +209,7 @@ Modernes dunkles Dashboard, eine Datei, keine externen Bibliotheken:
 | dunkelblau atmend, Punkt kreist | niemand verbunden |
 | Regenbogen dreht sich | App per Bluetooth |
 | türkiser Komet | über den Router (Heim-WLAN) |
-| grüner Komet (langsam, 4 s/Runde) | direkt im Auto-WLAN „Roboauto“ |
+| violetter Komet | direkt im Auto-WLAN „Roboauto-XXXX“ |
 | kurzes Füllen in der Farbe | gerade verbunden / Weg gewechselt |
 | orange atmend | WLAN-Einrichtung offen |
 | Blaulicht / Teamfarben | Polizei- bzw. Team-Modus |

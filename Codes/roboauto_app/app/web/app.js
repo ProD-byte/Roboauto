@@ -55,6 +55,14 @@
     if (u) window.robo.update(u.split('|')[0]);
   });
 
+  // Kurzes Vibrieren wie bei einem Controller: Knopf gedrueckt, Joystick angefasst und losgelassen
+  function brumm(ms) { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} }
+  document.addEventListener('pointerdown', function (e) {
+    if (e.target.closest('#feld')) brumm(10);
+    else if (e.target.closest('button, summary')) brumm(15);
+  }, true);
+  document.addEventListener('pointerup', function (e) { if (e.target.closest('#feld')) brumm(6); }, true);
+
   // App-Update auch in der Steuerung anzeigen (das letzte Auto verbindet sich ja oft sofort):
   // gruene Pille "App 1.0.x" oben, antippen = herunterladen und installieren
   let updPille = null;

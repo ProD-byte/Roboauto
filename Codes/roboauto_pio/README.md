@@ -7,7 +7,7 @@ Geschrieben mit **VS Code + PlatformIO**, Schritt für Schritt aufgebaut.
 
 | | |
 |---|---|
-| 🎮 **Steuerung** | [Roboauto-App](../roboauto_app/README.md) für Android (Bluetooth, Heim-WLAN oder direkt ins WLAN „Roboauto“ des Autos) oder Browser mit Joystick und Tastatur (W A S D) |
+| 🎮 **Steuerung** | [Roboauto-App](../roboauto_app/README.md) für Android (Bluetooth, Heim-WLAN oder direkt ins WLAN „Roboauto-XXXX“ des Autos) oder Browser mit Joystick und Tastatur (W A S D) |
 | 🌐 **Weboberfläche** | modernes Dashboard: Live-Ansicht des Autos, Kompass, Neigung, Motorleistung, Akkuverlauf · Handy quer = Gamepad-Ansicht · Deutsch/Englisch/Spanisch/Französisch |
 | 🧭 **Gyro (MPU6050)** | Geradeauslauf, 180°-Wende auf Knopfdruck, Kompass, Crash- und Umkipp-Erkennung |
 | 💡 **Licht** | Front-/Rücklicht, Fernlicht, Blinker, Warnblinker, Bremslicht, LED-Ring mit Animationen |
@@ -85,7 +85,7 @@ Auf der **GitHub-Pages-Seite** dieses Projekts auf „Roboauto installieren“ k
 4. Im normalen WLAN **http://roboauto.local** öffnen – fertig.
 
 Oder mit der **[Roboauto-App](../roboauto_app/README.md)** (Android): App öffnen – sie findet das Auto
-von selbst per Bluetooth und im WLAN. Ohne Router geht es direkt über das WLAN **„Roboauto“** des Autos.
+von selbst per Bluetooth und im WLAN. Ohne Router geht es direkt über das WLAN **„Roboauto-XXXX“** des Autos.
 
 ## 🤖 Automatischer Build (GitHub Actions)
 

@@ -8,7 +8,7 @@ Die App zum Roboauto (ersetzt die frühere Dabble-App). Sie zeigt **genau die We
   ändert sich die Webseite, ändert sich die App automatisch mit.
 - Protokoll zwischen App und Auto: [`docs/app-protokoll.md`](../roboauto_pio/docs/app-protokoll.md)
 
-- Drei Wege zum Auto: **Bluetooth**, **Heim-WLAN** oder direkt das WLAN **„Roboauto“** des Autos (ohne Router)
+- Drei Wege zum Auto: **Bluetooth**, **Heim-WLAN** oder direkt das WLAN **„Roboauto-XXXX“** des Autos (ohne Router)
 
 > Ältere Autos mit Dabble-Firmware bekommen die App-Firmware per Auto-Update (oder einmal per Online-Flasher).
 

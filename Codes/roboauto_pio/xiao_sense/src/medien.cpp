@@ -8,8 +8,17 @@ static httpd_handle_t server = nullptr;
 // Eine lange Anfrage in eine eigene Aufgabe auslagern ("async handler" des ESP-Webservers)
 struct Auftrag { httpd_req_t* req; esp_err_t (*seite)(httpd_req_t*); };
 
+// Die Roboauto-App zeigt die Oberflaeche von einer eigenen Adresse aus -> Antworten fuer alle freigeben (CORS)
+static void freigeben(httpd_req_t* req) { httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*"); }
+
+static esp_err_t kurz(httpd_req_t* req) {
+  freigeben(req);
+  return ((esp_err_t (*)(httpd_req_t*))req->user_ctx)(req);
+}
+
 static void auftragAufgabe(void* p) {
   Auftrag* a = (Auftrag*)p;
+  freigeben(a->req);
   a->seite(a->req);
   httpd_req_async_handler_complete(a->req);
   delete a;
@@ -32,7 +41,7 @@ static void anmelden(const char* uri, esp_err_t (*seite)(httpd_req_t*), bool lan
   httpd_uri_t u = {};
   u.uri = uri;
   u.method = HTTP_GET;
-  u.handler = lang ? auslagern : seite;
+  u.handler = lang ? auslagern : kurz;
   u.user_ctx = (void*)seite;
   httpd_register_uri_handler(server, &u);
 }

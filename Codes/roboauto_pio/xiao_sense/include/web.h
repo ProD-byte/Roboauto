@@ -11,9 +11,12 @@ void webUpdate();
 // true, solange die Webseite im Browser offen ist (fragt regelmaessig den Status ab)
 bool webVerbunden();
 
-// true, wenn die Seite/App direkt im eigenen WLAN des Autos haengt ("Roboauto", 192.168.4.1),
+// true, wenn die Seite/App direkt im eigenen WLAN des Autos haengt ("Roboauto-XXXX", 192.168.4.1),
 // false = ueber den Router (Heim-WLAN)
 bool webUeberAutoWlan();
+
+// Name des Autos fuer Bluetooth und eigenes WLAN, z. B. "Roboauto-3F2A" (mit Chip-Nummer)
+const char* autoName();
 
 // Befehl der App ueber Bluetooth/UDP, z. B. "/fahr?x=3&y=7&t=0" - wird genau wie die
 // HTTP-Anfrage der Webseite behandelt. Liefert die Antwort (JSON oder "ok").

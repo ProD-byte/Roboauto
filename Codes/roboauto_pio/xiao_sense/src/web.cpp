@@ -50,6 +50,16 @@ static unsigned long wlanStart = 0;
 static int  ereignis = 0;                     // fuer webEreignis()
 static bool fehlerGemeldet = false;
 
+// Name des Autos fuer Bluetooth und eigenes WLAN: Anfang + die letzten 4 Stellen der Chip-Nummer,
+// z. B. "Roboauto-3F2A". Jedes Auto hat so seinen eigenen Namen.
+const char* autoName() {
+  static char name[24] = "";
+  if (!name[0]) {
+    uint64_t mac = ESP.getEfuseMac();
+    snprintf(name, sizeof(name), "%s-%02X%02X", AUTO_NAME_ANFANG, (uint8_t)(mac >> 32), (uint8_t)(mac >> 40));
+  }
+  return name;
+}
 #ifndef OTA_PASSWORT
 #define OTA_PASSWORT ""
 #endif
@@ -241,13 +251,14 @@ static void starteEinrichtung() {
                 SETUP_WLAN_NAME, WiFi.softAPIP().toString().c_str());
 }
 
-// Eigenes WLAN "Roboauto" zum Fahren: das Handy verbindet sich direkt mit dem Auto, ohne Router.
+// Eigenes WLAN "Roboauto-XXXX" zum Fahren: das Handy verbindet sich direkt mit dem Auto, ohne Router.
 // Laeuft neben dem Heim-WLAN (gleicher Funkkanal wie der Router). Das Auto ist dort 192.168.4.1.
 static void starteFahrWlan() {
   WiFi.mode(WIFI_AP_STA);
-  WiFi.softAP(FAHR_WLAN_NAME);
+  WiFi.softAP(autoName());
+  medienServerStarten();                  // Video/Ton auch direkt im Auto-WLAN (nicht erst mit Heim-WLAN)
   Serial.printf(">> Eigenes WLAN \"%s\" offen (App direkt verbinden: %s)\n",
-                FAHR_WLAN_NAME, WiFi.softAPIP().toString().c_str());
+                autoName(), WiFi.softAPIP().toString().c_str());
 }
 
 // HTML-Sonderzeichen in Netzwerknamen entschaerfen
@@ -445,9 +456,9 @@ static String steuerBefehl(const String& pfad, const Param* p, int n, bool app) 
   // Fuer die App: ueber welche Adresse ist das Auto im WLAN erreichbar?
   if (pfad == "/info") {
     bool da = webWlanDa();
-    return String("{\"name\":\"") + WEB_NAME + "\",\"ble\":\"" + BLE_NAME + "\",\"wlan\":" + (da ? 1 : 0) +
+    return String("{\"name\":\"") + WEB_NAME + "\",\"ble\":\"" + autoName() + "\",\"wlan\":" + (da ? 1 : 0) +
            ",\"ip\":\"" + (da ? WiFi.localIP().toString() : String("")) + "\",\"fw\":" + autoUpdateBuild() +
-           ",\"udp\":" + APP_UDP_PORT + "}";
+           ",\"udp\":" + APP_UDP_PORT + ",\"board\":\"xiao\"}";   // board: welche Oberflaeche die App zeigt (mit Kamera)
   }
   return "?";
 }

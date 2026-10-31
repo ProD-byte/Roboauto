@@ -60,19 +60,24 @@ dependencies {
 
 // ------------------------------------------------------------
 //  Weboberflaeche aus der Firmware uebernehmen: WEBSEITE aus include/webseite.h
-//  wird zu assets/index.html. Damit sieht die App immer genauso aus wie die Webseite.
+//  wird zu assets/index.html, die des XIAO Sense (mit Kamera) zu assets/xiao.html.
+//  Damit sieht die App immer genauso aus wie die Webseite des jeweiligen Autos.
 //  Dazu kommen die App-eigenen Dateien aus app/web (app.js, verbinden.html).
 // ------------------------------------------------------------
 abstract class WebseiteAusziehen : DefaultTask() {
     @get:InputFile abstract val quelle: RegularFileProperty
+    @get:InputFile abstract val quelleXiao: RegularFileProperty
     @get:InputDirectory abstract val webOrdner: DirectoryProperty
     @get:OutputDirectory abstract val ausgabe: DirectoryProperty
 
+    private fun webseite(datei: File): String =
+        Regex("""const char WEBSEITE\[\] PROGMEM = R"==\((.*?)\)==";""", RegexOption.DOT_MATCHES_ALL)
+            .find(datei.readText())?.groupValues?.get(1) ?: throw GradleException("WEBSEITE in $datei nicht gefunden")
+
     @TaskAction
     fun los() {
-        val text = quelle.get().asFile.readText()
-        val html = Regex("""const char WEBSEITE\[\] PROGMEM = R"==\((.*?)\)==";""", RegexOption.DOT_MATCHES_ALL)
-            .find(text)?.groupValues?.get(1) ?: throw GradleException("WEBSEITE in webseite.h nicht gefunden")
+        val html = webseite(quelle.get().asFile)
+        val xiao = webseite(quelleXiao.get().asFile)
         // Auto-Logo aus der Kopfleiste - der Verbinden-Bildschirm benutzt es auch
         val logo = Regex("""<div class="marke">(<svg.*?</svg>)""", RegexOption.DOT_MATCHES_ALL)
             .find(html)?.groupValues?.get(1) ?: ""
@@ -81,7 +86,9 @@ abstract class WebseiteAusziehen : DefaultTask() {
         ziel.deleteRecursively()
         ziel.mkdirs()
         // app.js als erstes Skript: leitet fetch('/status') usw. an die App weiter
-        File(ziel, "index.html").writeText(html.replaceFirst("<head>", "<head>\n<script src=\"app.js\"></script>"))
+        val mitApp = "<head>\n<script src=\"app.js\"></script>"
+        File(ziel, "index.html").writeText(html.replaceFirst("<head>", mitApp))
+        File(ziel, "xiao.html").writeText(xiao.replaceFirst("<head>", mitApp))
         webOrdner.get().asFile.listFiles()!!.forEach { f ->
             File(ziel, f.name).writeText(f.readText().replace("<!--LOGO-->", logo))
         }
@@ -90,6 +97,7 @@ abstract class WebseiteAusziehen : DefaultTask() {
 
 val webseite = tasks.register<WebseiteAusziehen>("webseiteAusziehen") {
     quelle.set(file("../../roboauto_pio/include/webseite.h"))
+    quelleXiao.set(file("../../roboauto_pio/xiao_sense/include/webseite.h"))
     webOrdner.set(file("web"))
 }
 

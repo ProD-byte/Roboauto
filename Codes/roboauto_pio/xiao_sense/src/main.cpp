@@ -208,7 +208,7 @@ void loop() {
                 modus, lichtIstAn() });
 
   // --- LED-Ring: Verbindungsstatus ---
-  // Regenbogen = App per Bluetooth, tuerkiser Komet = ueber den Router, gruener Komet = direkt im WLAN des Autos,
+  // Regenbogen = App per Bluetooth, tuerkiser Komet = ueber den Router, violetter Komet = direkt im WLAN des Autos,
   // blau = niemand. Tank-Knopf = Tankanzeige
   RingQuelle quelle = ble ? RING_APP : !web ? RING_NIEMAND : webUeberAutoWlan() ? RING_AUTOWLAN : RING_WEB;
   static RingQuelle quelleVorher = RING_NIEMAND;

@@ -17,7 +17,7 @@ Ganz normale HTTP-Aufrufe an `http://roboauto.local` (oder die IP-Adresse), z. B
 | Befehl (App → Auto) | `8d3a1001-5b7e-4f2a-9c61-2e4b7a9d0c11` | Write / Write without response |
 | Antwort (Auto → App) | `8d3a1002-5b7e-4f2a-9c61-2e4b7a9d0c11` | Notify |
 
-Gerätename: **`RoboautoV3`** (wie bisher bei Dabble). Die App sollte nach dem Verbinden
+Gerätename: **`Roboauto-XXXX`** (XXXX = Chip-Nummer; XIAO: `RoboautoXiao-XXXX`). Die App sollte nach dem Verbinden
 eine **MTU von 517** anfordern, sonst werden die Antworten in viele kleine Stücke zerlegt.
 
 ### Anfrage
@@ -67,7 +67,7 @@ fährt die App per HTTP.
 
 ### Ohne Router: WLAN des Autos
 
-Das Auto öffnet immer sein eigenes, offenes WLAN **„Roboauto“** (neben dem Heim-WLAN, gleicher Funkkanal
+Das Auto öffnet immer sein eigenes, offenes WLAN **„Roboauto-XXXX“** (neben dem Heim-WLAN, gleicher Funkkanal
 wie der Router). Im Einrichtungsmodus heißt es „Roboauto-Setup“. Das Auto ist dort unter **192.168.4.1**
 erreichbar – gleiche HTTP- und UDP-Befehle wie oben. Ab Android 10 wechselt die App selbst in dieses WLAN
 (nur für die App, das Handy behält sein Internet über Mobilfunk); bei Android 8/9 wählt man es in den

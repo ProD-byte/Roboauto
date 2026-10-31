@@ -578,7 +578,7 @@ addEventListener('blur', () => {
   loslassen();
 });
 
-// ---------- Senden: alle 80 ms, solange etwas aktiv ist; einmal 0 beim Loslassen ----------
+// ---------- Senden: alle 40 ms, solange etwas aktiv ist; einmal 0 beim Loslassen ----------
 function aktuell(){
   let x = jx, y = jy;
   if (keys.w || keys.s || keys.a || keys.d){
@@ -603,7 +603,7 @@ async function sendeSchleife(){
     try { await fetch('/fahr?x='+x+'&y='+y+'&t='+t); letzteGesendet = wert; } catch(e){}
     unterwegs = false;
   }
-  setTimeout(sendeSchleife, 80);
+  setTimeout(sendeSchleife, 40);
 }
 sendeSchleife();
 

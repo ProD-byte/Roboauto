@@ -136,11 +136,11 @@ static void zeigeApp(unsigned long jetzt) {
   }
 }
 
-// WLAN: Komet, eine Runde in 4 s - tuerkis ueber den Router, gruen direkt im WLAN des Autos
+// WLAN: Komet, eine Runde in 4 s - tuerkis ueber den Router, violett direkt im WLAN des Autos
 static void zeigeWeb(unsigned long jetzt, bool autoWlan) {
-  for (int i = 0; i < LED_RING_ANZAHL; i++) autoWlan ? setze(i, 1, 9, 2) : setze(i, 0, 6, 9);   // ganz schwacher Grundschein
+  for (int i = 0; i < LED_RING_ANZAHL; i++) autoWlan ? setze(i, 4, 1, 9) : setze(i, 0, 6, 9);   // ganz schwacher Grundschein
   float pos = (jetzt % 4000) * (float)LED_RING_ANZAHL / 4000;
-  if (autoWlan) komet(pos, 40, 255, 40, 3.0f);
+  if (autoWlan) komet(pos, 170, 60, 255, 3.0f);
   else          komet(pos, 0, 180, 255, 3.0f);
 }
 
@@ -301,7 +301,7 @@ void ringSignal(uint32_t farbe) {
 
 void ringVerbunden(RingQuelle quelle) {
   if (quelle == RING_NIEMAND) return;
-  ringSignal(quelle == RING_AUTOWLAN ? 0x28FF28 : 0x00B4FF);
+  ringSignal(quelle == RING_AUTOWLAN ? 0xA03CFF : 0x00B4FF);
   signalRegenbogen = quelle == RING_APP;
 }
 

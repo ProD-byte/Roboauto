@@ -11,9 +11,12 @@ void webUpdate();
 // true, solange die Webseite im Browser offen ist (fragt regelmaessig den Status ab)
 bool webVerbunden();
 
-// true, wenn die Seite/App direkt im eigenen WLAN des Autos haengt ("Roboauto", 192.168.4.1),
+// true, wenn die Seite/App direkt im eigenen WLAN des Autos haengt ("Roboauto-XXXX", 192.168.4.1),
 // false = ueber den Router (Heim-WLAN)
 bool webUeberAutoWlan();
+
+// Name des Autos fuer Bluetooth und eigenes WLAN, z. B. "Roboauto-3F2A" (mit Chip-Nummer)
+const char* autoName();
 
 // Meldet einmalig, wie der WLAN-Start ausging: 0 = nichts Neues,
 // 1 = gerade erfolgreich verbunden, 2 = nach WLAN_TIMEOUT_MS nicht verbunden,
