@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Gleiche Farben wie die Weboberflaeche (--bg) -->
+    <!-- Gleiche Farben wie die Weboberflaeche (Hintergrund bg) -->
     <style name="Theme.Roboauto" parent="android:Theme.Material.NoActionBar">
         <item name="android:windowBackground">@color/hintergrund</item>
         <item name="android:colorAccent">@color/akzent</item>
