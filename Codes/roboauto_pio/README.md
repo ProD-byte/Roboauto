@@ -86,6 +86,9 @@ Auf der **GitHub-Pages-Seite** dieses Projekts auf „Roboauto installieren“ k
 
 Oder: Dabble-App öffnen, mit **„RoboautoV3“** verbinden, GamePad-Modul wählen.
 
+> 🧪 **Neu, im Test:** eigene [Roboauto-App](../roboauto_app/README.md) für Android statt Dabble –
+> gleiche Oberfläche wie im Browser, per Bluetooth oder WLAN. Braucht die Firmware `env:roboauto_bletest`.
+
 ## 🤖 Automatischer Build (GitHub Actions)
 
 Bei jedem Hochladen baut GitHub die Firmware automatisch:

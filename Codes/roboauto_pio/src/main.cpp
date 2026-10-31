@@ -18,9 +18,30 @@
 // ============================================================
 #include <Arduino.h>
 
+#ifdef MIT_DABBLE
 #define CUSTOM_SETTINGS
 #define INCLUDE_GAMEPAD_MODULE
 #include <DabbleESP32.h>
+#else
+// Test ohne Dabble (env:roboauto_bletest): die Roboauto-App schickt alles als Web-Befehle
+// ueber Bluetooth. Gamepad-Tasten gibt es dann nicht - dieser Platzhalter meldet immer "nicht gedrueckt".
+// Fliegt Dabble ganz raus, verschwindet der GamePad-Code in loop() mit.
+#include "app_ble.h"
+static struct {
+  bool isStartPressed()    { return false; }
+  bool isSelectPressed()   { return false; }
+  bool isUpPressed()       { return false; }
+  bool isDownPressed()     { return false; }
+  bool isLeftPressed()     { return false; }
+  bool isRightPressed()    { return false; }
+  bool isSquarePressed()   { return false; }
+  bool isCirclePressed()   { return false; }
+  bool isTrianglePressed() { return false; }
+  bool isCrossPressed()    { return false; }
+  int  getx_axis()         { return 0; }
+  int  gety_axis()         { return 0; }
+} GamePad;
+#endif
 #include <BLEDevice.h>
 
 #include "config.h"
@@ -92,8 +113,12 @@ void setup() {
   lichtStarten();
   akkuStarten();
   if (gyroStarten()) gyroKalibrieren();   // Auto beim Einschalten 1 s still stehen lassen
+#ifdef MIT_DABBLE
   Dabble.begin(BLE_NAME);
-  webStarten();                           // WLAN + Webseite (oder Einrichtungs-WLAN)
+#else
+  appBleStarten();                        // Bluetooth fuer die Roboauto-App
+#endif
+  webStarten();                          // WLAN + Webseite (oder Einrichtungs-WLAN)
   aufnahmeStarten();                      // gespeicherten Fahrweg laden
 
   Serial.println();
@@ -103,7 +128,11 @@ void setup() {
 }
 
 void loop() {
+#ifdef MIT_DABBLE
   Dabble.processInput();
+#else
+  appBleUpdate();
+#endif
 
   akkuUpdate();
   gyroUpdate();
@@ -129,7 +158,7 @@ void loop() {
   bool web = webVerbunden();
   if (ble != bleVorher) {
     bleVorher = ble;
-    Serial.println(ble ? ">> Handy (Dabble) verbunden" : ">> Handy (Dabble) getrennt");
+    Serial.println(ble ? ">> Handy (Bluetooth) verbunden" : ">> Handy (Bluetooth) getrennt");
     if (ble) buzzerVerbunden(); else buzzerGetrennt();
   }
   if (web != webVorher) {

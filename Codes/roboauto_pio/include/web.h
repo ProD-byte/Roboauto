@@ -49,3 +49,11 @@ constexpr int WEB_AKTION_MUSIK_STOPP = 40, WEB_AKTION_MUSIK = 41;          // 41
 // Modus fuer die Statusanzeige auf der Webseite mitteilen (siehe enum Modus in config.h)
 void webSetzeModus(int modus);
 int webAktion();
+
+// Befehl der App ueber Bluetooth, z. B. "/fahr?x=3&y=7&t=0" - wird genau wie die
+// HTTP-Anfrage der Webseite behandelt. Liefert die Antwort (JSON oder "ok").
+// Siehe docs/app-protokoll.md
+String webAppBefehl(const String& anfrage);
+
+// Fahren sofort stoppen (z. B. wenn die Bluetooth-Verbindung abreisst)
+void webFahrStopp();

@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="de"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Roboauto verbinden</title>
+<style>
+  /* Gleiche Farben und Formen wie die Weboberflaeche (include/webseite.h) */
+  :root{--bg:#0d0f13;--karte:#161a20;--karte2:#1c2129;--rand:#262c35;--rand2:#323a45;--text:#eef1f5;--leise:#8b95a3;
+        --akzent:#4f9cff;--akzent2:#7c6cff;--gut:#3ccf6e;--warn:#f0a030;--rot:#ef5350;--r:18px}
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  body{margin:0;min-height:100vh;color:var(--text);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;user-select:none;-webkit-user-select:none;
+       background:radial-gradient(1200px 600px at 10% -10%,#1a2440 0%,transparent 60%),radial-gradient(900px 500px at 110% 10%,#251c40 0%,transparent 55%),var(--bg);background-attachment:fixed}
+  .kopf{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--rand);background:rgba(13,15,19,.72)}
+  .marke{display:flex;align-items:center;gap:10px;font-weight:700;font-size:19px;letter-spacing:.2px}
+  .marke svg{width:52px;height:24px}
+  main{max-width:560px;margin:0 auto;padding:18px 16px 40px;display:flex;flex-direction:column;gap:22px}
+  h2{margin:0 0 10px;font-size:12px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--leise);display:flex;align-items:center;gap:8px}
+  h2::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--rand2),transparent)}
+  .karte{background:linear-gradient(180deg,var(--karte2),var(--karte));border:1px solid var(--rand);border-radius:var(--r);padding:16px;box-shadow:0 10px 30px -18px #000}
+  .leise{color:var(--leise);font-size:13px}
+
+  /* ---- Radar ---- */
+  .start{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;padding:22px 16px}
+  .radar{position:relative;width:190px;height:190px}
+  .radar i{position:absolute;inset:0;border-radius:50%;border:1.5px solid var(--akzent);opacity:0;animation:welle 2.4s ease-out infinite}
+  .radar i:nth-child(2){animation-delay:.8s}
+  .radar i:nth-child(3){animation-delay:1.6s}
+  @keyframes welle{0%{transform:scale(.4);opacity:.9}100%{transform:scale(1);opacity:0}}
+  .radar .mitte{position:absolute;inset:52px;border-radius:50%;display:grid;place-items:center;
+       background:radial-gradient(circle at 35% 30%,#8ec0ff,var(--akzent) 45%,var(--akzent2));box-shadow:0 8px 30px -6px #4f9cffaa,inset 0 -4px 10px #0004;transition:background .4s}
+  .radar .mitte svg{width:76px;height:35px;filter:drop-shadow(0 2px 3px #0006)}
+  .radar.ruhe i{animation:none}
+  .radar.fehler .mitte{background:radial-gradient(circle at 35% 30%,#ffb0a8,var(--rot) 50%,#a83232);box-shadow:0 8px 30px -6px #ef5350aa}
+  .radar.fehler i{border-color:var(--rot)}
+  #text{font-size:17px;font-weight:650;min-height:24px}
+  #unter{max-width:380px}
+  .knoepfe{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+  button{font:600 14px system-ui,sans-serif;color:var(--text);background:var(--karte2);border:1px solid var(--rand2);border-radius:14px;height:46px;padding:0 18px;cursor:pointer;
+         display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s,border-color .15s,transform .08s}
+  button:active{transform:scale(.97)}
+  button.haupt{border:0;background:linear-gradient(90deg,var(--akzent),var(--akzent2));box-shadow:0 8px 22px -10px var(--akzent)}
+
+  /* ---- Gefundene Autos ---- */
+  .liste{display:flex;flex-direction:column;gap:10px}
+  .auto{height:auto;min-height:72px;width:100%;justify-content:flex-start;gap:14px;padding:12px 14px;text-align:left;border-radius:var(--r);
+        background:linear-gradient(180deg,var(--karte2),var(--karte));border-color:var(--rand)}
+  .auto .ico{width:44px;height:44px;border-radius:14px;flex:none;display:grid;place-items:center;font-size:20px;
+             background:linear-gradient(135deg,#1b2a48,#22204a);border:1px solid #3a4f80}
+  .auto span{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+  .auto b{font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .auto small{color:var(--leise);font-weight:400;font-size:12.5px}
+  .auto .pfeil{color:var(--akzent);font-size:22px}
+  .auto.zuletzt{border-color:#3a4f80;box-shadow:0 0 0 1px #3a4f80 inset}
+  .auto.laedt{border-color:var(--akzent);box-shadow:0 0 0 1px var(--akzent) inset,0 0 22px -6px var(--akzent)}
+  .auto.laedt .pfeil{width:20px;height:20px;border:2.5px solid #4f9cff44;border-top-color:var(--akzent);border-radius:50%;animation:dreh .8s linear infinite;font-size:0}
+  @keyframes dreh{to{transform:rotate(360deg)}}
+  .lade{height:72px;border-radius:var(--r);background:linear-gradient(90deg,#161a20,#1e242d,#161a20);background-size:200% 100%;animation:schimmer 1.4s infinite;border:1px solid var(--rand)}
+  @keyframes schimmer{to{background-position:-200% 0}}
+
+  /* ---- WLAN von Hand ---- */
+  details>summary{list-style:none;cursor:pointer;color:var(--akzent);font-size:14px;text-align:center}
+  details>summary::-webkit-details-marker{display:none}
+  .hand{display:flex;gap:8px;margin-top:12px}
+  .hand input{flex:1;min-width:0;height:46px;border-radius:14px;border:1px solid var(--rand2);background:#12161c;color:var(--text);padding:0 14px;font:15px system-ui,sans-serif;user-select:text;-webkit-user-select:text}
+  .hand input:focus{outline:none;border-color:var(--akzent)}
+  .fuss{text-align:center;color:var(--leise);font-size:12.5px}
+</style></head><body>
+<header class="kopf"><div class="marke"><!--LOGO-->Roboauto</div></header>
+
+<main>
+  <div class="karte start">
+    <div class="radar" id="radar"><i></i><i></i><i></i><div class="mitte"><!--LOGO--></div></div>
+    <div id="text"></div>
+    <div id="unter" class="leise"></div>
+    <div class="knoepfe" id="knoepfe"></div>
+  </div>
+
+  <section>
+    <h2 data-t="gefunden"></h2>
+    <div class="liste" id="liste"><div class="lade"></div><div class="lade"></div></div>
+  </section>
+
+  <details class="karte">
+    <summary data-t="hand"></summary>
+    <div class="hand">
+      <input id="adresse" autocapitalize="off" autocorrect="off" spellcheck="false" inputmode="url">
+      <button class="haupt" id="los" data-t="verbinden"></button>
+    </div>
+    <p class="leise" data-t="handinfo" style="margin:10px 2px 0"></p>
+  </details>
+
+  <p class="fuss" data-t="tipp"></p>
+</main>
+
+<script>
+// Texte in den vier Sprachen der Weboberflaeche (gleiche Einstellung im localStorage)
+const TEXTE = {
+  de: {gefunden:'Gefundene Autos', hand:'WLAN-Adresse von Hand eingeben', verbinden:'Verbinden',
+       handinfo:'Steht im seriellen Monitor oder im Router, z. B. 192.168.178.42. Das Handy muss im selben WLAN sein.',
+       tipp:'Auto einschalten – leuchtet der LED-Ring blau, wartet es auf eine Verbindung.',
+       sucht:'Suche nach Autos …', suchtU:'Bluetooth und WLAN werden durchsucht.',
+       erlaubnis:'Bluetooth-Erlaubnis fehlt', erlaubnisU:'Die App braucht die Erlaubnis für „Geräte in der Nähe“, um das Auto zu finden.',
+       erlauben:'Erlauben', einstellungen:'App-Einstellungen',
+       keinbt:'Kein Bluetooth', keinbtU:'Dieses Handy hat kein Bluetooth – über WLAN geht es trotzdem.',
+       btaus:'Bluetooth ist aus', btausU:'Bluetooth einschalten, dann neu suchen.', btan:'Bluetooth einschalten',
+       standort:'Standort ist aus', standortU:'Bis Android 11 findet die Bluetooth-Suche nur mit eingeschaltetem Standort etwas.', standortan:'Standort einschalten',
+       verbinde:'Verbinde mit {0} …', verbindeU:'Gleich geht’s los.',
+       verbindeW:'Verbinde über WLAN …', fehler:'Verbindung klappt nicht', fehlerU:'Neuer Versuch läuft. Ist das Auto an und in der Nähe?',
+       wfehler:'Kein Roboauto gefunden', wfehlerU:'Unter {0} antwortet kein Auto. Ist das Handy im selben WLAN?',
+       neu:'Neu suchen', bt:'Bluetooth', wlan:'WLAN', zuletzt:'zuletzt verbunden', leer:'Noch kein Auto gefunden.'},
+  en: {gefunden:'Cars found', hand:'Enter Wi-Fi address manually', verbinden:'Connect',
+       handinfo:'Shown in the serial monitor or your router, e.g. 192.168.178.42. Your phone must be on the same Wi-Fi.',
+       tipp:'Switch the car on – a blue LED ring means it is waiting for a connection.',
+       sucht:'Looking for cars …', suchtU:'Searching Bluetooth and Wi-Fi.',
+       erlaubnis:'Bluetooth permission missing', erlaubnisU:'The app needs the “Nearby devices” permission to find the car.',
+       erlauben:'Allow', einstellungen:'App settings',
+       keinbt:'No Bluetooth', keinbtU:'This phone has no Bluetooth – Wi-Fi still works.',
+       btaus:'Bluetooth is off', btausU:'Switch Bluetooth on, then search again.', btan:'Turn on Bluetooth',
+       standort:'Location is off', standortU:'Up to Android 11, the Bluetooth search only works with location turned on.', standortan:'Turn on location',
+       verbinde:'Connecting to {0} …', verbindeU:'Almost there.',
+       verbindeW:'Connecting via Wi-Fi …', fehler:'Connection failed', fehlerU:'Trying again. Is the car on and nearby?',
+       wfehler:'No Roboauto found', wfehlerU:'No car answers at {0}. Is your phone on the same Wi-Fi?',
+       neu:'Search again', bt:'Bluetooth', wlan:'Wi-Fi', zuletzt:'last connected', leer:'No car found yet.'},
+  es: {gefunden:'Coches encontrados', hand:'Introducir dirección Wi-Fi a mano', verbinden:'Conectar',
+       handinfo:'Aparece en el monitor serie o en el router, p. ej. 192.168.178.42. El móvil debe estar en la misma Wi-Fi.',
+       tipp:'Enciende el coche: si el anillo LED está azul, espera una conexión.',
+       sucht:'Buscando coches …', suchtU:'Buscando por Bluetooth y Wi-Fi.',
+       erlaubnis:'Falta el permiso de Bluetooth', erlaubnisU:'La app necesita el permiso «Dispositivos cercanos» para encontrar el coche.',
+       erlauben:'Permitir', einstellungen:'Ajustes de la app',
+       keinbt:'Sin Bluetooth', keinbtU:'Este móvil no tiene Bluetooth; por Wi-Fi funciona igual.',
+       btaus:'Bluetooth apagado', btausU:'Activa Bluetooth y vuelve a buscar.', btan:'Activar Bluetooth',
+       standort:'Ubicación apagada', standortU:'Hasta Android 11, la búsqueda Bluetooth solo funciona con la ubicación activada.', standortan:'Activar ubicación',
+       verbinde:'Conectando con {0} …', verbindeU:'Casi listo.',
+       verbindeW:'Conectando por Wi-Fi …', fehler:'No se pudo conectar', fehlerU:'Reintentando. ¿Está el coche encendido y cerca?',
+       wfehler:'No se encontró ningún Roboauto', wfehlerU:'Ningún coche responde en {0}. ¿Está el móvil en la misma Wi-Fi?',
+       neu:'Buscar de nuevo', bt:'Bluetooth', wlan:'Wi-Fi', zuletzt:'última conexión', leer:'Aún no se ha encontrado ningún coche.'},
+  fr: {gefunden:'Voitures trouvées', hand:'Saisir l’adresse Wi-Fi à la main', verbinden:'Connecter',
+       handinfo:'Indiquée dans le moniteur série ou le routeur, p. ex. 192.168.178.42. Le téléphone doit être sur le même Wi-Fi.',
+       tipp:'Allume la voiture : si l’anneau LED est bleu, elle attend une connexion.',
+       sucht:'Recherche de voitures …', suchtU:'Recherche en Bluetooth et Wi-Fi.',
+       erlaubnis:'Autorisation Bluetooth manquante', erlaubnisU:'L’app a besoin de l’autorisation « Appareils à proximité » pour trouver la voiture.',
+       erlauben:'Autoriser', einstellungen:'Réglages de l’app',
+       keinbt:'Pas de Bluetooth', keinbtU:'Ce téléphone n’a pas de Bluetooth – le Wi-Fi fonctionne quand même.',
+       btaus:'Bluetooth désactivé', btausU:'Active le Bluetooth, puis relance la recherche.', btan:'Activer le Bluetooth',
+       standort:'Localisation désactivée', standortU:'Jusqu’à Android 11, la recherche Bluetooth ne fonctionne qu’avec la localisation activée.', standortan:'Activer la localisation',
+       verbinde:'Connexion à {0} …', verbindeU:'Presque prêt.',
+       verbindeW:'Connexion par Wi-Fi …', fehler:'Connexion impossible', fehlerU:'Nouvel essai en cours. La voiture est-elle allumée et proche ?',
+       wfehler:'Aucun Roboauto trouvé', wfehlerU:'Aucune voiture ne répond à {0}. Le téléphone est-il sur le même Wi-Fi ?',
+       neu:'Rechercher', bt:'Bluetooth', wlan:'Wi-Fi', zuletzt:'dernière connexion', leer:'Aucune voiture trouvée pour l’instant.'}
+};
+let sprache = 'de';
+try { sprache = localStorage.getItem('sprache') || (navigator.language || 'de').slice(0, 2); } catch(e){}
+if (!TEXTE[sprache]) sprache = 'de';
+document.documentElement.lang = sprache;
+const t = (k, a) => (TEXTE[sprache][k] || k).replace('{0}', a == null ? '' : a);
+document.querySelectorAll('[data-t]').forEach(e => e.textContent = t(e.dataset.t));
+
+const $ = id => document.getElementById(id);
+const autos = {};          // schluessel -> {art, name, adresse, signal, el}
+let suchUhr = null;
+
+function knopf(text, klick, haupt){
+  const b = document.createElement('button');
+  b.textContent = text;
+  if (haupt) b.className = 'haupt';
+  b.addEventListener('click', klick);
+  return b;
+}
+function anzeige(titel, unter, knoepfe, art){
+  $('text').textContent = titel;
+  $('unter').textContent = unter || '';
+  $('knoepfe').replaceChildren(...(knoepfe || []));
+  $('radar').className = 'radar' + (art ? ' ' + art : '');
+}
+const neuKnopf = () => knopf(t('neu'), suchen);
+
+function suchen(){
+  document.querySelectorAll('.auto.laedt').forEach(e => e.classList.remove('laedt'));
+  anzeige(t('sucht'), t('suchtU'), []);
+  Roboauto.suchen();
+  clearTimeout(suchUhr);
+  suchUhr = setTimeout(() => {                       // nach der Suche: Radar anhalten
+    const welche = Object.keys(autos).length;
+    if ($('text').textContent === t('sucht')) anzeige(welche ? t('gefunden') : t('leer'), '', [neuKnopf()], 'ruhe');
+    if (!welche) $('liste').replaceChildren();
+  }, 15000);
+}
+
+// Signalstaerke als 4 Balken (wie auf der WLAN-Einrichtungsseite)
+function balken(rssi){
+  const n = Math.max(1, Math.min(4, Math.round((rssi + 90) / 45 * 3 + 1)));
+  let s = '<svg width="22" height="18" viewBox="0 0 22 18" style="flex:none">';
+  for (let i = 0; i < 4; i++){
+    const h = 5 + i * 4;
+    s += '<rect x="' + i * 6 + '" y="' + (18 - h) + '" width="4" height="' + h + '" rx="1.5" fill="' + (i < n ? '#4f9cff' : '#323a45') + '"/>';
+  }
+  return s + '</svg>';
+}
+
+const robo = window.robo = {
+  gefunden(g){
+    const schluessel = g.art + ':' + g.adresse;
+    let a = autos[schluessel];
+    if (!a){
+      if (!Object.keys(autos).length) $('liste').replaceChildren();   // Platzhalter weg
+      const el = document.createElement('button');
+      el.className = 'auto';
+      el.addEventListener('click', () => verbinden(a));
+      a = autos[schluessel] = Object.assign({el}, g);
+      $('liste').appendChild(el);
+    }
+    a.name = g.name; a.signal = g.signal;
+    const ble = g.art === 'ble';
+    a.el.innerHTML = '<div class="ico">' + (ble
+        ? '<svg width="16" height="22" viewBox="0 0 12 18" fill="none" stroke="#8ec0ff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 5l9 8-4.5 4V1L10 5 1 13"/></svg>'
+        : '&#128246;') + '</div>' +
+      '<span><b></b><small></small></span>' + (ble ? balken(g.signal) : '') + '<div class="pfeil">&rsaquo;</div>';
+    a.el.querySelector('b').textContent = g.name;
+    a.el.querySelector('small').textContent = (ble ? t('bt') : t('wlan') + ' · ' + g.adresse);
+  },
+  zustand(code, extra){
+    const name = (Object.values(autos).find(a => a.adresse === extra) || {}).name || extra;
+    switch (code){
+      case 'sucht':     anzeige(t('sucht'), t('suchtU'), []); break;
+      case 'erlaubnis': anzeige(t('erlaubnis'), t('erlaubnisU'), [knopf(t('erlauben'), suchen, true), knopf(t('einstellungen'), () => Roboauto.appEinstellungen())], 'ruhe fehler'); break;
+      case 'keinbt':    anzeige(t('keinbt'), t('keinbtU'), [neuKnopf()], 'ruhe'); break;
+      case 'btaus':     anzeige(t('btaus'), t('btausU'), [knopf(t('btan'), () => Roboauto.btEinschalten(), true), neuKnopf()], 'ruhe fehler'); break;
+      case 'standort':  anzeige(t('standort'), t('standortU'), [knopf(t('standortan'), () => Roboauto.standortEinschalten(), true), neuKnopf()], 'ruhe fehler'); break;
+      case 'verbinde':  anzeige(t('verbinde', name), t('verbindeU'), []); break;
+      case 'verbinde_wlan': anzeige(t('verbindeW'), extra, []); break;
+      case 'fehler':    anzeige(t('fehler'), t('fehlerU'), [neuKnopf()], 'fehler'); break;
+      case 'wlan_fehler':
+        document.querySelectorAll('.auto.laedt').forEach(e => e.classList.remove('laedt'));
+        anzeige(t('wfehler'), t('wfehlerU', extra), [neuKnopf()], 'ruhe fehler'); break;
+    }
+  }
+};
+
+function verbinden(a){
+  clearTimeout(suchUhr);
+  document.querySelectorAll('.auto.laedt').forEach(e => e.classList.remove('laedt'));
+  a.el.classList.add('laedt');
+  if (a.art === 'ble') Roboauto.verbindeBle(a.adresse);
+  else Roboauto.verbindeWlan(a.adresse);
+}
+
+$('adresse').value = Roboauto.letzteAdresse();
+$('los').addEventListener('click', () => Roboauto.verbindeWlan($('adresse').value));
+$('adresse').addEventListener('keydown', e => { if (e.key === 'Enter') Roboauto.verbindeWlan($('adresse').value); });
+
+suchen();
+</script>
+</body></html>

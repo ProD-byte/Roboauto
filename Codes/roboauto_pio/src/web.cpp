@@ -331,6 +331,138 @@ static void sendeEinrichtungsSeite() {
   sendeSeite(s);
 }
 
+// ------------------------------------------------------------
+//  Steuerbefehle: kommen von der Webseite (HTTP) oder von der App (HTTP oder Bluetooth).
+//  Beide Wege landen hier, damit alles gleich funktioniert. Protokoll: docs/app-protokoll.md
+// ------------------------------------------------------------
+struct Param { String name, wert; };
+constexpr int PARAM_MAX = 24;
+
+static bool hatParam(const Param* p, int n, const char* name) {
+  for (int i = 0; i < n; i++) if (p[i].name == name) return true;
+  return false;
+}
+static String param(const Param* p, int n, const char* name) {
+  for (int i = 0; i < n; i++) if (p[i].name == name) return p[i].wert;
+  return "";
+}
+
+static String statusJson() {
+  char ringText[8 * 7 + 1] = "";                   // 8 Ring-LEDs als "rrggbb,rrggbb,..."
+  for (int i = 0; i < LED_RING_ANZAHL && i < 8; i++)
+    snprintf(ringText + strlen(ringText), sizeof(ringText) - strlen(ringText), i ? ",%06lx" : "%06lx",
+             (unsigned long)ringAnzeigeFarbe(i));
+  char json[900];
+  snprintf(json, sizeof(json),
+           "{\"akku\":%d,\"prozent\":%d,\"usb\":%d,\"eco\":%d,\"links\":%d,\"rechts\":%d,\"rssi\":%d,"
+           "\"licht\":%d,\"fern\":%d,\"warn\":%d,\"wende\":%d,\"modus\":%d,\"figur\":%d,"
+           "\"rec\":%d,\"play\":%d,\"reclen\":%.1f,\"playpos\":%.1f,\"balance\":%d,"
+           "\"nicken\":%.1f,\"rollen\":%.1f,\"kurs\":%.1f,\"dreh\":%.0f,\"kal\":%d,\"mt\":%d,\"lied\":%d,\"liedpos\":%d,\"ton\":%d,\"fw\":%d,\"fwneu\":%d,\"upd\":%d,\"updp\":%d,"
+           "\"lampen\":\"%06lx,%06lx,%06lx,%06lx\",\"ring\":\"%s\"}",
+           akkuWert(), akkuProzent(), akkuUsb(), akkuEco(), antriebLinks(), antriebRechts(), WiFi.RSSI(),
+           lichtIstAn(), lichtIstFernlicht(), lichtIstWarnblinker(), antriebWendeAktiv(), modus, figurNummer(),
+           aufnahmeLaeuft(), abspielenLaeuft(), aufnahmeSekunden(), abspielenSekunden(), balanceAktiv(),
+           -gyroNeigungY(), gyroNeigungX(), kurs(), gyroDrehrate(),   // nicken: Schnauze hoch = positiv
+           gyroKalibriertGerade(), antriebTestSeite() + 1, musikNummer(), musikFortschritt(), musikTon(),
+           autoUpdateBuild(), autoUpdateNeu(), autoUpdateZustand(), autoUpdateProzent(),
+           (unsigned long)lichtAnzeigeFarbe(0), (unsigned long)lichtAnzeigeFarbe(1),
+           (unsigned long)lichtAnzeigeFarbe(2), (unsigned long)lichtAnzeigeFarbe(3), ringText);
+  return String(json);
+}
+
+// app = true: kam ueber Bluetooth (zaehlt nicht als "Webseite offen")
+static String steuerBefehl(const String& pfad, const Param* p, int n, bool app) {
+  if (pfad == "/fahr") {
+    x = constrain(param(p, n, "x").toInt(), -JOYSTICK_MAX, JOYSTICK_MAX);
+    y = constrain(param(p, n, "y").toInt(), -JOYSTICK_MAX, JOYSTICK_MAX);
+    tasten = param(p, n, "t").toInt();
+    letzterFahrbefehl = millis();
+    if (!app) letzteAbfrage = millis();
+    return "ok";
+  }
+  if (pfad == "/aktion") {
+    aktion = param(p, n, "a").toInt();
+    if (!app) letzteAbfrage = millis();
+    return "ok";
+  }
+  if (pfad == "/status") {
+    if (!app) letzteAbfrage = millis();
+    return statusJson();
+  }
+  // Einstellungen lesen: /einstellungen   aendern: /einstellungen?tempo=150&toene=1 ...
+  if (pfad == "/einstellungen") {
+    if (hatParam(p, n, "standard")) {
+      einstellungenStandard();
+    } else if (hatParam(p, n, "motorStandard")) {
+      einstellungenMotorStandard();
+    } else if (n > 0) {
+      for (int i = 0; i < n; i++) einstellungSetzen(p[i].name, p[i].wert);
+      einstellungenSpeichern();
+      if (hatParam(p, n, "lautstaerke")) buzzerProbe();   // neue Lautstaerke gleich hoerbar
+      Serial.println(">> Einstellungen gespeichert: " + einstellungenJson());
+    }
+    return einstellungenJson();
+  }
+  // Auto-Update: /update?a=suchen  oder  /update?a=installieren
+  if (pfad == "/update") {
+    String a = param(p, n, "a");
+    if (a == "suchen") autoUpdateSuchen();
+    if (a == "installieren") { autoUpdateSuchen(); autoUpdateInstallieren(); }
+    if (!app) letzteAbfrage = millis();
+    return "ok";
+  }
+  if (pfad == "/verlauf") return akkuVerlaufJson();
+  // Fuer die App: ueber welche Adresse ist das Auto im WLAN erreichbar?
+  if (pfad == "/info") {
+    bool da = webWlanDa();
+    return String("{\"name\":\"") + WEB_NAME + "\",\"ble\":\"" + BLE_NAME + "\",\"wlan\":" + (da ? 1 : 0) +
+           ",\"ip\":\"" + (da ? WiFi.localIP().toString() : String("")) + "\",\"fw\":" + autoUpdateBuild() + "}";
+  }
+  return "?";
+}
+
+static void httpSteuerung() {
+  Param p[PARAM_MAX];
+  int n = min(server.args(), PARAM_MAX);
+  for (int i = 0; i < n; i++) p[i] = {server.argName(i), server.arg(i)};
+  String antwort = steuerBefehl(server.uri(), p, n, false);
+  server.send(200, antwort.startsWith("{") ? "application/json" : "text/plain", antwort);
+}
+
+// %41 -> 'A', '+' -> ' '
+static String urlDekodieren(const String& s) {
+  String r;
+  for (unsigned i = 0; i < s.length(); i++) {
+    char c = s[i];
+    if (c == '+') r += ' ';
+    else if (c == '%' && i + 2 < s.length()) { r += (char)strtol(s.substring(i + 1, i + 3).c_str(), nullptr, 16); i += 2; }
+    else r += c;
+  }
+  return r;
+}
+
+String webAppBefehl(const String& anfrage) {
+  int frage = anfrage.indexOf('?');
+  String pfad = frage < 0 ? anfrage : anfrage.substring(0, frage);
+  Param p[PARAM_MAX];
+  int n = 0;
+  if (frage >= 0) {
+    String rest = anfrage.substring(frage + 1);
+    while (rest.length() > 0 && n < PARAM_MAX) {
+      int und = rest.indexOf('&');
+      String teil = und < 0 ? rest : rest.substring(0, und);
+      rest = und < 0 ? String("") : rest.substring(und + 1);
+      if (teil.length() == 0) continue;
+      int gleich = teil.indexOf('=');
+      p[n++] = {urlDekodieren(gleich < 0 ? teil : teil.substring(0, gleich)),
+                gleich < 0 ? String("") : urlDekodieren(teil.substring(gleich + 1))};
+    }
+  }
+  return steuerBefehl(pfad, p, n, true);
+}
+
+void webFahrStopp() { x = 0; y = 0; tasten = 0; letzterFahrbefehl = 0; }
+
 void webStarten() {
   ladeZugang();
   WiFi.setHostname(WEB_NAME);
@@ -392,71 +524,9 @@ void webStarten() {
     webWlanVergessen();
   });
 
-  // --- Steuerung ---
-  server.on("/fahr", HTTP_GET, []() {
-    x = constrain(server.arg("x").toInt(), -JOYSTICK_MAX, JOYSTICK_MAX);
-    y = constrain(server.arg("y").toInt(), -JOYSTICK_MAX, JOYSTICK_MAX);
-    tasten = server.arg("t").toInt();
-    letzterFahrbefehl = millis();
-    letzteAbfrage = millis();
-    server.send(200, "text/plain", "ok");
-  });
-  server.on("/aktion", HTTP_GET, []() {
-    aktion = server.arg("a").toInt();
-    letzteAbfrage = millis();
-    server.send(200, "text/plain", "ok");
-  });
-  server.on("/status", HTTP_GET, []() {
-    letzteAbfrage = millis();
-    char ringText[8 * 7 + 1] = "";                   // 8 Ring-LEDs als "rrggbb,rrggbb,..."
-    for (int i = 0; i < LED_RING_ANZAHL && i < 8; i++)
-      snprintf(ringText + strlen(ringText), sizeof(ringText) - strlen(ringText), i ? ",%06lx" : "%06lx",
-               (unsigned long)ringAnzeigeFarbe(i));
-    char json[900];
-    snprintf(json, sizeof(json),
-             "{\"akku\":%d,\"prozent\":%d,\"usb\":%d,\"eco\":%d,\"links\":%d,\"rechts\":%d,\"rssi\":%d,"
-             "\"licht\":%d,\"fern\":%d,\"warn\":%d,\"wende\":%d,\"modus\":%d,\"figur\":%d,"
-             "\"rec\":%d,\"play\":%d,\"reclen\":%.1f,\"playpos\":%.1f,\"balance\":%d,"
-             "\"nicken\":%.1f,\"rollen\":%.1f,\"kurs\":%.1f,\"dreh\":%.0f,\"kal\":%d,\"mt\":%d,\"lied\":%d,\"liedpos\":%d,\"ton\":%d,\"fw\":%d,\"fwneu\":%d,\"upd\":%d,\"updp\":%d,"
-             "\"lampen\":\"%06lx,%06lx,%06lx,%06lx\",\"ring\":\"%s\"}",
-             akkuWert(), akkuProzent(), akkuUsb(), akkuEco(), antriebLinks(), antriebRechts(), WiFi.RSSI(),
-             lichtIstAn(), lichtIstFernlicht(), lichtIstWarnblinker(), antriebWendeAktiv(), modus, figurNummer(),
-             aufnahmeLaeuft(), abspielenLaeuft(), aufnahmeSekunden(), abspielenSekunden(), balanceAktiv(),
-             -gyroNeigungY(), gyroNeigungX(), kurs(), gyroDrehrate(),   // nicken: Schnauze hoch = positiv
-             gyroKalibriertGerade(), antriebTestSeite() + 1, musikNummer(), musikFortschritt(), musikTon(),
-             autoUpdateBuild(), autoUpdateNeu(), autoUpdateZustand(), autoUpdateProzent(),
-             (unsigned long)lichtAnzeigeFarbe(0), (unsigned long)lichtAnzeigeFarbe(1),
-             (unsigned long)lichtAnzeigeFarbe(2), (unsigned long)lichtAnzeigeFarbe(3), ringText);
-    server.send(200, "application/json", json);
-  });
-
-  // Einstellungen lesen: /einstellungen   aendern: /einstellungen?tempo=150&toene=1 ...
-  server.on("/einstellungen", HTTP_GET, []() {
-    if (server.hasArg("standard")) {
-      einstellungenStandard();
-    } else if (server.hasArg("motorStandard")) {
-      einstellungenMotorStandard();
-    } else if (server.args() > 0) {
-      for (int i = 0; i < server.args(); i++) einstellungSetzen(server.argName(i), server.arg(i));
-      einstellungenSpeichern();
-      if (server.hasArg("lautstaerke")) buzzerProbe();   // neue Lautstaerke gleich hoerbar
-      Serial.println(">> Einstellungen gespeichert: " + einstellungenJson());
-    }
-    server.send(200, "application/json", einstellungenJson());
-  });
-
-  // Auto-Update: /update?a=suchen  oder  /update?a=installieren
-  server.on("/update", HTTP_GET, []() {
-    String a = server.arg("a");
-    if (a == "suchen") autoUpdateSuchen();
-    if (a == "installieren") { autoUpdateSuchen(); autoUpdateInstallieren(); }
-    letzteAbfrage = millis();
-    server.send(200, "text/plain", "ok");
-  });
-
-  server.on("/verlauf", HTTP_GET, []() {
-    server.send(200, "application/json", akkuVerlaufJson());
-  });
+  // --- Steuerung (gleiche Befehle kommen von der App auch ueber Bluetooth) ---
+  for (const char* pfad : {"/fahr", "/aktion", "/status", "/einstellungen", "/update", "/verlauf", "/info"})
+    server.on(pfad, HTTP_GET, httpSteuerung);
 
   // Alles andere: im Einrichtungsmodus auf die Einrichtungsseite umleiten.
   // Das loest auf Handys automatisch das "Im Netzwerk anmelden"-Fenster aus.
@@ -555,9 +625,10 @@ bool webWlanDa()      { return staVerbunden && !setupAktiv && WiFi.status() == W
 
 bool webVerbunden() { return (serverLaeuft || setupAktiv) && letzteAbfrage != 0 && millis() - letzteAbfrage < WEB_GETRENNT_MS; }
 int  webEreignis()  { int e = ereignis; ereignis = 0; return e; }
-bool webFaehrt()    { return (serverLaeuft || setupAktiv) && millis() - letzterFahrbefehl < WEB_TOTMANN_MS && (x != 0 || y != 0); }
+// Fahrbefehle kommen von der Webseite oder der App (auch ohne WLAN ueber Bluetooth) - der Totmann regelt beides
+bool webFaehrt()    { return millis() - letzterFahrbefehl < WEB_TOTMANN_MS && (x != 0 || y != 0); }
 void webSetzeModus(int m) { modus = m; }
-int  webTasten()     { return (serverLaeuft || setupAktiv) ? tasten : 0; }
+int  webTasten()     { return tasten; }
 int  webAktion()     { int a = aktion; aktion = 0; return a; }
 int  webX()         { return x; }
 int  webY()         { return y; }

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Roboauto von der Seite: Wanne mit gelbem Streifen, zwei grosse Raeder -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Deckel -->
+    <path android:fillColor="#FFEEF1F5" android:pathData="M33,40h42v3h-42z" />
+    <!-- gelber Streifen -->
+    <path android:fillColor="#FFFFD54F" android:pathData="M33,43h42v8h-42z" />
+    <!-- Wanne -->
+    <path android:fillColor="#FF2A2F38" android:pathData="M33,51h42v11h-42z" />
+    <!-- Raeder -->
+    <path android:fillColor="#FF16191F" android:strokeColor="#FFEEF1F5" android:strokeWidth="2.5"
+        android:pathData="M27,58a11,11 0,1 0,22 0a11,11 0,1 0,-22 0z" />
+    <path android:fillColor="#FF16191F" android:strokeColor="#FFEEF1F5" android:strokeWidth="2.5"
+        android:pathData="M59,58a11,11 0,1 0,22 0a11,11 0,1 0,-22 0z" />
+    <!-- Naben -->
+    <path android:fillColor="#FFC8CDE0" android:pathData="M35,58a3,3 0,1 0,6 0a3,3 0,1 0,-6 0z" />
+    <path android:fillColor="#FFC8CDE0" android:pathData="M67,58a3,3 0,1 0,6 0a3,3 0,1 0,-6 0z" />
+</vector>

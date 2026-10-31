@@ -1,0 +1,9 @@
+.gradle/
+build/
+local.properties
+.idea/
+*.iml
+# Signierschluessel NIE hochladen (liegt als GitHub-Secret bereit)
+schluessel/
+*.jks
+*.keystore
