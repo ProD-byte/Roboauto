@@ -3,6 +3,12 @@
 #  - Ergebnis zum Herunterladen unter "Actions" -> Lauf anklicken -> Artifacts
 #  - Bei einem Versions-Tag (z.B. v1.0.0) entsteht ein Release mit den Dateien
 #  - Der Online-Flasher (GitHub Pages) wird mit der neuesten Firmware aktualisiert
+#
+#  Zwei Autos, zwei unabhaengige Builds (laufen gleichzeitig, einer bremst den anderen nicht aus):
+#    mini - ESP32-S3 Super Mini      (Codes/roboauto_pio)            -> Pages: /
+#    xiao - XIAO ESP32S3 Sense       (Codes/roboauto_pio/xiao_sense) -> Pages: /xiao/
+#  Danach setzt "veroeffentlichen" die Seite aus dem zusammen, was fertig geworden ist.
+#  Ist ein Build fehlgeschlagen, bleiben fuer dieses Auto die bisherigen Dateien online.
 # ============================================================
 name: Firmware bauen
 
@@ -21,7 +27,8 @@ permissions:
   id-token: write
 
 jobs:
-  bauen:
+  # ---------- ESP32-S3 Super Mini ----------
+  mini:
     runs-on: ubuntu-24.04
     defaults:
       run:
@@ -37,7 +44,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.platformio
-          key: pio-${{ hashFiles('Codes/roboauto_pio/platformio.ini') }}
+          key: pio-mini-${{ hashFiles('Codes/roboauto_pio/platformio.ini') }}
 
       - name: PlatformIO und esptool installieren
         run: pip install platformio esptool==4.8.1
@@ -72,29 +79,133 @@ jobs:
           name: roboauto-firmware
           path: Codes/roboauto_pio/ausgabe/
 
+  # ---------- XIAO ESP32S3 Sense ----------
+  xiao:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: Codes/roboauto_pio/xiao_sense   # eigenes PlatformIO-Projekt
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: PlatformIO-Zwischenspeicher
+        uses: actions/cache@v4
+        with:
+          path: ~/.platformio
+          key: pio-xiao-${{ hashFiles('Codes/roboauto_pio/xiao_sense/platformio.ini') }}
+
+      - name: PlatformIO und esptool installieren
+        run: pip install platformio esptool==4.8.1
+
+      - name: Geheime Dateien aus den Vorlagen anlegen (leer)
+        run: |
+          cp geheim.beispiel.ini geheim.ini
+          cp include/wlan_zugang.beispiel.h include/wlan_zugang.h
+
+      - name: Firmware bauen (gleiche Build-Nummer wie der Super Mini)
+        env:
+          PLATFORMIO_BUILD_FLAGS: -DFIRMWARE_BUILD=${{ github.run_number }}
+        run: pio run -e roboauto_xiao
+
+      - name: Alles in eine Datei packen (8 MB Flash)
+        run: |
+          B=.pio/build/roboauto_xiao
+          BOOT_APP0=$(find ~/.platformio/packages/framework-arduinoespressif32 -name boot_app0.bin | head -n 1)
+          mkdir -p ausgabe/teile
+          # flash_mode keep: der XIAO-Bootloader ist schon fuer QIO gebaut
+          python -m esptool --chip esp32s3 merge_bin -o ausgabe/roboauto-xiao-komplett.bin \
+            --flash_mode keep --flash_size 8MB \
+            0x0 $B/bootloader.bin 0x8000 $B/partitions.bin 0xe000 "$BOOT_APP0" 0x10000 $B/firmware.bin
+          cp $B/firmware.bin ausgabe/roboauto-xiao-update.bin
+          cp $B/bootloader.bin $B/partitions.bin "$BOOT_APP0" $B/firmware.bin ausgabe/teile/
+          ls -la ausgabe
+
+      - name: Ergebnis aufheben
+        uses: actions/upload-artifact@v4
+        with:
+          name: roboauto-xiao-firmware
+          path: Codes/roboauto_pio/xiao_sense/ausgabe/
+
+  # ---------- Release + Online-Flasher aus beiden Builds ----------
+  veroeffentlichen:
+    needs: [mini, xiao]
+    # laeuft, sobald mindestens ein Build geklappt hat (nicht bei Pull-Requests)
+    if: always() && github.event_name != 'pull_request' && (needs.mini.result == 'success' || needs.xiao.result == 'success')
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: Codes/roboauto_pio
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fertige Builds holen
+        uses: actions/download-artifact@v4
+        with:
+          path: Codes/roboauto_pio/artefakte    # je Build ein Unterordner (fehlt, wenn der Build gescheitert ist)
+
       - name: Release anlegen (nur bei Versions-Tag)
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            Codes/roboauto_pio/ausgabe/roboauto-komplett.bin
-            Codes/roboauto_pio/ausgabe/roboauto-update.bin
+            Codes/roboauto_pio/artefakte/roboauto-firmware/roboauto-komplett.bin
+            Codes/roboauto_pio/artefakte/roboauto-firmware/roboauto-update.bin
+            Codes/roboauto_pio/artefakte/roboauto-xiao-firmware/roboauto-xiao-komplett.bin
+            Codes/roboauto_pio/artefakte/roboauto-xiao-firmware/roboauto-xiao-update.bin
+          fail_on_unmatched_files: false        # ein gescheiterter Build soll das Release nicht verhindern
           generate_release_notes: true
 
       - name: Online-Flasher vorbereiten
         if: github.ref == 'refs/heads/main'
+        env:
+          LIVE: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
         run: |
-          mkdir -p seite
+          mkdir -p seite/xiao
           cp -r docs/* seite/
-          cp ausgabe/roboauto-komplett.bin seite/
-          cp ausgabe/roboauto-update.bin seite/
-          cp ausgabe/teile/* seite/
-          sed -i "s/__VERSION__/Build ${GITHUB_RUN_NUMBER} (${GITHUB_SHA::7})/" seite/manifest-*.json seite/index.html
-          # version.json: danach schaut das Auto beim Auto-Update
-          GROESSE=$(stat -c %s seite/roboauto-update.bin)
-          MD5=$(md5sum seite/roboauto-update.bin | cut -d' ' -f1)
-          echo "{\"build\":${GITHUB_RUN_NUMBER},\"datei\":\"roboauto-update.bin\",\"groesse\":${GROESSE},\"md5\":\"${MD5}\",\"commit\":\"${GITHUB_SHA::7}\"}" > seite/version.json
-          cat seite/version.json
+          VERSION="Build ${GITHUB_RUN_NUMBER} (${GITHUB_SHA::7})"
+
+          # version.json: danach schaut das Auto beim Auto-Update - jedes Auto in seinem eigenen Ordner
+          versionsdatei() {   # $1 = Ordner, $2 = Update-Datei
+            GROESSE=$(stat -c %s "$1/$2")
+            MD5=$(md5sum "$1/$2" | cut -d' ' -f1)
+            echo "{\"build\":${GITHUB_RUN_NUMBER},\"datei\":\"$2\",\"groesse\":${GROESSE},\"md5\":\"${MD5}\",\"commit\":\"${GITHUB_SHA::7}\"}" > "$1/version.json"
+            cat "$1/version.json"
+          }
+          # Build gescheitert -> die bisherigen Dateien von der Live-Seite uebernehmen (sonst waeren sie weg)
+          uebernehmen() {     # $1 = Ordner auf der Seite ("" oder "xiao"), Rest = Dateinamen
+            ORDNER=$1; shift
+            echo "!! Build fehlt - uebernehme bisherige Dateien fuer /${ORDNER}"
+            for D in "$@"; do
+              curl -fsSL "${LIVE}/${ORDNER:+$ORDNER/}$D" -o "seite/${ORDNER:+$ORDNER/}$D" || echo "   (nicht vorhanden: $D)"
+            done
+          }
+
+          A=artefakte/roboauto-firmware
+          if [ -d "$A" ]; then
+            cp $A/roboauto-komplett.bin $A/roboauto-update.bin $A/teile/* seite/
+            sed -i "s/__VERSION__/${VERSION}/" seite/manifest-*.json
+            versionsdatei seite roboauto-update.bin
+          else
+            uebernehmen "" manifest-neu.json manifest-update.json version.json roboauto-komplett.bin roboauto-update.bin \
+                           bootloader.bin partitions.bin boot_app0.bin firmware.bin
+          fi
+
+          X=artefakte/roboauto-xiao-firmware
+          if [ -d "$X" ]; then
+            cp $X/roboauto-xiao-komplett.bin $X/roboauto-xiao-update.bin $X/teile/* seite/xiao/
+            sed -i "s/__VERSION__/${VERSION}/" seite/xiao/manifest-*.json
+            versionsdatei seite/xiao roboauto-xiao-update.bin
+          else
+            uebernehmen xiao manifest-neu.json manifest-update.json version.json roboauto-xiao-komplett.bin \
+                             roboauto-xiao-update.bin bootloader.bin partitions.bin boot_app0.bin firmware.bin
+          fi
+
+          sed -i "s/__VERSION__/${VERSION}/" seite/index.html
+          find seite -maxdepth 2 -type f | sort    # (kein "| head": mit pipefail bricht das den Schritt ab)
 
       - name: Flasher-Seite hochladen
         if: github.ref == 'refs/heads/main'
@@ -103,8 +214,8 @@ jobs:
           path: Codes/roboauto_pio/seite
 
   flasher:
-    needs: bauen
-    if: github.ref == 'refs/heads/main'
+    needs: veroeffentlichen
+    if: always() && github.ref == 'refs/heads/main' && needs.veroeffentlichen.result == 'success'
     runs-on: ubuntu-24.04
     environment:
       name: github-pages

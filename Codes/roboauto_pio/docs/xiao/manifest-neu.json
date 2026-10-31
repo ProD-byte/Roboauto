@@ -1,0 +1,11 @@
+{
+  "name": "Roboauto XIAO Sense (Neuinstallation)",
+  "version": "__VERSION__",
+  "new_install_prompt_erase": false,
+  "builds": [
+    {
+      "chipFamily": "ESP32-S3",
+      "parts": [{ "path": "roboauto-xiao-komplett.bin", "offset": 0 }]
+    }
+  ]
+}

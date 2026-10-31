@@ -62,6 +62,32 @@
     <span class="leise">Funktioniert mit Chrome und Edge am Computer &middot; Auto per USB-C anschlie&szlig;en.</span>
   </div>
 
+  <div class="karte knopf">
+    <h2 style="margin:0">&#128247; Roboauto mit XIAO ESP32S3 Sense</h2>
+    <span class="leise">Nur f&uuml;r Autos mit dem <b>Seeed Studio XIAO ESP32S3 Sense</b> (Kamera, Mikrofon, SD-Karte) &ndash; nicht f&uuml;r den Super Mini!</span>
+    <div class="wahl">
+      <div class="option">
+        <div class="titel">&#128260; Update</div>
+        <p><b>WLANs, Einstellungen und Fahrweg bleiben erhalten.</b><br><span style="color:#f0a030">&#9888;&#65039; Bei &bdquo;Erase device?&ldquo; den Haken <b>nicht</b> setzen.</span></p>
+        <esp-web-install-button manifest="xiao/manifest-update.json">
+          <button slot="activate">&#9889; XIAO-Update installieren</button>
+          <span slot="unsupported"><b>Dieser Browser kann das leider nicht.</b><br><span class="leise">Bitte Chrome oder Edge am PC/Mac verwenden.</span></span>
+          <span slot="not-allowed"><b>Nur &uuml;ber https m&ouml;glich.</b></span>
+        </esp-web-install-button>
+      </div>
+      <div class="option loeschen">
+        <div class="titel">&#129529; Neuinstallation</div>
+        <p>Speicher komplett l&ouml;schen und neu aufspielen. <b>WLANs und Einstellungen sind danach weg</b> (die SD-Karte bleibt, wie sie ist).</p>
+        <esp-web-install-button manifest="xiao/manifest-neu.json">
+          <button slot="activate">&#128465;&#65039; XIAO l&ouml;schen &amp; neu installieren</button>
+          <span slot="unsupported"><b>Dieser Browser kann das leider nicht.</b></span>
+          <span slot="not-allowed"><b>Nur &uuml;ber https m&ouml;glich.</b></span>
+        </esp-web-install-button>
+      </div>
+    </div>
+    <span class="leise">Kein Anschluss gefunden? Am XIAO <b>BOOT</b> gedr&uuml;ckt halten, USB-C einstecken, BOOT loslassen.</span>
+  </div>
+
   <div class="karte">
     <h2>So geht&rsquo;s</h2>
     <ol>
@@ -87,7 +113,7 @@
       <span>&#128165; Crash- und Umkipp-Erkennung</span><span>&#128246; Updates &uuml;ber WLAN</span>
     </div>
   </div>
-  <p class="leise" style="text-align:center">ESP32-S3 Super Mini &middot; gebaut mit PlatformIO &middot; Online-Flasher: <a href="https://esphome.github.io/esp-web-tools/">ESP Web Tools</a></p>
+  <p class="leise" style="text-align:center">ESP32-S3 Super Mini &amp; XIAO ESP32S3 Sense &middot; gebaut mit PlatformIO &middot; Online-Flasher: <a href="https://esphome.github.io/esp-web-tools/">ESP Web Tools</a></p>
 </div>
 <script>
 /* Flasher-Einstellungen immer frisch laden (nie aus dem Browser-Zwischenspeicher) */
