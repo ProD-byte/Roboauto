@@ -152,8 +152,9 @@ const char WEBSEITE[] PROGMEM = R"==(<!doctype html>
   #punkt{width:9px;height:9px;border-radius:50%;background:var(--rot);box-shadow:0 0 8px currentColor;transition:background .3s}
   .akkuleiste{width:34px;height:8px;border-radius:4px;background:#2a3039;overflow:hidden}
   #akkubalken{height:100%;width:0;background:var(--gut);transition:width .5s,background .5s}
-  #b-sprache{height:34px;width:auto;padding:0 10px;border-radius:999px;font-size:13px;font-family:inherit;color:var(--text);background:#ffffff0d;border:1px solid #ffffff22;cursor:pointer}
-  #b-sprache option{background:#1a1f2b;color:#eef1f5}
+  .sprachwahl{height:34px;width:auto;padding:0 10px;border-radius:999px;font-size:13px;font-family:inherit;color:var(--text);background:#ffffff0d;border:1px solid #ffffff22;cursor:pointer}
+  .sprachwahl option{background:#1a1f2b;color:#eef1f5}
+  .reihe .sprachwahl{height:42px;border-radius:14px;padding:0 14px}
   /* ---- Seite ---- */
   section,details.einst{scroll-margin-top:110px}
   main{max-width:1120px;margin:0 auto;padding:18px 16px 40px;display:flex;flex-direction:column;gap:26px}
@@ -199,15 +200,45 @@ const char WEBSEITE[] PROGMEM = R"==(<!doctype html>
     main{gap:20px;padding-top:12px}
     #b-einst span{display:none}
     .marke{font-size:17px}
+    #b-sprache{display:none}                     /* Sprache steht auf dem Handy in den Einstellungen */
+  }
+  /* Handy/Tablet (Finger statt Maus): Tastatur-Hinweise weg, Statuszeile kompakt mit Symbolen */
+  @media(hover:none) and (pointer:coarse),(max-width:600px){
+    .tast,button small{display:none}
+    .knoepfe button{height:52px}
+    .nurpc{display:none}
+    .pille .t[data-ico]{font-size:0}
+    .pille .t[data-ico]::before{content:attr(data-ico);font-size:13px}
+  }
+  /* ---- Handy quer: Fahransicht wie ein Gamepad - Joystick links, Knoepfe rechts, ohne Scrollen ---- */
+  @media(orientation:landscape) and (max-height:540px){
+    .kopf{position:static;flex-wrap:nowrap;padding:6px 16px;gap:10px}
+    .marke{font-size:16px;margin-right:0}
+    .marke svg{width:40px;height:18px}
+    .pillen{flex:1;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;justify-content:flex-end}
+    .pillen::-webkit-scrollbar{display:none}
+    .pille{padding:4px 10px;font-size:12px}
+    .kopf .nav,#b-sprache{display:none}
+    #b-einst{height:30px}
+    #b-einst span{display:none}
+    main{padding-top:8px}
+    #steuerung>h2{display:none}
+    #steuerung .r2{grid-template-columns:auto 1fr;height:calc(100vh - 58px);height:calc(100dvh - 58px);min-height:260px}
+    .fahrkarte{--feld:min(260px,calc(100dvh - 120px));padding:10px 18px;gap:6px}
+    #steuerung .karte:not(.fahrkarte){display:flex;flex-direction:column;justify-content:center;padding:12px;overflow:auto}
+    #steuerung .gruppe{margin-bottom:8px}
+    #steuerung .gruppe>.leise{display:none}
+    #steuerung .knoepfe button{height:44px}
+    #steuerung .chips button{height:32px;padding:0 11px;font-size:12px}
   }
   /* ---- Joystick ---- */
   .fahrkarte{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
-  #feld{width:260px;height:260px;border-radius:50%;position:relative;touch-action:none;border:1px solid var(--rand2);
+  #feld{width:var(--feld,260px);height:var(--feld,260px);flex:none;border-radius:50%;position:relative;touch-action:none;border:1px solid var(--rand2);
         background:radial-gradient(circle,#1e2430 0%,#151920 62%,#11151b 100%);box-shadow:inset 0 0 40px #000a,0 0 0 8px #ffffff05}
   #feld::before,#feld::after{content:'';position:absolute;background:#ffffff0d}
   #feld::before{left:50%;top:18px;bottom:18px;width:1px}
   #feld::after{top:50%;left:18px;right:18px;height:1px}
-  #knopf{width:84px;height:84px;border-radius:50%;position:absolute;left:88px;top:88px;z-index:1;
+  #knopf{width:84px;height:84px;border-radius:50%;position:absolute;left:calc(50% - 42px);top:calc(50% - 42px);z-index:1;
          background:radial-gradient(circle at 35% 30%,#8ec0ff,var(--akzent) 45%,var(--akzent2));box-shadow:0 8px 24px -4px #4f9cffaa,inset 0 -4px 10px #0004}
   kbd{font:600 11px ui-monospace,monospace;background:#232934;border:1px solid var(--rand2);border-bottom-width:2px;border-radius:6px;padding:1px 6px;color:var(--text)}
   /* ---- Live ---- */
@@ -306,13 +337,13 @@ const char WEBSEITE[] PROGMEM = R"==(<!doctype html>
   <div class="marke"><svg viewBox="-66 -18 132 60" width="52" height="24" aria-hidden="true"><rect x="-40" y="-14" width="80" height="4" fill="#e6e6e6" stroke="#222" stroke-width=".6"/><rect x="-40" y="-10" width="80" height="12" fill="#ffd54f" stroke="#222" stroke-width=".6"/><rect x="-40" y="2" width="80" height="17" fill="#404040" stroke="#222" stroke-width=".6"/><circle cx="-33" cy="10" r="27" fill="#404040" stroke="#111" stroke-width=".8"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(0 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(20 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(40 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(60 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(80 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(100 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(120 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(140 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(160 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(180 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(200 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(220 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(240 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(260 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(280 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(300 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(320 -33 10)"/><rect x="-36.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(340 -33 10)"/><circle cx="-33" cy="10" r="17" fill="#383838" stroke="#1e1e1e" stroke-width="1.2"/><circle cx="-33" cy="10" r="14" fill="none" stroke="#2a2a2a" stroke-width="1"/><line x1="-29.5" y1="12.0" x2="-20.9" y2="17.0" stroke="#222" stroke-width="1.6"/><line x1="-33.0" y1="14.0" x2="-33.0" y2="24.0" stroke="#222" stroke-width="1.6"/><line x1="-36.5" y1="12.0" x2="-45.1" y2="17.0" stroke="#222" stroke-width="1.6"/><line x1="-36.5" y1="8.0" x2="-45.1" y2="3.0" stroke="#222" stroke-width="1.6"/><line x1="-33.0" y1="6.0" x2="-33.0" y2="-4.0" stroke="#222" stroke-width="1.6"/><line x1="-29.5" y1="8.0" x2="-20.9" y2="3.0" stroke="#222" stroke-width="1.6"/><circle cx="-33" cy="10" r="4.5" fill="#c8cde0" stroke="#222" stroke-width=".8"/><circle cx="33" cy="10" r="27" fill="#404040" stroke="#111" stroke-width=".8"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(0 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(20 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(40 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(60 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(80 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(100 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(120 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(140 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(160 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(180 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(200 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(220 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(240 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(260 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(280 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(300 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(320 33 10)"/><rect x="29.5" y="-20" width="7" height="4.5" rx="1.5" fill="#111" transform="rotate(340 33 10)"/><circle cx="33" cy="10" r="17" fill="#383838" stroke="#1e1e1e" stroke-width="1.2"/><circle cx="33" cy="10" r="14" fill="none" stroke="#2a2a2a" stroke-width="1"/><line x1="36.5" y1="12.0" x2="45.1" y2="17.0" stroke="#222" stroke-width="1.6"/><line x1="33.0" y1="14.0" x2="33.0" y2="24.0" stroke="#222" stroke-width="1.6"/><line x1="29.5" y1="12.0" x2="20.9" y2="17.0" stroke="#222" stroke-width="1.6"/><line x1="29.5" y1="8.0" x2="20.9" y2="3.0" stroke="#222" stroke-width="1.6"/><line x1="33.0" y1="6.0" x2="33.0" y2="-4.0" stroke="#222" stroke-width="1.6"/><line x1="36.5" y1="8.0" x2="45.1" y2="3.0" stroke="#222" stroke-width="1.6"/><circle cx="33" cy="10" r="4.5" fill="#c8cde0" stroke="#222" stroke-width=".8"/></svg>Roboauto</div>
   <div class="pillen">
     <div class="pille"><span id="punkt"></span><span id="verb">verbinde...</span></div>
-    <div class="pille"><span class="t">Akku</span><b id="akku">-</b><div class="akkuleiste"><div id="akkubalken"></div></div></div>
-    <div class="pille"><span class="t">WLAN</span><b id="wlan">-</b></div>
-    <div class="pille"><span class="t">Motoren L / R</span><b id="mot">-</b></div>
+    <div class="pille"><span class="t" data-ico="&#128267;">Akku</span><b id="akku">-</b><div class="akkuleiste"><div id="akkubalken"></div></div></div>
+    <div class="pille"><span class="t" data-ico="&#128246;">WLAN</span><b id="wlan">-</b></div>
+    <div class="pille nurpc"><span class="t">Motoren L / R</span><b id="mot">-</b></div>
     <div class="pille upd" id="upd-pille" hidden>&#11014;&#65039; <span>Update</span></div>
   </div>
   <button id="b-einst" title="Einstellungen">&#9881;&#65039; <span>Einstellungen</span></button>
-  <select id="b-sprache" title="Sprache / Language / Idioma / Langue"><option value="de">&#127760; Deutsch</option><option value="en">&#127760; English</option><option value="es">&#127760; Espa&ntilde;ol</option><option value="fr">&#127760; Fran&ccedil;ais</option></select>
+  <select id="b-sprache" class="sprachwahl" title="Sprache / Language / Idioma / Langue"><option value="de">&#127760; Deutsch</option><option value="en">&#127760; English</option><option value="es">&#127760; Espa&ntilde;ol</option><option value="fr">&#127760; Fran&ccedil;ais</option></select>
   <nav class="nav"><a href="#steuerung">Steuerung</a><a href="#live">Live</a><a href="#programme">Programme</a><a href="#musik">&#127925; Musik</a><a href="#einst">Einstellungen</a></nav>
 </header>
 
@@ -322,7 +353,7 @@ const char WEBSEITE[] PROGMEM = R"==(<!doctype html>
   <div class="raster r2">
     <div class="karte fahrkarte">
       <div id="feld"><div id="knopf"></div></div>
-      <div class="leise"><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> / <span>Pfeiltasten</span> &middot; <span>Loslassen = Stopp</span></div>
+      <div class="leise joyhinweis"><span class="tast"><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> / <span>Pfeiltasten</span> &middot; </span><span>Loslassen = Stopp</span></div>
     </div>
     <div class="karte">
       <div class="gruppe"><span class="leise">Beleuchtung</span>
@@ -346,7 +377,7 @@ const char WEBSEITE[] PROGMEM = R"==(<!doctype html>
           <button id="b-kal"               data-aktion="33">&#127919; Kalibrieren<small>Gyro</small></button>
         </div>
       </div>
-      <div class="gruppe"><span class="leise">Modus &middot; <kbd>P</kbd> = n&auml;chster</span>
+      <div class="gruppe"><span class="leise">Modus<span class="tast"> &middot; <kbd>P</kbd> = n&auml;chster</span></span>
         <div class="chips">
           <button id="m-0" data-aktion="10"><i style="background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red)"></i>Normal</button>
           <button id="m-1" data-aktion="11"><i style="background:linear-gradient(90deg,#3d6bff 50%,#ef5350 50%)"></i>Polizei</button>
@@ -470,6 +501,7 @@ const char WEBSEITE[] PROGMEM = R"==(<!doctype html>
       <h3 style="margin:0">&#128421;&#65039; System</h3>
       <span id="e-status"></span>
       <div class="reihe" style="flex:0 1 auto">
+        <select class="sprachwahl" title="Sprache / Language / Idioma / Langue"><option value="de">&#127760; Deutsch</option><option value="en">&#127760; English</option><option value="es">&#127760; Espa&ntilde;ol</option><option value="fr">&#127760; Fran&ccedil;ais</option></select>
         <button class="klein" onclick="location.href='/wlan'">&#128246; WLAN &auml;ndern</button>
         <button id="e-standard" class="klein">&#8634; Standard wiederherstellen</button>
       </div>
@@ -478,7 +510,7 @@ const char WEBSEITE[] PROGMEM = R"==(<!doctype html>
 </details>
 
 <footer class="fuss">
-  <div><span>Tastatur:</span> <kbd>L</kbd> <span>Licht</span> &middot; <kbd>F</kbd> <span>Fernlicht</span> &middot; <kbd>B</kbd> <span>Warnblinker</span> &middot; <kbd>U</kbd> <span>Wende</span> &middot; <kbd>Q</kbd>/<kbd>E</kbd> <span>Blinker</span> &middot; <kbd>H</kbd> <span>Hupe</span> &middot; <kbd>T</kbd> <span>Tank</span> &middot; <kbd>P</kbd> <span>Modus</span></div>
+  <div class="tast"><span>Tastatur:</span> <kbd>L</kbd> <span>Licht</span> &middot; <kbd>F</kbd> <span>Fernlicht</span> &middot; <kbd>B</kbd> <span>Warnblinker</span> &middot; <kbd>U</kbd> <span>Wende</span> &middot; <kbd>Q</kbd>/<kbd>E</kbd> <span>Blinker</span> &middot; <kbd>H</kbd> <span>Hupe</span> &middot; <kbd>T</kbd> <span>Tank</span> &middot; <kbd>P</kbd> <span>Modus</span></div>
   <div id="version"><span>Software: Schritt</span> 39<span id="version-build"></span></div>
 </footer>
 </main>
@@ -494,11 +526,12 @@ let unterwegs = false, letzteGesendet = "0,0,0";
 // ---------- Joystick ----------
 const feld = document.getElementById('feld'), knopf = document.getElementById('knopf');
 let ziehen = false;
-function setzeKnopf(px, py){ knopf.style.left = (88+px)+'px'; knopf.style.top = (88+py)+'px'; }
+// Feld kann je nach Bildschirm kleiner sein (Querformat) -> Weg des Knopfs aus der echten Groesse
+function setzeKnopf(px, py){ knopf.style.left = 'calc(50% - 42px + ' + px + 'px)'; knopf.style.top = 'calc(50% - 42px + ' + py + 'px)'; }
 function bewege(e){
   const r = feld.getBoundingClientRect();
   let dx = e.clientX - (r.left + r.width/2), dy = e.clientY - (r.top + r.height/2);
-  const max = 88, d = Math.hypot(dx, dy);
+  const max = r.width/2 - 42, d = Math.hypot(dx, dy);
   if (d > max){ dx *= max/d; dy *= max/d; }
   setzeKnopf(dx, dy);
   jx = Math.round(dx/max*MAX); jy = Math.round(-dy/max*MAX);
@@ -639,7 +672,11 @@ function zeichneTempo(prozent){
 async function zeichneAkku(einmal){
   try {
     const d = await (await fetch('/verlauf')).json(), w = d.werte;
-    const c = document.getElementById('c-akku'), g = c.getContext('2d'), B = c.width, H = c.height;
+    // In der echten Anzeigegroesse zeichnen - sonst wird die Schrift auf dem Handy gestaucht
+    const c = document.getElementById('c-akku'), g = c.getContext('2d'), dpr = window.devicePixelRatio || 1;
+    const B = c.clientWidth || 1040, H = 110;
+    c.width = Math.round(B * dpr); c.height = Math.round(H * dpr);
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.clearRect(0, 0, B, H);
     g.strokeStyle = '#2c3139'; g.lineWidth = 1; g.fillStyle = farbe('--leise'); g.font = '11px system-ui';
     for (const p of [0, 50, 100]){ const yy = H - 14 - p / 100 * (H - 24); g.beginPath(); g.moveTo(34, yy); g.lineTo(B, yy); g.stroke(); g.fillText(p + '%', 2, yy + 4); }
@@ -651,11 +688,14 @@ async function zeichneAkku(einmal){
     w.forEach((v, i) => { const p = v === 255 ? 100 : v, xx = start + i * dx, yy = H - 14 - p / 100 * (H - 24); i ? g.lineTo(xx, yy) : g.moveTo(xx, yy); });
     g.strokeStyle = farbe('--gut'); g.lineWidth = 2; g.stroke();
     g.lineTo(start + (w.length - 1) * dx, H - 14); g.lineTo(start, H - 14); g.closePath(); g.fillStyle = grad; g.fill();
-    g.fillStyle = farbe('--leise'); g.fillText(t('jetzt'), B - 28, H - 2); g.fillText(t('vor {0} min', Math.round(w.length * d.intervall / 60)), start, H - 2);
+    g.fillStyle = farbe('--leise'); g.textAlign = 'right'; g.fillText(t('jetzt'), B - 2, H - 2);
+    if (start < B - 110){ g.textAlign = 'left'; g.fillText(t('vor {0} min', Math.round(w.length * d.intervall / 60)), Math.max(start, 36), H - 2); }
+    g.textAlign = 'left';
   } catch(e){}
   if (einmal !== true) setTimeout(zeichneAkku, 10000);
 }
 zeichneAkku();
+addEventListener('resize', () => { clearTimeout(zeichneAkku.uhr); zeichneAkku.uhr = setTimeout(() => zeichneAkku(true), 300); });   // Handy gedreht
 
 // ---------- Einstellungen ----------
 let einst = {};
@@ -881,18 +921,19 @@ function uebersetzeSeite(){
     n.nodeValue = roh.replace(kern, t(kern));
   }
   document.getElementById('mt-titel').textContent = t('\ud83d\udd27 Motortest-Assistent');
-  document.getElementById('b-sprache').value = sprache;
+  document.querySelectorAll('.sprachwahl').forEach(s => s.value = sprache);
   if (einst.tempo !== undefined) zeigeEinst(einst);
   zeigeLieder();
   if (liedAktiv >= 0) document.getElementById('lied-titel').textContent = LIEDER[liedAktiv][0] + '  ' + t(LIEDER[liedAktiv][1]);
 }
-document.getElementById('b-sprache').addEventListener('change', e => {
+// Sprachwahl oben in der Kopfleiste (PC) und in den Einstellungen (Handy)
+document.querySelectorAll('.sprachwahl').forEach(s => s.addEventListener('change', e => {
   sprache = e.target.value;
   try { localStorage.setItem('sprache', sprache); } catch(e){}
   uebersetzeSeite();
   zeichneAkku(true);
   if (!mtBox.hidden) mtEnde();
-});
+}));
 uebersetzeSeite();
 
 // Menue-Links auf zugeklappte Bereiche (Musik, Einstellungen) klappen sie auf
