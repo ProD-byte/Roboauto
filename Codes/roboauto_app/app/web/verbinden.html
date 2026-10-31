@@ -64,10 +64,24 @@
   .hand input{flex:1;min-width:0;height:46px;border-radius:14px;border:1px solid var(--rand2);background:#12161c;color:var(--text);padding:0 14px;font:15px system-ui,sans-serif;user-select:text;-webkit-user-select:text}
   .hand input:focus{outline:none;border-color:var(--akzent)}
   .fuss{text-align:center;color:var(--leise);font-size:12.5px}
+
+  /* ---- App-Update ---- */
+  .update{display:flex;align-items:center;gap:14px;border-color:#2f7a4c;background:linear-gradient(120deg,#13301f,#16261c);box-shadow:0 10px 30px -14px #3ccf6e88}
+  .update .ico{width:44px;height:44px;border-radius:14px;flex:none;display:grid;place-items:center;font-size:20px;background:#1d4a2e;border:1px solid #2f7a4c}
+  .update span{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+  .update small{color:var(--leise);font-size:12.5px}
+  .update button{flex:none;padding:0 16px}
+  .update button:disabled{opacity:.6}
 </style></head><body>
 <header class="kopf"><div class="marke"><!--LOGO-->Roboauto</div></header>
 
 <main>
+  <div class="karte update" id="update" hidden>
+    <div class="ico">&#11014;&#65039;</div>
+    <span><b data-t="update"></b><small id="update-text"></small></span>
+    <button class="haupt" id="update-los" data-t="updateKnopf"></button>
+  </div>
+
   <div class="karte start">
     <div class="radar" id="radar"><i></i><i></i><i></i><div class="mitte"><!--LOGO--></div></div>
     <div id="text"></div>
@@ -119,7 +133,11 @@ const TEXTE = {
        neu:'Neu suchen', bt:'Bluetooth', wlan:'WLAN', zuletzt:'zuletzt verbunden', leer:'Noch kein Auto gefunden.',
        direkt:'Ohne Router', autoWlan:'WLAN des Autos „Roboauto“', autoWlanU:'Direkt verbinden – schnell und auch draußen',
        autoHand:'Mit „Roboauto“ verbinden', autoHandU:'In den WLAN-Einstellungen „Roboauto“ antippen und dann zurück zur App kommen.',
-       autoFehler:'WLAN „Roboauto“ nicht gefunden', autoFehlerU:'Ist das Auto an und in der Nähe?'},
+       autoFehler:'WLAN „Roboauto“ nicht gefunden', autoFehlerU:'Ist das Auto an und in der Nähe?',
+       update:'App-Update verfügbar', updateU:'Version {0} · {1} MB', updateKnopf:'Aktualisieren', updateLaedt:'Lädt … {0} %',
+       updateErlauben:'Bitte „Apps aus dieser Quelle erlauben“ einschalten und zurückkommen.',
+       updateSchluessel:'Die neue Version ist anders signiert – App einmal deinstallieren und neu installieren.',
+       updateAbgebrochen:'Abgebrochen – nochmal versuchen?', updateFehler:'Update hat nicht geklappt – nochmal versuchen?'},
   en: {gefunden:'Cars found', hand:'Enter Wi-Fi address manually', verbinden:'Connect',
        handinfo:'Shown in the serial monitor or your router, e.g. 192.168.178.42. Your phone must be on the same Wi-Fi.',
        tipp:'Switch the car on – a blue LED ring means it is waiting for a connection.',
@@ -135,7 +153,11 @@ const TEXTE = {
        neu:'Search again', bt:'Bluetooth', wlan:'Wi-Fi', zuletzt:'last connected', leer:'No car found yet.',
        direkt:'Without router', autoWlan:'Car’s Wi-Fi “Roboauto”', autoWlanU:'Connect directly – fast, works outdoors too',
        autoHand:'Connect to “Roboauto”', autoHandU:'Tap “Roboauto” in the Wi-Fi settings, then come back to the app.',
-       autoFehler:'Wi-Fi “Roboauto” not found', autoFehlerU:'Is the car on and nearby?'},
+       autoFehler:'Wi-Fi “Roboauto” not found', autoFehlerU:'Is the car on and nearby?',
+       update:'App update available', updateU:'Version {0} · {1} MB', updateKnopf:'Update', updateLaedt:'Downloading … {0} %',
+       updateErlauben:'Please turn on “Allow from this source” and come back.',
+       updateSchluessel:'The new version is signed differently – uninstall the app once and install it again.',
+       updateAbgebrochen:'Cancelled – try again?', updateFehler:'Update failed – try again?'},
   es: {gefunden:'Coches encontrados', hand:'Introducir dirección Wi-Fi a mano', verbinden:'Conectar',
        handinfo:'Aparece en el monitor serie o en el router, p. ej. 192.168.178.42. El móvil debe estar en la misma Wi-Fi.',
        tipp:'Enciende el coche: si el anillo LED está azul, espera una conexión.',
@@ -151,7 +173,11 @@ const TEXTE = {
        neu:'Buscar de nuevo', bt:'Bluetooth', wlan:'Wi-Fi', zuletzt:'última conexión', leer:'Aún no se ha encontrado ningún coche.',
        direkt:'Sin router', autoWlan:'Wi-Fi del coche «Roboauto»', autoWlanU:'Conexión directa: rápida y también al aire libre',
        autoHand:'Conéctate a «Roboauto»', autoHandU:'En los ajustes Wi-Fi toca «Roboauto» y vuelve a la app.',
-       autoFehler:'No se encontró la Wi-Fi «Roboauto»', autoFehlerU:'¿Está el coche encendido y cerca?'},
+       autoFehler:'No se encontró la Wi-Fi «Roboauto»', autoFehlerU:'¿Está el coche encendido y cerca?',
+       update:'Actualización disponible', updateU:'Versión {0} · {1} MB', updateKnopf:'Actualizar', updateLaedt:'Descargando … {0} %',
+       updateErlauben:'Activa «Permitir de esta fuente» y vuelve a la app.',
+       updateSchluessel:'La nueva versión tiene otra firma: desinstala la app una vez y vuelve a instalarla.',
+       updateAbgebrochen:'Cancelado. ¿Intentar de nuevo?', updateFehler:'La actualización falló. ¿Intentar de nuevo?'},
   fr: {gefunden:'Voitures trouvées', hand:'Saisir l’adresse Wi-Fi à la main', verbinden:'Connecter',
        handinfo:'Indiquée dans le moniteur série ou le routeur, p. ex. 192.168.178.42. Le téléphone doit être sur le même Wi-Fi.',
        tipp:'Allume la voiture : si l’anneau LED est bleu, elle attend une connexion.',
@@ -167,7 +193,11 @@ const TEXTE = {
        neu:'Rechercher', bt:'Bluetooth', wlan:'Wi-Fi', zuletzt:'dernière connexion', leer:'Aucune voiture trouvée pour l’instant.',
        direkt:'Sans routeur', autoWlan:'Wi-Fi de la voiture « Roboauto »', autoWlanU:'Connexion directe – rapide, même dehors',
        autoHand:'Se connecter à « Roboauto »', autoHandU:'Dans les réglages Wi-Fi, touche « Roboauto », puis reviens dans l’app.',
-       autoFehler:'Wi-Fi « Roboauto » introuvable', autoFehlerU:'La voiture est-elle allumée et proche ?'}
+       autoFehler:'Wi-Fi « Roboauto » introuvable', autoFehlerU:'La voiture est-elle allumée et proche ?',
+       update:'Mise à jour disponible', updateU:'Version {0} · {1} Mo', updateKnopf:'Mettre à jour', updateLaedt:'Téléchargement … {0} %',
+       updateErlauben:'Active « Autoriser cette source », puis reviens dans l’app.',
+       updateSchluessel:'La nouvelle version est signée autrement – désinstalle l’app une fois et réinstalle-la.',
+       updateAbgebrochen:'Annulé – réessayer ?', updateFehler:'La mise à jour a échoué – réessayer ?'}
 };
 let sprache = 'de';
 try { sprache = localStorage.getItem('sprache') || (navigator.language || 'de').slice(0, 2); } catch(e){}
@@ -258,8 +288,26 @@ const robo = window.robo = {
         $('autowlan').classList.remove('laedt');
         anzeige(t('autoFehler'), t('autoFehlerU'), [neuKnopf()], 'ruhe fehler'); break;
     }
+  },
+  // ---- App-Update (meldet die App) ----
+  update(version, groesse){
+    $('update').hidden = false;
+    $('update-text').textContent = t('updateU', version).replace('{1}', (groesse / 1048576).toFixed(1).replace('.', sprache === 'en' ? '.' : ','));
+    $('update-los').disabled = false;
+    $('update-los').textContent = t('updateKnopf');
+  },
+  updateFortschritt(p){
+    $('update-los').disabled = true;
+    $('update-los').textContent = t('updateLaedt', p);
+  },
+  updateFehler(code){
+    $('update-los').disabled = false;
+    $('update-los').textContent = t('updateKnopf');
+    $('update-text').textContent = t({erlauben: 'updateErlauben', schluessel: 'updateSchluessel', abgebrochen: 'updateAbgebrochen'}[code] || 'updateFehler');
   }
 };
+$('update-los').addEventListener('click', () => Roboauto.updateInstallieren());
+{ const u = (Roboauto.updateInfo && Roboauto.updateInfo()) || ''; if (u) robo.update(u.split('|')[0], +u.split('|')[1]); }
 
 function verbinden(a){
   clearTimeout(suchUhr);

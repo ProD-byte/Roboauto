@@ -21,6 +21,7 @@ import android.os.Looper
 import android.provider.Settings
 import android.view.WindowManager
 import android.webkit.JavascriptInterface
+import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
@@ -42,7 +43,7 @@ import org.json.JSONObject
  * Bauen aus include/webseite.h). Die Webseite fragt wie im Browser fetch('/status') usw. -
  * app.js leitet das hierher um, und die App schickt es per Bluetooth oder WLAN ans Auto.
  */
-class MainActivity : ComponentActivity(), BleVerbindung.Ereignisse, WlanVerbindung.Ereignisse {
+class MainActivity : ComponentActivity(), BleVerbindung.Ereignisse, WlanVerbindung.Ereignisse, Aktualisierung.Ereignisse {
 
     companion object {
         private const val SEITEN = "https://appassets.androidplatform.net/assets/"
@@ -54,6 +55,8 @@ class MainActivity : ComponentActivity(), BleVerbindung.Ereignisse, WlanVerbindu
     private lateinit var web: WebView
     private lateinit var ble: BleVerbindung
     private lateinit var wlan: WlanVerbindung
+    private lateinit var aktualisierung: Aktualisierung
+    @Volatile private var updateInfo = ""   // "1.0.42|1912311" = neuere App-Version gefunden
     private val haupt = Handler(Looper.getMainLooper())
     private val speicher by lazy { getSharedPreferences("roboauto", MODE_PRIVATE) }
 
@@ -82,6 +85,8 @@ class MainActivity : ComponentActivity(), BleVerbindung.Ereignisse, WlanVerbindu
 
         ble = BleVerbindung(this, this)
         wlan = WlanVerbindung(this, this)
+        aktualisierung = Aktualisierung(this, this)
+        aktualisierung.pruefen()                         // gibt es eine neuere App auf GitHub?
 
         // Rahmen haelt Abstand zu Statusleiste/Kamera-Loch, die Webseite selbst bleibt unveraendert
         val rahmen = FrameLayout(this)
@@ -113,6 +118,9 @@ class MainActivity : ComponentActivity(), BleVerbindung.Ereignisse, WlanVerbindu
                 return true
             }
         }
+        // Ohne WebChromeClient zeigt die WebView keine alert()/confirm()-Fenster
+        // (z. B. "Einstellungen auf Standard zuruecksetzen?" - confirm() waere sonst immer "Nein")
+        web.webChromeClient = WebChromeClient()
         web.addJavascriptInterface(Bruecke(), "Roboauto")
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
@@ -126,6 +134,7 @@ class MainActivity : ComponentActivity(), BleVerbindung.Ereignisse, WlanVerbindu
 
     override fun onResume() {
         super.onResume()
+        aktualisierung.weiterNachErlaubnis()          // zurueck aus "Apps aus dieser Quelle erlauben"
         if (autoWlanWarten) {                         // zurueck aus den WLAN-Einstellungen
             autoWlanWarten = false
             wlanVerbinden(AUTO_WLAN_IP)
@@ -137,6 +146,7 @@ class MainActivity : ComponentActivity(), BleVerbindung.Ereignisse, WlanVerbindu
         ble.suchStopp()
         autoWlanLoslassen()
         wlan.beenden()
+        aktualisierung.beenden()
         web.destroy()
         super.onDestroy()
     }
@@ -148,6 +158,8 @@ class MainActivity : ComponentActivity(), BleVerbindung.Ereignisse, WlanVerbindu
         @JavascriptInterface fun verbindeBle(adresse: String) { haupt.post { bleVerbinden(adresse) } }
         @JavascriptInterface fun verbindeWlan(host: String) { haupt.post { wlanVerbinden(host.trim()) } }
         @JavascriptInterface fun verbindeAutoWlan() { haupt.post { autoWlanVerbinden() } }
+        @JavascriptInterface fun updateInfo(): String = updateInfo
+        @JavascriptInterface fun updateInstallieren() { haupt.post { aktualisierung.installieren() } }
         @JavascriptInterface fun trennen() { haupt.post { zumVerbinden(manuell = true) } }
         @JavascriptInterface fun art(): String = art
         @JavascriptInterface fun letzteAdresse(): String = speicher.getString("wlan", null) ?: speicher.getString("ip", null) ?: "roboauto.local"
@@ -329,4 +341,15 @@ class MainActivity : ComponentActivity(), BleVerbindung.Ereignisse, WlanVerbindu
     }
 
     override fun wlanAntwort(nr: Int, ok: Boolean, text: String) = antwortAnSeite(nr, ok, text)
+
+    // ---------------- App-Update ----------------
+    // Der Hinweis steht auf dem Verbinden-Bildschirm (die Seite fragt beim Laden auch selbst nach)
+    override fun updateVerfuegbar(version: String, groesse: Long) {
+        updateInfo = "$version|$groesse"
+        js("window.robo&&robo.update(${JSONObject.quote(version)},$groesse)")
+    }
+
+    override fun updateFortschritt(prozent: Int) = js("window.robo&&robo.updateFortschritt($prozent)")
+
+    override fun updateFehler(code: String) = js("window.robo&&robo.updateFehler(${JSONObject.quote(code)})")
 }

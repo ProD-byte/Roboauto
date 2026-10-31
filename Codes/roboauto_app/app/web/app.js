@@ -51,5 +51,31 @@
     p.innerHTML += '<span class="t">&#8644;</span>';
     p.addEventListener('click', function () { Roboauto.trennen(); });
     pillen.insertBefore(p, pillen.firstChild);
+    const u = Roboauto.updateInfo ? Roboauto.updateInfo() : '';
+    if (u) window.robo.update(u.split('|')[0]);
   });
+
+  // App-Update auch in der Steuerung anzeigen (das letzte Auto verbindet sich ja oft sofort):
+  // gruene Pille "App 1.0.x" oben, antippen = herunterladen und installieren
+  let updPille = null;
+  function pille() {
+    if (updPille) return updPille;
+    const pillen = document.querySelector('.pillen');
+    if (!pillen) return null;
+    updPille = document.createElement('div');
+    updPille.className = 'pille upd';
+    updPille.addEventListener('click', function () { Roboauto.updateInstallieren(); });
+    pillen.insertBefore(updPille, pillen.children[1] || null);
+    return updPille;
+  }
+  window.robo = window.robo || {
+    update: function (version) { const p = pille(); if (p) p.innerHTML = '&#11014;&#65039; <span>App ' + version + '</span>'; },
+    updateFortschritt: function (pr) { const p = pille(); if (p) p.innerHTML = '&#11014;&#65039; <span>' + pr + ' %</span>'; },
+    updateFehler: function (code) {
+      const p = pille(); if (!p) return;
+      p.innerHTML = '&#11014;&#65039; <span>App-Update</span>';
+      if (code === 'erlauben') alert('Bitte „Apps aus dieser Quelle erlauben“ einschalten und zurückkommen. / Please allow installs from this source and come back.');
+      else if (code === 'schluessel') alert('Die neue Version ist anders signiert – App einmal deinstallieren und neu installieren. / The new version is signed differently – reinstall the app once.');
+    }
+  };
 })();

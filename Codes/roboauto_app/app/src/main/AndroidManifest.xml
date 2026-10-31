@@ -10,6 +10,9 @@
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
     <!-- WLAN beim Fahren nicht schlafen lassen (schnellere Reaktion) -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- App aktualisiert sich selbst (neue APK von GitHub Pages installieren) -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <uses-permission android:name="android.permission.UPDATE_PACKAGES_WITHOUT_USER_ACTION" />
 
     <!-- Bluetooth bis Android 11 (Suche braucht dort den Standort) -->
     <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
