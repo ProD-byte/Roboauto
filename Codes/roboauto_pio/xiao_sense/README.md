@@ -99,5 +99,6 @@ auf GitHub Pages im Unterordner **`/xiao/`** (`version.json`, `roboauto-xiao-upd
 Der XIAO schaut nur dort nach Updates, der Super Mini nur im Hauptordner. So lädt keines der beiden Autos
 die falsche Firmware. Bei einem Versions-Tag (`v1.2.0`) hängen die XIAO-Dateien zusätzlich am Release.
 
-In der Roboauto-App heißt das Auto per Bluetooth **„RoboautoXiao-XXXX“**. Die App zeigt die Oberfläche des
-Hauptautos – Kamera, Mikrofon und SD-Karte gibt es (noch) nur im Browser.
+In der Roboauto-App heißt das Auto per Bluetooth **„RoboautoXiao-XXXX“**. Die App erkennt den XIAO (`/info` →
+`board: xiao`) und zeigt seine Oberfläche mit Kamera, Mikrofon und SD-Karte. Video, Ton und Dateien gibt es nur
+über WLAN (Heim-WLAN oder WLAN des Autos), per Bluetooth wäre es zu langsam.

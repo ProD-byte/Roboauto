@@ -9,6 +9,9 @@ Die App zum Roboauto (ersetzt die frühere Dabble-App). Sie zeigt **genau die We
 - Protokoll zwischen App und Auto: [`docs/app-protokoll.md`](../roboauto_pio/docs/app-protokoll.md)
 
 - Drei Wege zum Auto: **Bluetooth**, **Heim-WLAN** oder direkt das WLAN **„Roboauto-XXXX“** des Autos (ohne Router)
+- **📱 Kippen:** Knopf unter dem Joystick. Dann den Finger auf dem Feld halten und das Handy kippen
+  (nach vorn = Gas, zur Seite = lenken). Wie das Handy beim Antippen gehalten wird, ist der Nullpunkt.
+  Loslassen = Stopp. Gibt es nur in der App, nicht im Browser.
 
 > Ältere Autos mit Dabble-Firmware bekommen die App-Firmware per Auto-Update (oder einmal per Online-Flasher).
 

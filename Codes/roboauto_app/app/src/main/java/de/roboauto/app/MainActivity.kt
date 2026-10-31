@@ -6,6 +6,10 @@ import android.bluetooth.BluetoothAdapter
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.location.LocationManager
 import android.net.ConnectivityManager
 import android.net.Network
@@ -19,6 +23,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
+import android.view.Surface
 import android.view.WindowManager
 import android.webkit.JavascriptInterface
 import android.webkit.WebChromeClient
@@ -142,6 +147,39 @@ class MainActivity : ComponentActivity(), BleVerbindung.Ereignisse, WlanVerbindu
             autoWlanWarten = false
             wlanVerbinden(AUTO_WLAN_IP)
         }
+        kippSensor?.let { sensoren.registerListener(kippHoerer, it, SensorManager.SENSOR_DELAY_GAME) }
+    }
+
+    override fun onPause() {
+        sensoren.unregisterListener(kippHoerer)
+        super.onPause()
+    }
+
+    // ---------------- Kipp-Lenkung ----------------
+    // Schwerkraft in Bildschirm-Achsen (x nach rechts, y nach oben, z aus dem Bildschirm),
+    // auch im Querformat. Die Seite rechnet daraus die Winkel.
+    private val sensoren by lazy { getSystemService(SENSOR_SERVICE) as SensorManager }
+    private val kippSensor: Sensor? by lazy {
+        sensoren.getDefaultSensor(Sensor.TYPE_GRAVITY) ?: sensoren.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+    }
+    @Volatile private var schwere = floatArrayOf(0f, 0f, 0f)
+    private val kippHoerer = object : SensorEventListener {
+        override fun onSensorChanged(e: SensorEvent) {
+            val (x, y, z) = e.values
+            val drehung = if (Build.VERSION.SDK_INT >= 30) display?.rotation ?: 0
+                          else @Suppress("DEPRECATION") windowManager.defaultDisplay.rotation
+            val (sx, sy) = when (drehung) {
+                Surface.ROTATION_90 -> -y to x
+                Surface.ROTATION_180 -> -x to -y
+                Surface.ROTATION_270 -> y to -x
+                else -> x to y
+            }
+            // Beschleunigungssensor (ohne Schwerkraft-Sensor) wackelt -> glaetten
+            val f = if (e.sensor.type == Sensor.TYPE_GRAVITY) 1f else 0.2f
+            val a = schwere
+            schwere = floatArrayOf(a[0] + (sx - a[0]) * f, a[1] + (sy - a[1]) * f, a[2] + (z - a[2]) * f)
+        }
+        override fun onAccuracyChanged(s: Sensor, genauigkeit: Int) {}
     }
 
     override fun onDestroy() {
@@ -166,6 +204,8 @@ class MainActivity : ComponentActivity(), BleVerbindung.Ereignisse, WlanVerbindu
             try { packageManager.getPackageInfo(packageName, 0).versionName ?: "" } catch (_: Exception) { "" }
         @JavascriptInterface fun updateInstallieren() { haupt.post { aktualisierung.installieren() } }
         @JavascriptInterface fun trennen() { haupt.post { zumVerbinden(manuell = true) } }
+        @JavascriptInterface fun kippDa(): Boolean = kippSensor != null
+        @JavascriptInterface fun kipp(): String = schwere.let { "${it[0]},${it[1]},${it[2]}" }
         @JavascriptInterface fun art(): String = art
         @JavascriptInterface fun host(): String = wlan.host ?: ""   // Adresse des Autos im WLAN ("" = Bluetooth)
         @JavascriptInterface fun letzteAdresse(): String = speicher.getString("wlan", null) ?: speicher.getString("ip", null) ?: "roboauto.local"

@@ -7,7 +7,7 @@ Geschrieben mit **VS Code + PlatformIO**, Schritt für Schritt aufgebaut.
 
 | | |
 |---|---|
-| 🎮 **Steuerung** | [Roboauto-App](../roboauto_app/README.md) für Android (Bluetooth, Heim-WLAN oder direkt ins WLAN „Roboauto-XXXX“ des Autos) oder Browser mit Joystick und Tastatur (W A S D) |
+| 🎮 **Steuerung** | [Roboauto-App](../roboauto_app/README.md) für Android (Bluetooth, Heim-WLAN oder direkt ins WLAN „Roboauto-XXXX“ des Autos, auch Lenken durch Kippen des Handys) oder Browser mit Joystick und Tastatur (W A S D) |
 | 🌐 **Weboberfläche** | modernes Dashboard: Live-Ansicht des Autos, Kompass, Neigung, Motorleistung, Akkuverlauf · Handy quer = Gamepad-Ansicht · Deutsch/Englisch/Spanisch/Französisch |
 | 🧭 **Gyro (MPU6050)** | Geradeauslauf, 180°-Wende auf Knopfdruck, Kompass, Crash- und Umkipp-Erkennung |
 | 💡 **Licht** | Front-/Rücklicht, Fernlicht, Blinker, Warnblinker, Bremslicht, LED-Ring mit Animationen |

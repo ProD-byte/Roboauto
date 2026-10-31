@@ -47,7 +47,7 @@ aneinander, bis ein `\n` kommt. Der Inhalt selbst enthält nie ein `\n`.
 
 | Pfad | Parameter | Antwort | Wozu |
 |---|---|---|---|
-| `/fahr` | `x`, `y` (−7…7), `t` (Tasten-Bits: 1 Blinker links, 2 Blinker rechts, 4 Hupe, 8 Tankanzeige) | `ok` | Fahren, ca. alle 80 ms schicken |
+| `/fahr` | `x`, `y` (−7…7), `t` (Tasten-Bits: 1 Blinker links, 2 Blinker rechts, 4 Hupe, 8 Tankanzeige) | `ok` | Fahren, ca. alle 40 ms schicken |
 | `/aktion` | `a` (Nummer, siehe [`include/web.h`](../include/web.h)) | `ok` | Licht, Modus, Figur, Musik … |
 | `/status` | – | JSON | Live-Werte, ca. alle 250 ms |
 | `/einstellungen` | keine = lesen; `name=wert` = ändern; `standard`, `motorStandard` | JSON | Einstellungen |
