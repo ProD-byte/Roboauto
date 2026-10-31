@@ -26,6 +26,7 @@ static RingQuelle letzteQuelle = RING_NIEMAND;
 static uint32_t signalFarbe = 0;
 static unsigned long signalStart = 0;
 static bool signalAktiv = false;
+static bool signalRegenbogen = false;          // Signal in Regenbogenfarben statt einer Farbe (Bluetooth verbunden)
 static bool einrichtung = false;
 static bool alarmAn = false;               // ("alarm" allein ist schon eine System-Funktion)
 static int  aufnahmeZustand = 0;
@@ -127,8 +128,8 @@ static void zeigeWarten(unsigned long jetzt) {
   komet((jetzt % 2400) * (float)LED_RING_ANZAHL / 2400, 30, 90, 255, 2.5f);
 }
 
-// Dabble: Regenbogen - langsamer und weicher als frueher
-static void zeigeDabble(unsigned long jetzt) {
+// App per Bluetooth: Regenbogen - langsam und weich
+static void zeigeApp(unsigned long jetzt) {
   uint16_t farbton = (jetzt * 9) & 0xFFFF;          // eine Runde ca. 7 s
   for (int i = 0; i < LED_RING_ANZAHL; i++) {
     uint32_t c = Adafruit_NeoPixel::gamma32(Adafruit_NeoPixel::ColorHSV(farbton + i * 65536L / LED_RING_ANZAHL, 230, 255));
@@ -137,9 +138,11 @@ static void zeigeDabble(unsigned long jetzt) {
 }
 
 // Webseite: tuerkiser Komet, eine Runde in 4 s
-static void zeigeWeb(unsigned long jetzt) {
-  for (int i = 0; i < LED_RING_ANZAHL; i++) setze(i, 0, 6, 9);   // ganz schwacher Grundschein
-  komet((jetzt % 4000) * (float)LED_RING_ANZAHL / 4000, 0, 180, 255, 3.0f);
+static void zeigeWeb(unsigned long jetzt, bool autoWlan) {
+  for (int i = 0; i < LED_RING_ANZAHL; i++) autoWlan ? setze(i, 1, 9, 2) : setze(i, 0, 6, 9);   // ganz schwacher Grundschein
+  float pos = (jetzt % 4000) * (float)LED_RING_ANZAHL / 4000;
+  if (autoWlan) komet(pos, 40, 255, 40, 3.0f);
+  else          komet(pos, 0, 180, 255, 3.0f);
 }
 
 // Einrichtungsmodus: orange atmen
@@ -201,8 +204,8 @@ static bool zeigeSignal(unsigned long jetzt) {
   float pos = min(t / 450.0f, 1.0f) * LED_RING_ANZAHL;
   float aus = t > 800 ? 1.0f - (t - 800) / 500.0f : 1.0f;
   for (int i = 0; i < LED_RING_ANZAHL; i++)
-    if (i < pos) setzeFarbe(i, signalFarbe, 0.55f * aus);
-  if (t < 450) {
+    if (i < pos) setzeFarbe(i, signalRegenbogen ? Adafruit_NeoPixel::gamma32(Adafruit_NeoPixel::ColorHSV(i * 65536L / LED_RING_ANZAHL, 230, 255)) : signalFarbe, 0.55f * aus);
+  if (t < 450 && !signalRegenbogen) {
     uint32_t c = signalFarbe;
     lichtpunkt(pos, ((c >> 16) & 0xFF) * 0.5f + 127, ((c >> 8) & 0xFF) * 0.5f + 127, (c & 0xFF) * 0.5f + 127, 1.2f);
   }
@@ -283,16 +286,23 @@ void ringStatus(RingQuelle quelle, bool tankanzeige, int akkuProzent, int modus)
   else if (tankanzeige)                       zeigeTank(jetzt, akkuProzent);
   else if (modus == MODUS_POLIZEI)            zeigePolizei(jetzt);
   else if (modus >= MODUS_BLAU)               zeigeTeam(jetzt, modus);
-  else if (quelle == RING_DABBLE)             zeigeDabble(jetzt);
-  else                                        zeigeWeb(jetzt);
+  else if (quelle == RING_APP)                zeigeApp(jetzt);
+  else                                        zeigeWeb(jetzt, quelle == RING_AUTOWLAN);
 
   ausgeben(jetzt);
 }
 
 void ringSignal(uint32_t farbe) {
   signalFarbe = farbe;
+  signalRegenbogen = false;
   signalStart = millis();
   signalAktiv = true;
+}
+
+void ringVerbunden(RingQuelle quelle) {
+  if (quelle == RING_NIEMAND) return;
+  ringSignal(quelle == RING_AUTOWLAN ? 0x28FF28 : 0x00B4FF);
+  signalRegenbogen = quelle == RING_APP;
 }
 
 void ringEinrichtung(bool an) { einrichtung = an; }

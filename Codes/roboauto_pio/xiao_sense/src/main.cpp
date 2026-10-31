@@ -14,7 +14,8 @@
 //  Schritt 15: Crash- und Umkipp-Erkennung (Alarm, Warnblinker, Motoren aus)
 //  Schritt 16: Figuren fahren (Quadrat, Acht, Slalom) - Start 2x / Webseite
 //  Schritt 17: Fahrweg aufnehmen/abspielen (Start+Viereck / Start+Kreis / Webseite)
-//  Balancieren (Experiment): Start+Dreieck / Knopf auf der Webseite
+//  Balancieren (Experiment): Knopf auf der Webseite
+//  Schritt 40: eigene Roboauto-App statt Dabble (Bluetooth + WLAN, gleiche Oberflaeche)
 //
 //  XIAO ESP32S3 Sense:
 //  - alle LEDs an einem Pin (Ring -> Front -> Heck), siehe ledkette.h
@@ -24,20 +25,16 @@
 //  - SD-Karte: "Lernen" schreibt Fahrdaten + Bilder mit, lange Fahrweg-Aufnahmen
 // ============================================================
 #include <Arduino.h>
-
-#define CUSTOM_SETTINGS
-#define INCLUDE_GAMEPAD_MODULE
-#include <DabbleESP32.h>
 #include <BLEDevice.h>
 
 #include "config.h"
+#include "app_ble.h"
 #include "antrieb.h"
 #include "ledring.h"
 #include "buzzer.h"
 #include "lichter.h"
 #include "akku.h"
 #include "gyro.h"
-#include "klick.h"
 #include "autoupdate.h"
 #include "musik.h"
 #include "web.h"
@@ -52,11 +49,11 @@
 #include "karte.h"
 #include "lernen.h"
 
-static bool verbunden = false;    // Handy ODER Webseite (fuer Ring, Lichter, Fahren)
+static bool verbunden = false;    // App ODER Webseite (fuer Ring, Lichter, Fahren)
 static bool bleVorher = false;
 static bool webVorher = false;
 
-// Licht-Modus (siehe enum Modus in config.h): Select in Dabble / Knoepfe auf der Webseite
+// Licht-Modus (siehe enum Modus in config.h): Knoepfe in App/Webseite
 static int  modus = MODUS_NORMAL;
 
 // Gyro neu kalibrieren: alles anhalten, dann im Hintergrund messen
@@ -75,14 +72,9 @@ static void setzeModus(int neu) {
   buzzerTick();
   Serial.printf(">> Modus: %s\n", MODUS_NAME[modus]);
 }
-static bool selectVorher = false;
-static KlickTaste startKlick;      // Start: halten = Tankanzeige, 2x klicken = naechste Figur fahren
-static int  naechsteFigur = 0;
-static KlickTaste kreuzKlick;      // X: halten = Hupe, 2x klicken = 180-Grad-Wende
-static bool hupeGesperrt = false;  // nach dem Doppelklick bis zum Loslassen nicht hupen
 static bool klatschAn = false;     // Doppelklatschen schaltet das Licht (Knopf auf der Webseite)
 
-// Fragt den BLE-Server, ob ein Handy verbunden ist
+// Fragt den BLE-Server, ob die App per Bluetooth verbunden ist
 static bool handyVerbunden() {
   BLEServer* server = BLEDevice::getServer();
   return server != nullptr && server->getConnectedCount() > 0;
@@ -109,7 +101,7 @@ void setup() {
   kameraStarten();
   mikroStarten();
   lernenStarten();
-  Dabble.begin(BLE_NAME);
+  appBleStarten();                        // Bluetooth fuer die Roboauto-App
   webStarten();                           // WLAN + Webseite (oder Einrichtungs-WLAN)
   aufnahmeStarten();                      // gespeicherten Fahrweg laden
 
@@ -121,7 +113,7 @@ void setup() {
 }
 
 void loop() {
-  Dabble.processInput();
+  appBleUpdate();
 
   akkuUpdate();
   gyroUpdate();
@@ -140,14 +132,14 @@ void loop() {
   }
 
   // --- Verbindung ueberwachen ---
-  // Handy (Bluetooth) und Webseite getrennt ueberwachen.
-  // Nur Dabble/Handy spielt die Verbinden-/Trennen-Melodie - die Webseite meldet sich
+  // App (Bluetooth) und Webseite getrennt ueberwachen.
+  // Nur die Bluetooth-Verbindung spielt die Verbinden-/Trennen-Melodie - die Webseite meldet sich
   // nur im Monitor, damit es nicht staendig piept, wenn der Browser kurz haengt.
   bool ble = handyVerbunden();
   bool web = webVerbunden();
   if (ble != bleVorher) {
     bleVorher = ble;
-    Serial.println(ble ? ">> Handy (Dabble) verbunden" : ">> Handy (Dabble) getrennt");
+    Serial.println(ble ? ">> Handy (Bluetooth) verbunden" : ">> Handy (Bluetooth) getrennt");
     if (ble) buzzerVerbunden(); else buzzerGetrennt();
   }
   if (web != webVorher) {
@@ -157,45 +149,14 @@ void loop() {
   verbunden = ble || web;
 
   // --- Fahren (nur mit Verbindung, sonst Stopp) ---
+  // App und Webseite schicken dieselben Befehle (Bluetooth, WLAN oder Browser)
   int x = 0, y = 0;
-  int wt = webTasten();                                  // gehaltene Tasten auf der Webseite
-  bool startTaste = (ble && GamePad.isStartPressed()) || (wt & WEB_TANK);
-  if (startKlick.pruefe(ble && GamePad.isStartPressed(), millis()) == 2) {
-    // Dabble: Start 2x = Figuren der Reihe nach (Quadrat, Acht, Slalom)
-    if (figurStarten(naechsteFigur)) { naechsteFigur = (naechsteFigur + 1) % FIGUR_ANZAHL; buzzerEin(); }
-    else buzzerWarnung();
-  }
-
+  int wt = webTasten();                                  // gehaltene Tasten in App/Webseite
+  bool startTaste = wt & WEB_TANK;
   if (webFaehrt()) {
-    // Wird gerade ueber die Webseite gefahren, hat das Vorrang
     x = webX();
     y = webY();
-  } else if (ble) {
-    x = GamePad.getx_axis();
-    y = GamePad.gety_axis();
-
-    // Pfeiltasten (Digital-Modus in Dabble) wirken wie der Joystick.
-    // Im Joystick-Modus liefern sie false, im Digital-Modus ist der Joystick 0.
-    if (GamePad.isUpPressed())    y =  DPAD_STAERKE;
-    if (GamePad.isDownPressed())  y = -DPAD_STAERKE;
-    if (GamePad.isRightPressed()) x =  DPAD_STAERKE;
-    if (GamePad.isLeftPressed())  x = -DPAD_STAERKE;
   }
-
-  // --- Dabble: Start halten + Viereck = Aufnahme an/aus, Start halten + Kreis = Abspielen ---
-  static bool kombiVorher = false;
-  bool startGehalten = ble && GamePad.isStartPressed();
-  bool vier = startGehalten && GamePad.isSquarePressed();
-  bool kreisK = startGehalten && GamePad.isCirclePressed();
-  bool dreiK = startGehalten && GamePad.isTrianglePressed();      // Start + Dreieck = Balancieren
-  bool kreuzK = startGehalten && GamePad.isCrossPressed();         // Start + X = Gyro neu kalibrieren
-  if ((vier || kreisK || dreiK || kreuzK) && !kombiVorher) {
-    if (vier)        aufnahmeUmschalten();
-    else if (kreisK) abspielenUmschalten();
-    else if (dreiK)  { if (balanceUmschalten()) buzzerEin(); else buzzerAus(); }
-    else             kalibrierungStarten();
-  }
-  kombiVorher = vier || kreisK || dreiK || kreuzK;
 
   // --- Gyro-Kalibrierung im Hintergrund ---
   if (gyroKalibriertGerade()) { x = 0; y = 0; }      // waehrenddessen nicht fahren
@@ -247,40 +208,19 @@ void loop() {
                 modus, lichtIstAn() });
 
   // --- LED-Ring: Verbindungsstatus ---
-  // Regenbogen = Dabble, tuerkiser Komet = Webseite, blau = niemand. Start halten = Tankanzeige
-  RingQuelle quelle = ble ? RING_DABBLE : (web ? RING_WEB : RING_NIEMAND);
-  // --- Modus umschalten: Select (Dabble) ---
-  bool select = ble && GamePad.isSelectPressed();
-  if (select && !selectVorher) {
-    setzeModus(modus + 1);
+  // Regenbogen = App per Bluetooth, tuerkiser Komet = ueber den Router, gruener Komet = direkt im WLAN des Autos,
+  // blau = niemand. Tank-Knopf = Tankanzeige
+  RingQuelle quelle = ble ? RING_APP : !web ? RING_NIEMAND : webUeberAutoWlan() ? RING_AUTOWLAN : RING_WEB;
+  static RingQuelle quelleVorher = RING_NIEMAND;
+  if (quelle != quelleVorher) {                      // neu verbunden / Weg gewechselt: kurzes Farbsignal, auch bei Polizei/Team
+    ringVerbunden(quelle);
+    quelleVorher = quelle;
   }
-  selectVorher = select;
   webSetzeModus(modus);
 
   ringEinrichtung(webEinrichtung());                 // orange atmend = WLAN einrichten
   ringMusik(musikNummer() >= 0, musikTon(), musikNotenNummer());
   ringStatus(quelle, startTaste, akkuUsb() ? -1 : akkuProzent(), modus);
-
-  // --- Start + Select 3 s halten (Dabble) = WLAN neu einrichten ---
-  static unsigned long kombiSeit = 0;
-  if (ble && GamePad.isStartPressed() && GamePad.isSelectPressed()) {
-    if (kombiSeit == 0) kombiSeit = millis();
-    else if (millis() - kombiSeit > WLAN_VERGESSEN_HALTEN_MS) {
-      kombiSeit = 0;
-      buzzerWlanFehler();
-      webWlanVergessen();
-    }
-  } else {
-    kombiSeit = 0;
-  }
-
-  // --- X: Doppelklick = 180-Grad-Wende, halten = Hupe ---
-  bool kreuz = ble && GamePad.isCrossPressed() && !GamePad.isStartPressed();   // Start+X = Kalibrieren, nicht hupen
-  if (kreuzKlick.pruefe(kreuz, millis()) == 2) {
-    hupeGesperrt = true;                     // der zweite Klick soll nicht hupen
-    if (!antriebWendeStarten()) buzzerWarnung();
-  }
-  if (!kreuz) hupeGesperrt = false;
 
   // --- Einmal-Aktionen von der Webseite ---
   int aktion = webAktion();
@@ -328,11 +268,11 @@ void loop() {
   // --- Mikrofon: zweimal klatschen = Licht an/aus (nur wenn eingeschaltet) ---
   // Waehrend Musik oder Hupe laeuft, hoert das Mikro den Buzzer -> dann nicht auswerten
   bool klatsch = mikroDoppelKlatsch();
-  if (klatsch && klatschAn && musikNummer() < 0 && !(wt & WEB_HUPE) && !kreuz) lichtBefehl(LICHT_UMSCHALTEN);
+  if (klatsch && klatschAn && musikNummer() < 0 && !(wt & WEB_HUPE)) lichtBefehl(LICHT_UMSCHALTEN);
   webSetzeKlatschen(klatschAn);
 
-  // X / Hupe-Knopf: Polizei = Sirene + Frontblitzer, Teams = eigener Hupenton
-  bool hupeGedrueckt = (kreuz && !hupeGesperrt) || (wt & WEB_HUPE);
+  // Hupe-Knopf: Polizei = Sirene + Frontblitzer, Teams = eigener Hupenton
+  bool hupeGedrueckt = wt & WEB_HUPE;
   if (modus == MODUS_POLIZEI) { buzzerHupe(false); buzzerSirene(hupeGedrueckt); }
   else                        { buzzerSirene(false); buzzerHupe(hupeGedrueckt, TEAM_HUPE_HZ[modus]); }
   lichtBlitzer(modus == MODUS_POLIZEI && hupeGedrueckt);
@@ -341,13 +281,7 @@ void loop() {
 
   // --- Lichter, Blinker, Warnblinker ---
   LichtTasten tasten = {};
-  if (ble) {
-    tasten.dreieck = GamePad.isTrianglePressed();
-    tasten.viereck = GamePad.isSquarePressed();
-    tasten.kreis   = GamePad.isCirclePressed();
-  }
-  if (startGehalten) { tasten.viereck = false; tasten.kreis = false; tasten.dreieck = false; }   // Start-Kombis nicht als Blinker/Licht
-  if (wt & WEB_BLINK_L) tasten.viereck = true;   // Blinker von der Webseite (gehalten)
+  if (wt & WEB_BLINK_L) tasten.viereck = true;   // Blinker von App/Webseite (gehalten)
   if (wt & WEB_BLINK_R) tasten.kreis   = true;
   // Beim Balancieren zappeln die Motoren staendig -> fuer Brems-/Rueckfahrlicht als 'steht' werten
   lichtDisco(musikNummer() >= 0 && einst().disco, musikTon(), musikNotenNummer(), musikViertel());

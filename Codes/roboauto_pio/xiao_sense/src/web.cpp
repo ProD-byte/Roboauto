@@ -29,6 +29,7 @@
 #include "medien.h"
 
 static WebServer server(80);
+static WiFiUDP appUdp;                        // Fahrbefehle der App im WLAN (gleiches Textformat wie Bluetooth)
 static bool klatschAn = false;               // Doppelklatschen schaltet das Licht (fuer die Anzeige)
 static bool serverLaeuft = false;
 static bool staVerbunden = false;           // im Heim-WLAN
@@ -44,6 +45,7 @@ static int aktion = 0;                        // offene Einmal-Aktion
 static int modus = 0;                         // nur fuer die Anzeige
 static unsigned long letzterFahrbefehl = 0;   // Totmann: ohne neue Befehle -> Stopp
 static unsigned long letzteAbfrage = 0;       // Seite offen?
+static bool ueberAutoWlan = false;            // letzte Anfrage kam ueber das eigene WLAN des Autos (nicht den Router)
 static unsigned long wlanStart = 0;
 static int  ereignis = 0;                     // fuer webEreignis()
 static bool fehlerGemeldet = false;
@@ -239,6 +241,15 @@ static void starteEinrichtung() {
                 SETUP_WLAN_NAME, WiFi.softAPIP().toString().c_str());
 }
 
+// Eigenes WLAN "Roboauto" zum Fahren: das Handy verbindet sich direkt mit dem Auto, ohne Router.
+// Laeuft neben dem Heim-WLAN (gleicher Funkkanal wie der Router). Das Auto ist dort 192.168.4.1.
+static void starteFahrWlan() {
+  WiFi.mode(WIFI_AP_STA);
+  WiFi.softAP(FAHR_WLAN_NAME);
+  Serial.printf(">> Eigenes WLAN \"%s\" offen (App direkt verbinden: %s)\n",
+                FAHR_WLAN_NAME, WiFi.softAPIP().toString().c_str());
+}
+
 // HTML-Sonderzeichen in Netzwerknamen entschaerfen
 // Fahrtrichtung fuer den Kompass: 0..360 Grad im Uhrzeigersinn, 0 = Richtung beim Einschalten
 static float kurs() {
@@ -337,6 +348,173 @@ static void sendeEinrichtungsSeite() {
   sendeSeite(s);
 }
 
+// ------------------------------------------------------------
+//  Steuerbefehle: kommen von der Webseite (HTTP) oder von der App (HTTP, UDP oder Bluetooth).
+//  Alle Wege landen hier, damit alles gleich funktioniert. Protokoll: ../docs/app-protokoll.md
+// ------------------------------------------------------------
+struct Param { String name, wert; };
+constexpr int PARAM_MAX = 24;
+
+static bool hatParam(const Param* p, int n, const char* name) {
+  for (int i = 0; i < n; i++) if (p[i].name == name) return true;
+  return false;
+}
+static String param(const Param* p, int n, const char* name) {
+  for (int i = 0; i < n; i++) if (p[i].name == name) return p[i].wert;
+  return "";
+}
+
+static String statusJson() {
+  char ringText[8 * 7 + 1] = "";                   // 8 Ring-LEDs als "rrggbb,rrggbb,..."
+  for (int i = 0; i < LED_RING_ANZAHL && i < 8; i++)
+    snprintf(ringText + strlen(ringText), sizeof(ringText) - strlen(ringText), i ? ",%06lx" : "%06lx",
+             (unsigned long)ringAnzeigeFarbe(i));
+  char json[1200];
+  int n = snprintf(json, sizeof(json),
+           "{\"akku\":%d,\"prozent\":%d,\"usb\":%d,\"eco\":%d,\"links\":%d,\"rechts\":%d,\"rssi\":%d,"
+           "\"licht\":%d,\"fern\":%d,\"warn\":%d,\"wende\":%d,\"modus\":%d,\"figur\":%d,"
+           "\"rec\":%d,\"play\":%d,\"reclen\":%.1f,\"playpos\":%.1f,\"balance\":%d,"
+           "\"nicken\":%.1f,\"rollen\":%.1f,\"kurs\":%.1f,\"dreh\":%.0f,\"kal\":%d,\"mt\":%d,\"lied\":%d,\"liedpos\":%d,\"ton\":%d,\"fw\":%d,\"fwneu\":%d,\"upd\":%d,\"updp\":%d,"
+           "\"lampen\":\"%06lx,%06lx,%06lx,%06lx\",\"ring\":\"%s\"}",
+           akkuWert(), akkuProzent(), akkuUsb(), akkuEco(), antriebLinks(), antriebRechts(), WiFi.RSSI(),
+           lichtIstAn(), lichtIstFernlicht(), lichtIstWarnblinker(), antriebWendeAktiv(), modus, figurNummer(),
+           aufnahmeLaeuft(), abspielenLaeuft(), aufnahmeSekunden(), abspielenSekunden(), balanceAktiv(),
+           -gyroNeigungY(), gyroNeigungX(), kurs(), gyroDrehrate(),   // nicken: Schnauze hoch = positiv
+           gyroKalibriertGerade(), antriebTestSeite() + 1, musikNummer(), musikFortschritt(), musikTon(),
+           autoUpdateBuild(), autoUpdateNeu(), autoUpdateZustand(), autoUpdateProzent(),
+           (unsigned long)lichtAnzeigeFarbe(0), (unsigned long)lichtAnzeigeFarbe(1),
+           (unsigned long)lichtAnzeigeFarbe(2), (unsigned long)lichtAnzeigeFarbe(3), ringText);
+  // XIAO Sense: Kamera, Mikrofon, SD-Karte, Lernen (die schliessende Klammer wird ersetzt)
+  snprintf(json + n - 1, sizeof(json) - n + 1,
+           ",\"kam\":%d,\"aufl\":%d,\"mik\":%d,\"pegel\":%d,\"klatsch\":%d,\"sd\":%d,"
+           "\"lernen\":%d,\"fahrt\":%d,\"bilder\":%d,\"lernsek\":%.0f,\"foto\":%d,\"medien\":%d}",
+           kameraDa(), kameraAufloesungStufe(), mikroDa(), mikroPegel(), klatschAn, karteDa(),
+           lernenAktiv(), lernenFahrt(), lernenBilder(), lernenSekunden(), lernenLetztesFoto(), MEDIEN_PORT);
+  return String(json);
+}
+
+// app = true: kam ueber Bluetooth/UDP (zaehlt nicht als "Webseite offen")
+static String steuerBefehl(const String& pfad, const Param* p, int n, bool app) {
+  if (pfad == "/fahr") {
+    x = constrain(param(p, n, "x").toInt(), -JOYSTICK_MAX, JOYSTICK_MAX);
+    y = constrain(param(p, n, "y").toInt(), -JOYSTICK_MAX, JOYSTICK_MAX);
+    tasten = param(p, n, "t").toInt();
+    letzterFahrbefehl = millis();
+    if (!app) letzteAbfrage = millis();
+    return "ok";
+  }
+  if (pfad == "/aktion") {
+    aktion = param(p, n, "a").toInt();
+    if (!app) letzteAbfrage = millis();
+    return "ok";
+  }
+  if (pfad == "/status") {
+    if (!app) letzteAbfrage = millis();
+    return statusJson();
+  }
+  // Kamera-Aufloesung: /kamera?aufl=0..2
+  if (pfad == "/kamera") {
+    if (hatParam(p, n, "aufl")) kameraAufloesung(param(p, n, "aufl").toInt());
+    return "ok";
+  }
+  // SD-Karte: Ueberblick (Dateiliste und Downloads laufen ueber den Medien-Server)
+  if (pfad == "/karte") return karteJson();
+  // Einstellungen lesen: /einstellungen   aendern: /einstellungen?tempo=150&toene=1 ...
+  if (pfad == "/einstellungen") {
+    if (hatParam(p, n, "standard")) {
+      einstellungenStandard();
+    } else if (hatParam(p, n, "motorStandard")) {
+      einstellungenMotorStandard();
+    } else if (n > 0) {
+      for (int i = 0; i < n; i++) einstellungSetzen(p[i].name, p[i].wert);
+      einstellungenSpeichern();
+      if (hatParam(p, n, "lautstaerke")) buzzerProbe();   // neue Lautstaerke gleich hoerbar
+      Serial.println(">> Einstellungen gespeichert: " + einstellungenJson());
+    }
+    return einstellungenJson();
+  }
+  // Auto-Update: /update?a=suchen  oder  /update?a=installieren
+  if (pfad == "/update") {
+    String a = param(p, n, "a");
+    if (a == "suchen") autoUpdateSuchen();
+    if (a == "installieren") { autoUpdateSuchen(); autoUpdateInstallieren(); }
+    if (!app) letzteAbfrage = millis();
+    return "ok";
+  }
+  if (pfad == "/verlauf") return akkuVerlaufJson();
+  // Fuer die App: ueber welche Adresse ist das Auto im WLAN erreichbar?
+  if (pfad == "/info") {
+    bool da = webWlanDa();
+    return String("{\"name\":\"") + WEB_NAME + "\",\"ble\":\"" + BLE_NAME + "\",\"wlan\":" + (da ? 1 : 0) +
+           ",\"ip\":\"" + (da ? WiFi.localIP().toString() : String("")) + "\",\"fw\":" + autoUpdateBuild() +
+           ",\"udp\":" + APP_UDP_PORT + "}";
+  }
+  return "?";
+}
+
+static void httpSteuerung() {
+  Param p[PARAM_MAX];
+  int n = min(server.args(), PARAM_MAX);
+  for (int i = 0; i < n; i++) p[i] = {server.argName(i), server.arg(i)};
+  ueberAutoWlan = server.client().localIP() == WiFi.softAPIP();   // fuer die Farbe des LED-Rings
+  String antwort = steuerBefehl(server.uri(), p, n, false);
+  server.send(200, antwort.startsWith("{") ? "application/json" : "text/plain", antwort);
+}
+
+// %41 -> 'A', '+' -> ' '
+static String urlDekodieren(const String& s) {
+  String r;
+  for (unsigned i = 0; i < s.length(); i++) {
+    char c = s[i];
+    if (c == '+') r += ' ';
+    else if (c == '%' && i + 2 < s.length()) { r += (char)strtol(s.substring(i + 1, i + 3).c_str(), nullptr, 16); i += 2; }
+    else r += c;
+  }
+  return r;
+}
+
+String webAppBefehl(const String& anfrage) {
+  int frage = anfrage.indexOf('?');
+  String pfad = frage < 0 ? anfrage : anfrage.substring(0, frage);
+  Param p[PARAM_MAX];
+  int n = 0;
+  if (frage >= 0) {
+    String rest = anfrage.substring(frage + 1);
+    while (rest.length() > 0 && n < PARAM_MAX) {
+      int und = rest.indexOf('&');
+      String teil = und < 0 ? rest : rest.substring(0, und);
+      rest = und < 0 ? String("") : rest.substring(und + 1);
+      if (teil.length() == 0) continue;
+      int gleich = teil.indexOf('=');
+      p[n++] = {urlDekodieren(gleich < 0 ? teil : teil.substring(0, gleich)),
+                gleich < 0 ? String("") : urlDekodieren(teil.substring(gleich + 1))};
+    }
+  }
+  return steuerBefehl(pfad, p, n, true);
+}
+
+void webFahrStopp() { x = 0; y = 0; tasten = 0; letzterFahrbefehl = 0; }
+
+// Ein UDP-Paket = eine Anfrage "<nr>|<pfad>?<params>" wie ueber Bluetooth.
+// Kein Verbindungsaufbau wie bei HTTP -> der Befehl ist sofort beim Auto. nr 0 = keine Antwort.
+static void appUdpUpdate() {
+  while (int laenge = appUdp.parsePacket()) {
+    char text[256];
+    int n = appUdp.read(text, min(laenge, (int)sizeof(text) - 1));
+    if (n <= 0) continue;
+    text[n] = 0;
+    char* strich = strchr(text, '|');
+    if (!strich) continue;
+    long nr = atol(text);
+    String antwort = webAppBefehl(String(strich + 1));
+    if (nr == 0) continue;
+    appUdp.beginPacket(appUdp.remoteIP(), appUdp.remotePort());
+    appUdp.printf("%ld|", nr);
+    appUdp.print(antwort);
+    appUdp.endPacket();
+  }
+}
+
 void webStarten() {
   ladeZugang();
   WiFi.setHostname(WEB_NAME);
@@ -398,87 +576,9 @@ void webStarten() {
     webWlanVergessen();
   });
 
-  // --- Steuerung ---
-  server.on("/fahr", HTTP_GET, []() {
-    x = constrain(server.arg("x").toInt(), -JOYSTICK_MAX, JOYSTICK_MAX);
-    y = constrain(server.arg("y").toInt(), -JOYSTICK_MAX, JOYSTICK_MAX);
-    tasten = server.arg("t").toInt();
-    letzterFahrbefehl = millis();
-    letzteAbfrage = millis();
-    server.send(200, "text/plain", "ok");
-  });
-  server.on("/aktion", HTTP_GET, []() {
-    aktion = server.arg("a").toInt();
-    letzteAbfrage = millis();
-    server.send(200, "text/plain", "ok");
-  });
-  server.on("/status", HTTP_GET, []() {
-    letzteAbfrage = millis();
-    char ringText[8 * 7 + 1] = "";                   // 8 Ring-LEDs als "rrggbb,rrggbb,..."
-    for (int i = 0; i < LED_RING_ANZAHL && i < 8; i++)
-      snprintf(ringText + strlen(ringText), sizeof(ringText) - strlen(ringText), i ? ",%06lx" : "%06lx",
-               (unsigned long)ringAnzeigeFarbe(i));
-    char json[1200];
-    int n = snprintf(json, sizeof(json),
-             "{\"akku\":%d,\"prozent\":%d,\"usb\":%d,\"eco\":%d,\"links\":%d,\"rechts\":%d,\"rssi\":%d,"
-             "\"licht\":%d,\"fern\":%d,\"warn\":%d,\"wende\":%d,\"modus\":%d,\"figur\":%d,"
-             "\"rec\":%d,\"play\":%d,\"reclen\":%.1f,\"playpos\":%.1f,\"balance\":%d,"
-             "\"nicken\":%.1f,\"rollen\":%.1f,\"kurs\":%.1f,\"dreh\":%.0f,\"kal\":%d,\"mt\":%d,\"lied\":%d,\"liedpos\":%d,\"ton\":%d,\"fw\":%d,\"fwneu\":%d,\"upd\":%d,\"updp\":%d,"
-             "\"lampen\":\"%06lx,%06lx,%06lx,%06lx\",\"ring\":\"%s\"}",
-             akkuWert(), akkuProzent(), akkuUsb(), akkuEco(), antriebLinks(), antriebRechts(), WiFi.RSSI(),
-             lichtIstAn(), lichtIstFernlicht(), lichtIstWarnblinker(), antriebWendeAktiv(), modus, figurNummer(),
-             aufnahmeLaeuft(), abspielenLaeuft(), aufnahmeSekunden(), abspielenSekunden(), balanceAktiv(),
-             -gyroNeigungY(), gyroNeigungX(), kurs(), gyroDrehrate(),   // nicken: Schnauze hoch = positiv
-             gyroKalibriertGerade(), antriebTestSeite() + 1, musikNummer(), musikFortschritt(), musikTon(),
-             autoUpdateBuild(), autoUpdateNeu(), autoUpdateZustand(), autoUpdateProzent(),
-             (unsigned long)lichtAnzeigeFarbe(0), (unsigned long)lichtAnzeigeFarbe(1),
-             (unsigned long)lichtAnzeigeFarbe(2), (unsigned long)lichtAnzeigeFarbe(3), ringText);
-    // XIAO Sense: Kamera, Mikrofon, SD-Karte, Lernen (die schliessende Klammer wird ersetzt)
-    snprintf(json + n - 1, sizeof(json) - n + 1,
-             ",\"kam\":%d,\"aufl\":%d,\"mik\":%d,\"pegel\":%d,\"klatsch\":%d,\"sd\":%d,"
-             "\"lernen\":%d,\"fahrt\":%d,\"bilder\":%d,\"lernsek\":%.0f,\"foto\":%d,\"medien\":%d}",
-             kameraDa(), kameraAufloesungStufe(), mikroDa(), mikroPegel(), klatschAn, karteDa(),
-             lernenAktiv(), lernenFahrt(), lernenBilder(), lernenSekunden(), lernenLetztesFoto(), MEDIEN_PORT);
-    server.send(200, "application/json", json);
-  });
-
-  // Kamera-Aufloesung: /kamera?aufl=0..2
-  server.on("/kamera", HTTP_GET, []() {
-    if (server.hasArg("aufl")) kameraAufloesung(server.arg("aufl").toInt());
-    server.send(200, "text/plain", "ok");
-  });
-  // SD-Karte: Ueberblick (Dateiliste und Downloads laufen ueber den Medien-Server)
-  server.on("/karte", HTTP_GET, []() {
-    server.send(200, "application/json", karteJson());
-  });
-
-  // Einstellungen lesen: /einstellungen   aendern: /einstellungen?tempo=150&toene=1 ...
-  server.on("/einstellungen", HTTP_GET, []() {
-    if (server.hasArg("standard")) {
-      einstellungenStandard();
-    } else if (server.hasArg("motorStandard")) {
-      einstellungenMotorStandard();
-    } else if (server.args() > 0) {
-      for (int i = 0; i < server.args(); i++) einstellungSetzen(server.argName(i), server.arg(i));
-      einstellungenSpeichern();
-      if (server.hasArg("lautstaerke")) buzzerProbe();   // neue Lautstaerke gleich hoerbar
-      Serial.println(">> Einstellungen gespeichert: " + einstellungenJson());
-    }
-    server.send(200, "application/json", einstellungenJson());
-  });
-
-  // Auto-Update: /update?a=suchen  oder  /update?a=installieren
-  server.on("/update", HTTP_GET, []() {
-    String a = server.arg("a");
-    if (a == "suchen") autoUpdateSuchen();
-    if (a == "installieren") { autoUpdateSuchen(); autoUpdateInstallieren(); }
-    letzteAbfrage = millis();
-    server.send(200, "text/plain", "ok");
-  });
-
-  server.on("/verlauf", HTTP_GET, []() {
-    server.send(200, "application/json", akkuVerlaufJson());
-  });
+  // --- Steuerung (gleiche Befehle kommen von der App auch ueber Bluetooth/UDP) ---
+  for (const char* pfad : {"/fahr", "/aktion", "/status", "/kamera", "/karte", "/einstellungen", "/update", "/verlauf", "/info"})
+    server.on(pfad, HTTP_GET, httpSteuerung);
 
   // Alles andere: im Einrichtungsmodus auf die Einrichtungsseite umleiten.
   // Das loest auf Handys automatisch das "Im Netzwerk anmelden"-Fenster aus.
@@ -496,10 +596,11 @@ void webStarten() {
     Serial.println(">> WLAN: noch keine Zugangsdaten gespeichert");
     starteEinrichtung();
   } else {
-    WiFi.mode(WIFI_STA);
+    starteFahrWlan();
     starteSuche();                                 // im Hintergrund suchen, dann bekanntes Netz waehlen
   }
   server.begin();
+  appUdp.begin(APP_UDP_PORT);
 }
 
 // Kein bekanntes WLAN erreichbar -> Fehler melden und Einrichtungsmodus oeffnen
@@ -512,6 +613,7 @@ static void wlanFehlschlag() {
 }
 
 void webUpdate() {
+  appUdpUpdate();
   server.handleClient();
   if (setupAktiv) dns.processNextRequest();
 
@@ -543,8 +645,7 @@ void webUpdate() {
   if (setupAktiv && netzAnzahl > 0) {
     if (WiFi.status() == WL_CONNECTED) {
       dns.stop();
-      WiFi.softAPdisconnect(true);
-      WiFi.mode(WIFI_STA);
+      starteFahrWlan();                     // Einrichtungs-WLAN wird wieder zum Fahr-WLAN
       setupAktiv = false;
       Serial.println(">> Heim-WLAN doch erreichbar - Einrichtungsmodus beendet");
     } else if (phase == W_AUS && millis() - letzterNeuversuch > WLAN_NEUVERSUCH_MS && WiFi.softAPgetStationNum() == 0) {
@@ -578,11 +679,13 @@ bool webEinrichtung() { return setupAktiv; }
 bool webWlanDa()      { return staVerbunden && !setupAktiv && WiFi.status() == WL_CONNECTED; }
 
 bool webVerbunden() { return (serverLaeuft || setupAktiv) && letzteAbfrage != 0 && millis() - letzteAbfrage < WEB_GETRENNT_MS; }
+bool webUeberAutoWlan() { return ueberAutoWlan; }
 int  webEreignis()  { int e = ereignis; ereignis = 0; return e; }
-bool webFaehrt()    { return (serverLaeuft || setupAktiv) && millis() - letzterFahrbefehl < WEB_TOTMANN_MS && (x != 0 || y != 0); }
+// Fahrbefehle kommen von der Webseite oder der App (auch ohne WLAN ueber Bluetooth) - der Totmann regelt beides
+bool webFaehrt()    { return millis() - letzterFahrbefehl < WEB_TOTMANN_MS && (x != 0 || y != 0); }
 void webSetzeModus(int m) { modus = m; }
 void webSetzeKlatschen(bool an) { klatschAn = an; }
-int  webTasten()     { return (serverLaeuft || setupAktiv) ? tasten : 0; }
+int  webTasten()     { return tasten; }
 int  webAktion()     { int a = aktion; aktion = 0; return a; }
 int  webX()         { return x; }
 int  webY()         { return y; }

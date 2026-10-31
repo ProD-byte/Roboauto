@@ -1,7 +1,7 @@
 # 🚗📷 Roboauto – Seeed Studio XIAO ESP32S3 Sense
 
 Upgrade des Roboautos vom ESP32-S3 Super Mini auf den **XIAO ESP32S3 Sense**.
-Alle bisherigen Funktionen bleiben erhalten (Dabble, Weboberfläche, Gyro, Lichter, Modi, Figuren,
+Alle bisherigen Funktionen bleiben erhalten (Roboauto-App, Weboberfläche, Gyro, Lichter, Modi, Figuren,
 Fahrweg, Balancieren, Jukebox, Auto-Update). Neu dazu kommen:
 
 | | |
@@ -99,4 +99,5 @@ auf GitHub Pages im Unterordner **`/xiao/`** (`version.json`, `roboauto-xiao-upd
 Der XIAO schaut nur dort nach Updates, der Super Mini nur im Hauptordner. So lädt keines der beiden Autos
 die falsche Firmware. Bei einem Versions-Tag (`v1.2.0`) hängen die XIAO-Dateien zusätzlich am Release.
 
-Der Bluetooth-Name in Dabble ist jetzt **„RoboautoXiao“**.
+In der Roboauto-App heißt das Auto per Bluetooth **„RoboautoXiao“**. Die App zeigt die Oberfläche des
+Hauptautos – Kamera, Mikrofon und SD-Karte gibt es (noch) nur im Browser.

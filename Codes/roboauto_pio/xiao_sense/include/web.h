@@ -11,6 +11,18 @@ void webUpdate();
 // true, solange die Webseite im Browser offen ist (fragt regelmaessig den Status ab)
 bool webVerbunden();
 
+// true, wenn die Seite/App direkt im eigenen WLAN des Autos haengt ("Roboauto", 192.168.4.1),
+// false = ueber den Router (Heim-WLAN)
+bool webUeberAutoWlan();
+
+// Befehl der App ueber Bluetooth/UDP, z. B. "/fahr?x=3&y=7&t=0" - wird genau wie die
+// HTTP-Anfrage der Webseite behandelt. Liefert die Antwort (JSON oder "ok").
+// Siehe ../docs/app-protokoll.md
+String webAppBefehl(const String& anfrage);
+
+// Fahren sofort stoppen (z. B. wenn die Bluetooth-Verbindung abreisst)
+void webFahrStopp();
+
 // Meldet einmalig, wie der WLAN-Start ausging: 0 = nichts Neues,
 // 1 = gerade erfolgreich verbunden, 2 = nach WLAN_TIMEOUT_MS nicht verbunden,
 // 3 = Einrichtungs-WLAN geoeffnet (noch keine Zugangsdaten)
