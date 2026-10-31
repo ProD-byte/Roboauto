@@ -511,7 +511,7 @@ const char WEBSEITE[] PROGMEM = R"==(<!doctype html>
 
 <footer class="fuss">
   <div class="tast"><span>Tastatur:</span> <kbd>L</kbd> <span>Licht</span> &middot; <kbd>F</kbd> <span>Fernlicht</span> &middot; <kbd>B</kbd> <span>Warnblinker</span> &middot; <kbd>U</kbd> <span>Wende</span> &middot; <kbd>Q</kbd>/<kbd>E</kbd> <span>Blinker</span> &middot; <kbd>H</kbd> <span>Hupe</span> &middot; <kbd>T</kbd> <span>Tank</span> &middot; <kbd>P</kbd> <span>Modus</span></div>
-  <div id="version"><span>Software: Schritt</span> 39<span id="version-build"></span></div>
+  <div id="version"><span>Software: Schritt</span> 40<span id="version-build"></span></div>
 </footer>
 </main>
 

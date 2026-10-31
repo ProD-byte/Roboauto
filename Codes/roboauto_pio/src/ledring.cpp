@@ -126,8 +126,8 @@ static void zeigeWarten(unsigned long jetzt) {
   komet((jetzt % 2400) * (float)LED_RING_ANZAHL / 2400, 30, 90, 255, 2.5f);
 }
 
-// Dabble: Regenbogen - langsamer und weicher als frueher
-static void zeigeDabble(unsigned long jetzt) {
+// App per Bluetooth: Regenbogen - langsam und weich
+static void zeigeApp(unsigned long jetzt) {
   uint16_t farbton = (jetzt * 9) & 0xFFFF;          // eine Runde ca. 7 s
   for (int i = 0; i < LED_RING_ANZAHL; i++) {
     uint32_t c = ring.gamma32(ring.ColorHSV(farbton + i * 65536L / LED_RING_ANZAHL, 230, 255));
@@ -283,7 +283,7 @@ void ringStatus(RingQuelle quelle, bool tankanzeige, int akkuWert, int modus) {
   else if (tankanzeige)                       zeigeTank(jetzt, akkuWert);
   else if (modus == MODUS_POLIZEI)            zeigePolizei(jetzt);
   else if (modus >= MODUS_BLAU)               zeigeTeam(jetzt, modus);
-  else if (quelle == RING_DABBLE)             zeigeDabble(jetzt);
+  else if (quelle == RING_APP)                zeigeApp(jetzt);
   else                                        zeigeWeb(jetzt);
 
   ausgeben(jetzt);

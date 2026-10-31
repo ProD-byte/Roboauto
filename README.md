@@ -1,7 +1,7 @@
 # 🚗 Roboauto
 
 Ein kleines Roboterauto mit Panzerlenkung – selbst konstruiert, 3D-gedruckt und programmiert.
-Gesteuert per **Handy-App (Dabble, Bluetooth)** oder im **Browser über WLAN**.
+Gesteuert per eigener **[Roboauto-App](Codes/roboauto_app/README.md)** für Android (Bluetooth oder WLAN) oder im **Browser über WLAN**.
 
 ![Roboauto Weboberflaeche](Codes/roboauto_pio/docs/bilder/web-steuerung.jpg)
 

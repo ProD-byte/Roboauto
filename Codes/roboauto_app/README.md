@@ -1,6 +1,6 @@
 # 📱 Roboauto-App (Android)
 
-Eigene App statt Dabble. Sie zeigt **genau die Weboberfläche des Autos** und verbindet sich
+Die App zum Roboauto (ersetzt die frühere Dabble-App). Sie zeigt **genau die Weboberfläche des Autos** und verbindet sich
 **per Bluetooth** (ohne WLAN, auch draußen) oder **per WLAN**.
 
 - Android 8 und neuer
@@ -8,8 +8,9 @@ Eigene App statt Dabble. Sie zeigt **genau die Weboberfläche des Autos** und ve
   ändert sich die Webseite, ändert sich die App automatisch mit.
 - Protokoll zwischen App und Auto: [`docs/app-protokoll.md`](../roboauto_pio/docs/app-protokoll.md)
 
-> ⚠️ Zum Testen braucht das Auto die Firmware **`env:roboauto_bletest`** (ohne Dabble).
-> Mit der normalen Dabble-Firmware findet die App das Auto nur über WLAN.
+- Drei Wege zum Auto: **Bluetooth**, **Heim-WLAN** oder direkt das WLAN **„Roboauto“** des Autos (ohne Router)
+
+> Ältere Autos mit Dabble-Firmware bekommen die App-Firmware per Auto-Update (oder einmal per Online-Flasher).
 
 ## So funktioniert's
 

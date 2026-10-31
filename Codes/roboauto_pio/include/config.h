@@ -56,7 +56,7 @@ constexpr unsigned long BLINK_TAKT       = 250;  // ms an / ms aus
 // --- Hupe ---
 constexpr int HUPE_FREQUENZ = 300;               // Hz (wie V5)
 
-// --- Licht-Modi (Select in Dabble bzw. Knoepfe auf der Webseite schalten durch) ---
+// --- Licht-Modi (Knoepfe in App/Webseite) ---
 enum Modus { MODUS_NORMAL = 0, MODUS_POLIZEI, MODUS_BLAU, MODUS_GRUEN, MODUS_GELB, MODUS_ROT, MODUS_ANZAHL };
 constexpr const char* MODUS_NAME[MODUS_ANZAHL] = { "Normal", "Polizei", "Team Blau", "Team Gruen", "Team Gelb", "Team Rot" };
 
@@ -87,9 +87,8 @@ constexpr uint8_t GYRO_ADRESSE        = 0x68;
 constexpr int     GYRO_KALIBRIER_MESSUNGEN = 200;   // x 5 ms = 1 Sekunde stillhalten
 
 // --- Fahrwerte ---
-constexpr int JOYSTICK_MAX    = 7;    // Dabble liefert -7 ... +7
+constexpr int JOYSTICK_MAX    = 7;    // Joystick in App/Webseite liefert -7 ... +7
 constexpr int TOTZONE         = 1;    // |Wert| <= 1 gilt als Mitte
-constexpr int DPAD_STAERKE     = 7;    // Pfeiltasten wirken wie Joystick-Ausschlag 0..7 (7 = voll)
 constexpr int PWM_MAX         = 255;  // technische Obergrenze der Motoren
 constexpr int MAX_TEMPO       = 128;  // Fahrgeschwindigkeit: 128 = halb so schnell wie frueher (255 = voll)
 constexpr int MAX_LENKUNG     = 75;   // Lenkstaerke waehrend der Fahrt (halbiert, frueher 150)
@@ -121,7 +120,6 @@ constexpr unsigned long WENDE_MAX_ZEIT = 4000; // ms Sicherheits-Abbruch
 constexpr const char* WEB_NAME = "roboauto";   // Adresse im Browser: http://roboauto.local
 constexpr const char* SETUP_WLAN_NAME = "Roboauto-Setup";   // eigenes WLAN zum Einrichten (ohne Passwort)
 constexpr const char* FAHR_WLAN_NAME = "Roboauto";          // eigenes WLAN zum Fahren mit der App, ohne Router (ohne Passwort)
-constexpr unsigned long WLAN_VERGESSEN_HALTEN_MS = 3000;    // Start + Select so lange halten = WLAN neu einrichten
 constexpr unsigned long WEB_TOTMANN_MS = 400;   // ohne neuen Fahrbefehl so lange -> Stopp
 constexpr uint16_t APP_UDP_PORT = 4211;         // App schickt Fahrbefehle im WLAN per UDP (schneller als HTTP)
 constexpr unsigned long WEB_GETRENNT_MS = 6000;  // so lange ohne Lebenszeichen der Seite -> "Webseite getrennt"
@@ -152,7 +150,7 @@ constexpr int           AUFNAHME_MAX_EINTRAEGE = 500;     // so viele Lenk-/Gas-
 constexpr unsigned long AUFNAHME_MAX_MS        = 120000;  // maximal 2 Minuten
 
 // --- Balancieren (auf zwei Raedern, Schnauze hoch) ---
-// Einschalten: Auto am "schwerelosen" Punkt halten, dann Start halten + Dreieck (Dabble)
+// Einschalten: Auto am "schwerelosen" Punkt halten, dann Knopf "Balancieren" in App/Webseite
 // oder Knopf "Balancieren" auf der Webseite. Die aktuelle Neigung wird zum Balancierpunkt.
 constexpr int   BALANCE_RICHTUNG   = 1;      // auf -1 stellen, falls das Auto in die Kipprichtung WEGfaehrt
 constexpr float BALANCE_KP         = 18.0f;  // PWM pro Grad Neigung (Hauptwert)

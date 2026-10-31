@@ -1,14 +1,14 @@
 # 🚗 Roboauto
 
-Ein kleines Roboterauto mit Panzerlenkung (4 Räder, Skid-Steer) mit **ESP32-S3 Super Mini**, gesteuert per **Handy-App (Dabble, Bluetooth)** oder im **Browser über WLAN**.
+Ein kleines Roboterauto mit Panzerlenkung (4 Räder, Skid-Steer) mit **ESP32-S3 Super Mini**, gesteuert per eigener **Roboauto-App** (Android, Bluetooth oder WLAN) oder im **Browser über WLAN**.
 Geschrieben mit **VS Code + PlatformIO**, Schritt für Schritt aufgebaut.
 
 ## ✨ Funktionen
 
 | | |
 |---|---|
-| 🎮 **Steuerung** | Dabble-App (Joystick, Steuerkreuz, Neigungssteuerung) oder Weboberfläche mit Joystick und Tastatur (W A S D) |
-| 🌐 **Weboberfläche** | modernes Dashboard: Live-Ansicht des Autos, Kompass, Neigung, Motorleistung, Akkuverlauf · Deutsch/Englisch |
+| 🎮 **Steuerung** | [Roboauto-App](../roboauto_app/README.md) für Android (Bluetooth, Heim-WLAN oder direkt ins WLAN „Roboauto“ des Autos) oder Browser mit Joystick und Tastatur (W A S D) |
+| 🌐 **Weboberfläche** | modernes Dashboard: Live-Ansicht des Autos, Kompass, Neigung, Motorleistung, Akkuverlauf · Handy quer = Gamepad-Ansicht · Deutsch/Englisch/Spanisch/Französisch |
 | 🧭 **Gyro (MPU6050)** | Geradeauslauf, 180°-Wende auf Knopfdruck, Kompass, Crash- und Umkipp-Erkennung |
 | 💡 **Licht** | Front-/Rücklicht, Fernlicht, Blinker, Warnblinker, Bremslicht, LED-Ring mit Animationen |
 | 🚨 **Modi** | Normal, Polizei (Blaulicht + Sirene), Team Blau/Grün/Gelb/Rot |
@@ -84,10 +84,8 @@ Auf der **GitHub-Pages-Seite** dieses Projekts auf „Roboauto installieren“ k
 3. Eigenes WLAN wählen, Passwort eingeben, speichern.
 4. Im normalen WLAN **http://roboauto.local** öffnen – fertig.
 
-Oder: Dabble-App öffnen, mit **„RoboautoV3“** verbinden, GamePad-Modul wählen.
-
-> 🧪 **Neu, im Test:** eigene [Roboauto-App](../roboauto_app/README.md) für Android statt Dabble –
-> gleiche Oberfläche wie im Browser, per Bluetooth oder WLAN. Braucht die Firmware `env:roboauto_bletest`.
+Oder mit der **[Roboauto-App](../roboauto_app/README.md)** (Android): App öffnen – sie findet das Auto
+von selbst per Bluetooth und im WLAN. Ohne Router geht es direkt über das WLAN **„Roboauto“** des Autos.
 
 ## 🤖 Automatischer Build (GitHub Actions)
 
@@ -99,7 +97,6 @@ Bei jedem Hochladen baut GitHub die Firmware automatisch:
 
 ## 📚 Verwendete Bibliotheken
 
-- [DabbleESP32](https://github.com/STEMpedia/DabbleESP32) (STEMpedia, LGPL-3.0) – angepasste Kopie in `lib/DabbleESP32`
 - [Adafruit NeoPixel](https://github.com/adafruit/Adafruit_NeoPixel)
 - [ESP Web Tools](https://esphome.github.io/esp-web-tools/) für den Online-Flasher
 
