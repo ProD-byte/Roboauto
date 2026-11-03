@@ -423,6 +423,51 @@ static String statusJson() {
   return String(json);
 }
 
+// Netzwerke in der Naehe als JSON (fuer die App). Die Suche laeuft im Hintergrund - solange: {"suche":1}
+static String jsonText(const String& s) {
+  String r = "\"";
+  for (unsigned i = 0; i < s.length(); i++) {
+    char c = s[i];
+    if (c == '"' || c == '\\') { r += '\\'; r += c; }
+    else if ((uint8_t)c < 0x20) { char h[8]; snprintf(h, sizeof(h), "\\u%04x", c); r += h; }
+    else r += c;
+  }
+  return r + "\"";
+}
+static String netzeJson(bool neu) {
+  if (WiFi.getMode() == WIFI_OFF) WiFi.mode(WIFI_STA);
+  static unsigned long gesucht = 0;           // wann die letzte Suche gestartet wurde
+  int n = WiFi.scanComplete();
+  if (n == WIFI_SCAN_RUNNING) return "{\"suche\":1}";
+  // neu suchen: auf Wunsch, wenn noch nichts da ist oder das Ergebnis aelter als 20 s ist
+  if (neu || n < 0 || millis() - gesucht > 20000) {
+    WiFi.scanDelete();
+    WiFi.scanNetworks(true);
+    gesucht = millis();
+    return "{\"suche\":1}";
+  }
+  // gleiche Namen nur einmal (das staerkste), nach Signal sortiert, hoechstens 20
+  int idx[20], anzahl = 0;
+  for (int i = 0; i < n; i++) {
+    if (WiFi.SSID(i).length() == 0) continue;
+    int doppelt = -1;
+    for (int j = 0; j < anzahl; j++) if (WiFi.SSID(idx[j]) == WiFi.SSID(i)) doppelt = j;
+    if (doppelt >= 0) { if (WiFi.RSSI(i) > WiFi.RSSI(idx[doppelt])) idx[doppelt] = i; continue; }
+    if (anzahl < 20) idx[anzahl++] = i;
+  }
+  for (int a = 1; a < anzahl; a++)
+    for (int b = a; b > 0 && WiFi.RSSI(idx[b]) > WiFi.RSSI(idx[b - 1]); b--) { int z = idx[b]; idx[b] = idx[b - 1]; idx[b - 1] = z; }
+  String r = "{\"netze\":[";
+  for (int k = 0; k < anzahl; k++) {
+    int i = idx[k];
+    if (k) r += ',';
+    r += "{\"n\":" + jsonText(WiFi.SSID(i)) + ",\"s\":" + String(WiFi.RSSI(i)) +
+         ",\"z\":" + (WiFi.encryptionType(i) == WIFI_AUTH_OPEN ? "0" : "1") +
+         ",\"g\":" + (netzFinde(WiFi.SSID(i)) >= 0 ? "1" : "0") + "}";
+  }
+  return r + "]}";
+}
+
 // app = true: kam ueber Bluetooth (zaehlt nicht als "Webseite offen")
 static String steuerBefehl(const String& pfad, const Param* p, int n, bool app) {
   if (pfad == "/fahr") {
@@ -495,6 +540,22 @@ static String steuerBefehl(const String& pfad, const Param* p, int n, bool app) 
     return "ok";
   }
   if (pfad == "/verlauf") return akkuVerlaufJson();
+  // WLAN einrichten aus der App ueber Bluetooth (das Auto braucht dafuer noch kein WLAN).
+  // Nur ueber Bluetooth: das Passwort soll nicht als Adresse durchs Heimnetz gehen.
+  //   /netze[?neu=1]            -> {"suche":1} oder {"netze":[{"n":"Name","s":-60,"z":1,"g":1},...]}
+  //                                (s = Signal in dBm, z = mit Passwort, g = schon gespeichert)
+  //   /wlanspeichern?n=Name&p=Passwort  -> "ok" (startet neu und verbindet sich), leeres Passwort = gespeichertes behalten
+  if (app && pfad == "/netze") return netzeJson(param(p, n, "neu") == "1");
+  if (app && pfad == "/wlanspeichern") {
+    String name = param(p, n, "n"), pass = param(p, n, "p");
+    if (name.length() == 0 || name.length() > 32 || pass.length() > 64) return "fehler";
+    int bekannt = netzFinde(name);
+    if (pass.length() == 0 && bekannt >= 0) pass = netzPass[bekannt];
+    merkeNetz(name, pass);
+    Serial.printf(">> Neue WLAN-Daten aus der App: \"%s\" - starte neu\n", name.c_str());
+    neustartUm = millis() + 1500;
+    return "ok";
+  }
   // Fuer die App: ueber welche Adresse ist das Auto im WLAN erreichbar?
   // Uhrzeit vom Browser/App: /zeit?t=Sekunden seit 1970 (UTC) - fuer Datum/Uhrzeit in Dateinamen
   if (pfad == "/zeit") { zeitSetzen(strtoul(param(p, n, "t").c_str(), nullptr, 10)); return "ok"; }

@@ -273,6 +273,15 @@ const char WEBSEITE[] PROGMEM = R"==(<!doctype html>
   #mt-antw{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   #mt-antw button{height:auto;min-height:46px;padding:6px 8px;font-size:13px}
   #mt-antw button.gut{border-color:var(--gut)}
+  /* ---- WLAN einrichten aus der App (ueber Bluetooth) ---- */
+  .wl-hinweis{flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;border-color:var(--akzent);margin-bottom:14px}
+  .wl-hinweis[hidden],#wl-karte[hidden],#wl-form[hidden]{display:none}
+  .wl-liste{display:flex;flex-direction:column;gap:6px;max-height:280px;overflow:auto}
+  .wl-liste button{display:flex;flex-direction:row;justify-content:space-between;align-items:center;gap:10px;height:46px;padding:0 14px;font-size:14.5px;text-align:left}
+  .wl-liste button.an{border-color:var(--akzent);box-shadow:0 0 0 1px var(--akzent) inset}
+  .wl-liste .leise{font-size:12.5px;white-space:nowrap}
+  #wl-form{flex-wrap:wrap}
+  #wl-form .namefeld{flex:1 1 180px;width:auto}
   /* ---- Einstellungen ---- */
   details.einst>summary{list-style:none;cursor:pointer}
   details.einst>summary::-webkit-details-marker{display:none}
@@ -431,6 +440,7 @@ const char WEBSEITE[] PROGMEM = R"==(<!doctype html>
 </header>
 
 <main>
+<div id="wl-hinweis" class="karte wl-hinweis" hidden><span>&#128246; Das Auto ist noch in keinem WLAN. F&uuml;r Video, Ton und mehr Reichweite jetzt einrichten.</span><button id="wl-los" class="klein">WLAN einrichten</button></div>
 <section id="steuerung">
   <h2>Steuerung</h2>
   <div class="raster r2">
@@ -653,13 +663,29 @@ const char WEBSEITE[] PROGMEM = R"==(<!doctype html>
       </div>
       <p class="hinweis" id="upd-text" style="margin:0">Neue Versionen kommen automatisch von GitHub. Installiert wird nur, wenn das Auto 2 Minuten unbenutzt steht und der Akku reicht. Startet eine neue Version nicht sauber, schaltet das Auto von selbst auf die alte zur&uuml;ck.</p>
     </div>
+    <div class="karte" id="wl-karte" style="grid-column:1/-1" hidden>
+      <h3 style="margin:0">&#128246; WLAN einrichten</h3>
+      <p class="hinweis" id="wl-text" style="margin:0;text-align:left"></p>
+      <div id="wl-liste" class="wl-liste"></div>
+      <div class="reihe" id="wl-form" hidden>
+        <input id="wl-name" class="namefeld" maxlength="32" placeholder="WLAN-Name" autocomplete="off" spellcheck="false">
+        <input id="wl-pass" class="namefeld" type="password" maxlength="64" placeholder="Passwort" autocomplete="off" spellcheck="false">
+        <button id="wl-auge" class="klein" title="Passwort zeigen">&#128065;</button>
+        <button id="wl-speichern" class="klein">&#128190; <span>Speichern</span></button>
+      </div>
+      <div class="reihe">
+        <button id="wl-suchen" class="klein">&#128269; Netze suchen</button>
+        <button id="wl-hand" class="klein">&#9998;&#65039; Name selbst eingeben</button>
+        <button id="wl-wechseln" class="klein" hidden>&#128246; Auf WLAN wechseln</button>
+      </div>
+    </div>
     <div class="karte" style="grid-column:1/-1;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:space-between">
       <h3 style="margin:0">&#128421;&#65039; System</h3>
       <span id="e-status"></span>
       <span class="leise" id="sys-neustart" style="flex-basis:100%;font-size:13px"></span>
       <div class="reihe" style="flex:0 1 auto">
         <select class="sprachwahl" title="Sprache / Language"><option value="de">&#127760; Deutsch</option><option value="en">&#127760; English</option></select>
-        <button class="klein" onclick="location.href='/wlan'">&#128246; WLAN &auml;ndern</button>
+        <button class="klein" onclick="wlanAendern()">&#128246; WLAN &auml;ndern</button>
         <button id="e-standard" class="klein">&#8634; Standard wiederherstellen</button>
       </div>
     </div>
@@ -1041,6 +1067,100 @@ function mtStart(){
 }
 document.getElementById('b-mtest').addEventListener('click', mtStart);
 
+// ---------- WLAN einrichten aus der App (ueber Bluetooth) ----------
+// Das Auto sucht die Netze selbst und bekommt Name + Passwort per Bluetooth - das Handy muss dafuer
+// nicht ins Einrichtungs-WLAN wechseln. Danach startet das Auto neu, die App wechselt auf WLAN.
+const perBle = !!(window.Roboauto && Roboauto.host && !Roboauto.host());
+const wl = id => document.getElementById('wl-' + id);
+let wlGeschuetzt = true, wlLaeuft = false;
+const wlText = s => { wl('text').textContent = s; };
+const wlBalken = s => s >= -60 ? '\u2582\u2584\u2586\u2588' : s >= -70 ? '\u2582\u2584\u2586' : s >= -80 ? '\u2582\u2584' : '\u2582';
+async function wlFrage(pfad){ return (await fetch(pfad)).text(); }
+function wlZeigen(){
+  wl('karte').hidden = false;
+  const e = document.getElementById('einst'); e.open = true;
+  wl('karte').scrollIntoView({behavior: 'smooth', block: 'start'});
+  if (!wl('liste').children.length) wlSuchen();
+}
+window.wlanAendern = () => { if (perBle) wlZeigen(); else location.href = '/wlan'; };
+function wlWaehlen(name, geschuetzt, gespeichert, knopf){
+  wl('liste').querySelectorAll('button').forEach(b => b.classList.toggle('an', b === knopf));
+  wl('form').hidden = false;
+  wl('name').value = name; wl('name').readOnly = !!knopf;
+  wlGeschuetzt = geschuetzt;
+  wl('pass').value = ''; wl('pass').hidden = !geschuetzt;
+  wl('auge').hidden = !geschuetzt;
+  wl('pass').placeholder = gespeichert ? t('leer = gespeichertes Passwort') : t('Passwort');
+  wlText(geschuetzt ? t('Passwort für „{0}“ eingeben und speichern.', name) : t('„{0}“ ist offen (ohne Passwort).', name));
+  (geschuetzt ? wl('pass') : wl('speichern')).focus();
+}
+async function wlSuchen(){
+  if (wlLaeuft) return;
+  wlLaeuft = true; wl('suchen').disabled = true;
+  wlText(t('Das Auto sucht Netzwerke in der Nähe …'));
+  try {
+    let r = JSON.parse(await wlFrage('/netze?neu=1'));
+    for (let i = 0; i < 20 && !r.netze; i++){ await warteMs(800); r = JSON.parse(await wlFrage('/netze')); }
+    const liste = wl('liste'); liste.innerHTML = '';
+    for (const n of (r.netze || [])){
+      const b = document.createElement('button'); b.type = 'button';
+      const links = document.createElement('span'); links.textContent = (n.z ? '\ud83d\udd12 ' : '') + n.n;
+      const rechts = document.createElement('span'); rechts.className = 'leise';
+      rechts.textContent = (n.g ? '\u2713 ' + t('gespeichert') + '  ' : '') + wlBalken(n.s);
+      b.append(links, rechts);
+      b.addEventListener('click', () => wlWaehlen(n.n, !!n.z, !!n.g, b));
+      liste.append(b);
+    }
+    wlText(r.netze && r.netze.length ? t('Netz antippen, Passwort eingeben, speichern.') : t('Kein Netzwerk gefunden. Nochmal suchen oder den Namen selbst eingeben.'));
+  } catch (e) { wlText(t('Suche ging nicht - ist das Auto per Bluetooth verbunden?')); }
+  wlLaeuft = false; wl('suchen').disabled = false;
+}
+const warteMs = ms => new Promise(r => setTimeout(r, ms));
+async function wlSpeichern(){
+  const name = wl('name').value.trim(), pass = wlGeschuetzt ? wl('pass').value : '';
+  if (!name){ wlText(t('Bitte einen WLAN-Namen wählen oder eingeben.')); return; }
+  if (wlGeschuetzt && pass && pass.length < 8){ wlText(t('Das Passwort ist zu kurz (mindestens 8 Zeichen).')); return; }
+  const pfad = '/wlanspeichern?n=' + encodeURIComponent(name) + '&p=' + encodeURIComponent(pass);
+  if (pfad.length > 240){ wlText(t('Name oder Passwort ist zu lang.')); return; }
+  wl('speichern').disabled = true;
+  try {
+    if ((await wlFrage(pfad)).trim() !== 'ok') throw new Error();
+  } catch (e) { wl('speichern').disabled = false; wlText(t('Speichern ging nicht. Nochmal versuchen.')); return; }
+  wl('form').hidden = true; wl('pass').value = '';
+  wlText(t('Gespeichert. Das Auto startet neu und verbindet sich mit „{0}“ …', name));
+  // Das Auto ist gleich kurz weg (Neustart), die App verbindet Bluetooth von selbst neu -> /info abwarten
+  await warteMs(6000);
+  for (let i = 0; i < 25; i++){
+    try {
+      const info = JSON.parse(await wlFrage('/info'));
+      if (info.wlan && info.ip){
+        wlText(t('Verbunden mit „{0}“ (Adresse {1}).', name, info.ip));
+        const w = wl('wechseln'); w.hidden = false;
+        w.onclick = () => Roboauto.verbindeWlan(info.ip);
+        wl('hinweis').hidden = true; wl('speichern').disabled = false;
+        return;
+      }
+    } catch (e) {}
+    await warteMs(2000);
+  }
+  wl('speichern').disabled = false; wl('form').hidden = false;
+  wlText(t('Keine Verbindung mit „{0}“. Stimmt das Passwort? Das Auto bleibt per Bluetooth erreichbar.', name));
+}
+if (perBle) setTimeout(() => {   // erst nach dem ganzen Skript (Uebersetzungen sind dann da)
+  wlText(t('Das Auto sucht die Netze in der Nähe. Netz antippen, Passwort eingeben, speichern - fertig.'));
+  wl('karte').hidden = false;
+  wl('suchen').addEventListener('click', wlSuchen);
+  wl('hand').addEventListener('click', () => wlWaehlen('', true, false, null));
+  wl('speichern').addEventListener('click', wlSpeichern);
+  wl('pass').addEventListener('keydown', e => { if (e.key === 'Enter') wlSpeichern(); });
+  wl('auge').addEventListener('click', () => { wl('pass').type = wl('pass').type === 'password' ? 'text' : 'password'; });
+  wl('los').addEventListener('click', wlZeigen);
+  // Noch kein WLAN? Dann oben darauf hinweisen
+  setTimeout(async () => {
+    try { const info = JSON.parse(await wlFrage('/info')); if (!info.wlan) wl('hinweis').hidden = false; } catch (e) {}
+  }, 1500);
+}, 0);
+
 // ---------- Auto-Update ----------
 let updZustand = 0;
 document.getElementById('e-autoUpdate').addEventListener('change', e => speichere({autoUpdate: e.target.checked ? 1 : 0}));
@@ -1129,6 +1249,7 @@ Object.assign(EN, {"Kamera": "Camera", "Kamera aus": "Camera off", "keine Kamera
 /*/XIAO*/
 // Neustart-Anzeige (beide Autos)
 Object.assign(EN, {"Absturz": "Crash", "Einschalten": "power on", "Reset-Taste": "reset button", "Neustart (Software/Update)": "restart (software/update)", "Absturz (Programmfehler)": "crash (program error)", "Absturz (Watchdog)": "crash (watchdog)", "Aufwachen": "wake-up", "Spannungseinbruch (Akku/Motoren?)": "voltage drop (battery/motors?)", "Neustart über USB": "restart via USB", "unbekannt ({0})": "unknown ({0})", "{0} s": "{0} s", "{0} min": "{0} min", "{0} h": "{0} h", "Letzter Start: {0} · läuft seit {1}": "Last start: {0} · running for {1}", "Abstürze gezählt: {0} (zuletzt: {1})": "Crashes counted: {0} (last: {1})", "Zähler löschen": "reset counter"});
+Object.assign(EN, {"📶 Das Auto ist noch in keinem WLAN. Für Video, Ton und mehr Reichweite jetzt einrichten.": "📶 The car is not on any Wi-Fi yet. Set it up now for video, sound and more range.", "WLAN einrichten": "Set up Wi-Fi", "📶 WLAN einrichten": "📶 Set up Wi-Fi", "🔍 Netze suchen": "🔍 Search networks", "✏️ Name selbst eingeben": "✏️ Enter name manually", "📶 Auf WLAN wechseln": "📶 Switch to Wi-Fi", "WLAN-Name": "Wi-Fi name", "Passwort": "Password", "Passwort zeigen": "Show password", "leer = gespeichertes Passwort": "empty = saved password", "Passwort für „{0}“ eingeben und speichern.": "Enter the password for “{0}” and save.", "„{0}“ ist offen (ohne Passwort).": "“{0}” is open (no password).", "Das Auto sucht Netzwerke in der Nähe …": "The car is searching for networks nearby …", "gespeichert": "saved", "Netz antippen, Passwort eingeben, speichern.": "Tap a network, enter the password, save.", "Kein Netzwerk gefunden. Nochmal suchen oder den Namen selbst eingeben.": "No network found. Search again or enter the name manually.", "Suche ging nicht - ist das Auto per Bluetooth verbunden?": "Search failed – is the car connected via Bluetooth?", "Bitte einen WLAN-Namen wählen oder eingeben.": "Choose or enter a Wi-Fi name.", "Das Passwort ist zu kurz (mindestens 8 Zeichen).": "The password is too short (at least 8 characters).", "Name oder Passwort ist zu lang.": "Name or password is too long.", "Speichern ging nicht. Nochmal versuchen.": "Saving failed. Try again.", "Gespeichert. Das Auto startet neu und verbindet sich mit „{0}“ …": "Saved. The car restarts and connects to “{0}” …", "Verbunden mit „{0}“ (Adresse {1}).": "Connected to “{0}” (address {1}).", "Keine Verbindung mit „{0}“. Stimmt das Passwort? Das Auto bleibt per Bluetooth erreichbar.": "Could not connect to “{0}”. Is the password right? The car stays reachable via Bluetooth.", "Das Auto sucht die Netze in der Nähe. Netz antippen, Passwort eingeben, speichern - fertig.": "The car searches for networks nearby. Tap one, enter the password, save – done."});
 const SPRACHEN = {de: null, en: EN};
 let sprache = 'de';
 // Beim ersten Besuch: Sprache des Handys/Browsers, sonst Englisch
@@ -1145,7 +1266,7 @@ function uebersetzeSeite(){
   const gang = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
   let n;
   while ((n = gang.nextNode())){
-    if (n.parentNode.closest('script,style,#mt-box')) continue;
+    if (n.parentNode.closest('script,style,#mt-box,#wl-liste,#wl-text')) continue;
     if (n.deText === undefined) n.deText = n.nodeValue;
     const roh = n.deText, kern = roh.trim();
     if (!kern || !(kern in EN)) continue;
