@@ -434,18 +434,7 @@ static String jsonText(const String& s) {
   }
   return r + "\"";
 }
-static String netzeJson(bool neu) {
-  if (WiFi.getMode() == WIFI_OFF) WiFi.mode(WIFI_STA);
-  static unsigned long gesucht = 0;           // wann die letzte Suche gestartet wurde
-  int n = WiFi.scanComplete();
-  if (n == WIFI_SCAN_RUNNING) return "{\"suche\":1}";
-  // neu suchen: auf Wunsch, wenn noch nichts da ist oder das Ergebnis aelter als 20 s ist
-  if (neu || n < 0 || millis() - gesucht > 20000) {
-    WiFi.scanDelete();
-    WiFi.scanNetworks(true);
-    gesucht = millis();
-    return "{\"suche\":1}";
-  }
+static String netzListe(int n) {
   // gleiche Namen nur einmal (das staerkste), nach Signal sortiert, hoechstens 20
   int idx[20], anzahl = 0;
   for (int i = 0; i < n; i++) {
@@ -466,6 +455,25 @@ static String netzeJson(bool neu) {
          ",\"g\":" + (netzFinde(WiFi.SSID(i)) >= 0 ? "1" : "0") + "}";
   }
   return r + "]}";
+}
+static String netzeJson(bool neu) {
+  if (WiFi.getMode() == WIFI_OFF) WiFi.mode(WIFI_STA);
+  // Ergebnis merken: im Einrichtungsmodus sucht das Auto auch selbst und wuerde es sonst ueberschreiben
+  static String liste;
+  static unsigned long gestartet = 0;
+  static bool frisch = false;                 // Ergebnis stammt aus einer Suche nach dem letzten Start
+  int n = WiFi.scanComplete();
+  if (n >= 0) { liste = netzListe(n); frisch = true; }
+  if (n == WIFI_SCAN_RUNNING && !neu) return "{\"suche\":1}";
+  if (neu || (!frisch && n < 0 && millis() - gestartet > 3000)) {
+    if (n != WIFI_SCAN_RUNNING) {
+      WiFi.scanDelete();
+      WiFi.scanNetworks(true);
+    }
+    gestartet = millis(); frisch = false;
+    return "{\"suche\":1}";
+  }
+  return frisch ? liste : String("{\"suche\":1}");
 }
 
 // app = true: kam ueber Bluetooth (zaehlt nicht als "Webseite offen")
@@ -736,6 +744,16 @@ void webUpdate() {
   appUdpUpdate();
   server.handleClient();
   if (setupAktiv) dns.processNextRequest();
+
+  // Fehlersuche ueber das USB-Kabel: eine Zeile wie "/netze" wird ausgefuehrt wie ein Befehl der App
+  static String usbZeile;
+  while (Serial.available()) {
+    char c = Serial.read();
+    if (c == '\n' || c == '\r') {
+      if (usbZeile.startsWith("/")) Serial.println(">> USB " + usbZeile + " -> " + webAppBefehl(usbZeile));
+      usbZeile = "";
+    } else if (usbZeile.length() < 250) usbZeile += c;
+  }
 
   if (neustartUm != 0 && (long)(millis() - neustartUm) >= 0) {
     antriebStopp();

@@ -1099,8 +1099,16 @@ async function wlSuchen(){
   wlLaeuft = true; wl('suchen').disabled = true;
   wlText(t('Das Auto sucht Netzwerke in der Nähe …'));
   try {
-    let r = JSON.parse(await wlFrage('/netze?neu=1'));
-    for (let i = 0; i < 20 && !r.netze; i++){ await warteMs(800); r = JSON.parse(await wlFrage('/netze')); }
+    // Antwort lesen; kein JSON (z. B. "?") = die Firmware im Auto kennt den Befehl noch nicht
+    const lies = async pfad => { const a = await wlFrage(pfad); try { return JSON.parse(a); } catch (e) { throw new Error('alt'); } };
+    let r = await lies('/netze?neu=1');
+    // Die Suche dauert neben Bluetooth und dem eigenen WLAN des Autos bis zu ca. 20 s
+    const start = Date.now();
+    while (!r.netze && Date.now() - start < 45000){
+      await warteMs(1000);
+      wlText(t('Das Auto sucht Netzwerke in der Nähe … {0} s', Math.round((Date.now() - start) / 1000)));
+      try { r = await lies('/netze'); } catch (e) { if (e.message === 'alt') throw e; }   // einzelne Aussetzer abwarten
+    }
     const liste = wl('liste'); liste.innerHTML = '';
     for (const n of (r.netze || [])){
       const b = document.createElement('button'); b.type = 'button';
@@ -1112,7 +1120,10 @@ async function wlSuchen(){
       liste.append(b);
     }
     wlText(r.netze && r.netze.length ? t('Netz antippen, Passwort eingeben, speichern.') : t('Kein Netzwerk gefunden. Nochmal suchen oder den Namen selbst eingeben.'));
-  } catch (e) { wlText(t('Suche ging nicht - ist das Auto per Bluetooth verbunden?')); }
+  } catch (e) {
+    wlText(e.message === 'alt' ? t('Die Software im Auto ist zu alt dafür - bitte zuerst das Auto aktualisieren (Einstellungen > Updates).')
+                               : t('Suche ging nicht - ist das Auto per Bluetooth verbunden?'));
+  }
   wlLaeuft = false; wl('suchen').disabled = false;
 }
 const warteMs = ms => new Promise(r => setTimeout(r, ms));
@@ -1249,7 +1260,7 @@ Object.assign(EN, {"Kamera": "Camera", "Kamera aus": "Camera off", "keine Kamera
 /*/XIAO*/
 // Neustart-Anzeige (beide Autos)
 Object.assign(EN, {"Absturz": "Crash", "Einschalten": "power on", "Reset-Taste": "reset button", "Neustart (Software/Update)": "restart (software/update)", "Absturz (Programmfehler)": "crash (program error)", "Absturz (Watchdog)": "crash (watchdog)", "Aufwachen": "wake-up", "Spannungseinbruch (Akku/Motoren?)": "voltage drop (battery/motors?)", "Neustart über USB": "restart via USB", "unbekannt ({0})": "unknown ({0})", "{0} s": "{0} s", "{0} min": "{0} min", "{0} h": "{0} h", "Letzter Start: {0} · läuft seit {1}": "Last start: {0} · running for {1}", "Abstürze gezählt: {0} (zuletzt: {1})": "Crashes counted: {0} (last: {1})", "Zähler löschen": "reset counter"});
-Object.assign(EN, {"📶 Das Auto ist noch in keinem WLAN. Für Video, Ton und mehr Reichweite jetzt einrichten.": "📶 The car is not on any Wi-Fi yet. Set it up now for video, sound and more range.", "WLAN einrichten": "Set up Wi-Fi", "📶 WLAN einrichten": "📶 Set up Wi-Fi", "🔍 Netze suchen": "🔍 Search networks", "✏️ Name selbst eingeben": "✏️ Enter name manually", "📶 Auf WLAN wechseln": "📶 Switch to Wi-Fi", "WLAN-Name": "Wi-Fi name", "Passwort": "Password", "Passwort zeigen": "Show password", "leer = gespeichertes Passwort": "empty = saved password", "Passwort für „{0}“ eingeben und speichern.": "Enter the password for “{0}” and save.", "„{0}“ ist offen (ohne Passwort).": "“{0}” is open (no password).", "Das Auto sucht Netzwerke in der Nähe …": "The car is searching for networks nearby …", "gespeichert": "saved", "Netz antippen, Passwort eingeben, speichern.": "Tap a network, enter the password, save.", "Kein Netzwerk gefunden. Nochmal suchen oder den Namen selbst eingeben.": "No network found. Search again or enter the name manually.", "Suche ging nicht - ist das Auto per Bluetooth verbunden?": "Search failed – is the car connected via Bluetooth?", "Bitte einen WLAN-Namen wählen oder eingeben.": "Choose or enter a Wi-Fi name.", "Das Passwort ist zu kurz (mindestens 8 Zeichen).": "The password is too short (at least 8 characters).", "Name oder Passwort ist zu lang.": "Name or password is too long.", "Speichern ging nicht. Nochmal versuchen.": "Saving failed. Try again.", "Gespeichert. Das Auto startet neu und verbindet sich mit „{0}“ …": "Saved. The car restarts and connects to “{0}” …", "Verbunden mit „{0}“ (Adresse {1}).": "Connected to “{0}” (address {1}).", "Keine Verbindung mit „{0}“. Stimmt das Passwort? Das Auto bleibt per Bluetooth erreichbar.": "Could not connect to “{0}”. Is the password right? The car stays reachable via Bluetooth.", "Das Auto sucht die Netze in der Nähe. Netz antippen, Passwort eingeben, speichern - fertig.": "The car searches for networks nearby. Tap one, enter the password, save – done."});
+Object.assign(EN, {"📶 Das Auto ist noch in keinem WLAN. Für Video, Ton und mehr Reichweite jetzt einrichten.": "📶 The car is not on any Wi-Fi yet. Set it up now for video, sound and more range.", "WLAN einrichten": "Set up Wi-Fi", "📶 WLAN einrichten": "📶 Set up Wi-Fi", "🔍 Netze suchen": "🔍 Search networks", "✏️ Name selbst eingeben": "✏️ Enter name manually", "📶 Auf WLAN wechseln": "📶 Switch to Wi-Fi", "WLAN-Name": "Wi-Fi name", "Passwort": "Password", "Passwort zeigen": "Show password", "leer = gespeichertes Passwort": "empty = saved password", "Passwort für „{0}“ eingeben und speichern.": "Enter the password for “{0}” and save.", "„{0}“ ist offen (ohne Passwort).": "“{0}” is open (no password).", "Das Auto sucht Netzwerke in der Nähe …": "The car is searching for networks nearby …", "gespeichert": "saved", "Netz antippen, Passwort eingeben, speichern.": "Tap a network, enter the password, save.", "Kein Netzwerk gefunden. Nochmal suchen oder den Namen selbst eingeben.": "No network found. Search again or enter the name manually.", "Suche ging nicht - ist das Auto per Bluetooth verbunden?": "Search failed – is the car connected via Bluetooth?", "Das Auto sucht Netzwerke in der Nähe … {0} s": "The car is searching for networks nearby … {0} s", "Die Software im Auto ist zu alt dafür - bitte zuerst das Auto aktualisieren (Einstellungen > Updates).": "The car’s software is too old for this – update the car first (Settings > Updates).", "Bitte einen WLAN-Namen wählen oder eingeben.": "Choose or enter a Wi-Fi name.", "Das Passwort ist zu kurz (mindestens 8 Zeichen).": "The password is too short (at least 8 characters).", "Name oder Passwort ist zu lang.": "Name or password is too long.", "Speichern ging nicht. Nochmal versuchen.": "Saving failed. Try again.", "Gespeichert. Das Auto startet neu und verbindet sich mit „{0}“ …": "Saved. The car restarts and connects to “{0}” …", "Verbunden mit „{0}“ (Adresse {1}).": "Connected to “{0}” (address {1}).", "Keine Verbindung mit „{0}“. Stimmt das Passwort? Das Auto bleibt per Bluetooth erreichbar.": "Could not connect to “{0}”. Is the password right? The car stays reachable via Bluetooth.", "Das Auto sucht die Netze in der Nähe. Netz antippen, Passwort eingeben, speichern - fertig.": "The car searches for networks nearby. Tap one, enter the password, save – done."});
 const SPRACHEN = {de: null, en: EN};
 let sprache = 'de';
 // Beim ersten Besuch: Sprache des Handys/Browsers, sonst Englisch

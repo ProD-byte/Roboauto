@@ -17,7 +17,7 @@
 static bool da = false;
 static std::atomic<int> zuschauer{0};       // mehrere Browser = mehrere Aufgaben gleichzeitig
 static int stufe = 1;
-static int fokusArt = -1;                   // -1 = kein Autofokus, 0 = laeuft dauernd, 1 = einmal scharf und fest
+static volatile int fokusArt = -1;                   // -1 = kein Autofokus, 0 = laeuft dauernd, 1 = einmal scharf und fest
 static OV5640 ov5640;
 
 static const framesize_t GROESSEN[] = { FRAMESIZE_QVGA, FRAMESIZE_VGA, FRAMESIZE_SVGA, FRAMESIZE_HD };
@@ -52,12 +52,17 @@ bool kameraStarten() {
   if (s && KAMERA_DREHEN) { s->set_vflip(s, 1); s->set_hmirror(s, 1); }
   if (s) s->set_framesize(s, GROESSEN[stufe]);
   da = true;
-  // OV5640: Autofokus-Firmware in den Sensor laden (ca. 4 KB), dann scharfstellen lassen
+  // OV5640: Autofokus-Firmware in den Sensor laden (ca. 4 KB, dauert gut 5 s) und scharfstellen lassen -
+  // im Hintergrund, damit der Start nicht wartet. Bis dahin gilt "kein Autofokus" (fokusArt = -1).
   if (s && ov5640.start(s)) {
-    unsigned long t0 = millis();
-    uint8_t r = ov5640.focusInit();
-    if (r == 0 && ov5640.autoFocusMode() == 0) fokusArt = 0;
-    Serial.printf(">> Kamera: Autofokus %s (%lu ms)\n", fokusArt == 0 ? "an" : "startet nicht", millis() - t0);
+    xTaskCreate([](void*) {
+      unsigned long t0 = millis();
+      int art = -1;
+      if (ov5640.focusInit() == 0 && ov5640.autoFocusMode() == 0) art = 0;
+      fokusArt = art;
+      Serial.printf(">> Kamera: Autofokus %s (%lu ms)\n", art == 0 ? "an" : "startet nicht", millis() - t0);
+      vTaskDelete(nullptr);
+    }, "autofokus", 4096, nullptr, 1, nullptr);
   }
   camera_sensor_info_t* info = s ? esp_camera_sensor_get_info(&s->id) : nullptr;   // OV2640, OV3660, OV5640 ...
   Serial.printf(">> Kamera bereit (Sensor %s)\n", info ? info->name : "unbekannt");
