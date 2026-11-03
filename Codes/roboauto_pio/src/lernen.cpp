@@ -120,6 +120,7 @@ static void lernAufgabe(void*) {
 }
 
 void lernenStarten() {
-  if (!karteDa()) return;
-  xTaskCreatePinnedToCore(lernAufgabe, "lernen", 8192, nullptr, 1, nullptr, 0);
+  static bool laeuft = false;                   // darf mehrfach aufgerufen werden (z.B. nach dem Formatieren)
+  if (!karteDa() || laeuft) return;
+  laeuft = xTaskCreatePinnedToCore(lernAufgabe, "lernen", 8192, nullptr, 1, nullptr, 0) == pdPASS;
 }

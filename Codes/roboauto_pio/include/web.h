@@ -52,9 +52,13 @@ constexpr int WEB_AKTION_FIGUR = 20;
 constexpr int WEB_AKTION_AUFNAHME = 30, WEB_AKTION_ABSPIELEN = 31, WEB_AKTION_BALANCE = 32,
               WEB_AKTION_KALIBRIEREN = 33, WEB_AKTION_MOTORTEST = 34;   // 34 = links, 35 = rechts
 constexpr int WEB_AKTION_MUSIK_STOPP = 40, WEB_AKTION_MUSIK = 41;          // 41 + Liednummer
+// XIAO Sense: Lernen an/aus, Foto auf die SD-Karte, Klatschsteuerung an/aus
+constexpr int WEB_AKTION_LERNEN = 70, WEB_AKTION_FOTO = 71, WEB_AKTION_KLATSCHEN = 72;
 
 // Modus fuer die Statusanzeige auf der Webseite mitteilen (siehe enum Modus in config.h)
 void webSetzeModus(int modus);
+// XIAO: Klatschsteuerung an/aus fuer die Anzeige auf der Webseite
+void webSetzeKlatschen(bool an);
 int webAktion();
 
 // Befehl der App ueber Bluetooth, z. B. "/fahr?x=3&y=7&t=0" - wird genau wie die

@@ -2,6 +2,7 @@
 #include <Preferences.h>
 #include "config.h"
 #include "einstellungen.h"
+#include "web.h"
 
 static Einstellungen e;
 
@@ -51,6 +52,7 @@ void einstellungenLaden() {
   e.lautstaerke  = p.getInt("laut", e.lautstaerke);
   e.autoUpdate   = p.getBool("autoUpd", e.autoUpdate);
   e.disco        = p.getBool("disco", e.disco);
+  p.getString("name", e.name, sizeof(e.name));   // fehlt -> bleibt leer
   p.end();
 }
 
@@ -73,6 +75,7 @@ void einstellungenSpeichern() {
   p.putInt("laut", e.lautstaerke);
   p.putBool("autoUpd", e.autoUpdate);
   p.putBool("disco", e.disco);
+  p.putString("name", e.name);
   p.end();
 }
 
@@ -88,6 +91,17 @@ void einstellungenMotorStandard() {
   motorStandardwerte();
   einstellungenSpeichern();
   Serial.println(">> Motoren auf Standard zurueckgesetzt");
+}
+
+// Name fuer Bluetooth und WLAN: nur Buchstaben, Ziffern, Leerzeichen, - und _ (max. EIGENNAME_MAX Zeichen)
+static void setzeName(const String& wert) {
+  int n = 0;
+  for (unsigned i = 0; i < wert.length() && n < EIGENNAME_MAX; i++) {
+    char c = wert[i];
+    if (isalnum((unsigned char)c) || c == '-' || c == '_' || (c == ' ' && n > 0)) e.name[n++] = c;
+  }
+  while (n > 0 && e.name[n - 1] == ' ') n--;     // Leerzeichen am Ende weg
+  e.name[n] = 0;
 }
 
 // Jeder Wert wird auf einen sinnvollen Bereich begrenzt - kaputte Werte sind so nicht moeglich
@@ -110,6 +124,7 @@ bool einstellungSetzen(const String& name, const String& wert) {
   else if (name == "lautstaerke")  e.lautstaerke  = constrain(i, 5, 100);
   else if (name == "autoUpdate")   e.autoUpdate   = i != 0;
   else if (name == "disco")        e.disco        = i != 0;
+  else if (name == "name")         setzeName(wert);
   else return false;
   return true;
 }
@@ -119,9 +134,11 @@ String einstellungenJson() {
   snprintf(json, sizeof(json),
            "{\"tempo\":%d,\"lenkung\":%d,\"lenkungStand\":%d,\"geradeaus\":%d,\"crash\":%d,"
            "\"crashG\":%.1f,\"ringHell\":%d,\"lichtHell\":%d,\"toene\":%d,\"figurGroesse\":%d,"
-           "\"motorL\":%d,\"motorR\":%d,\"motorTausch\":%d,\"lautstaerke\":%d,\"autoUpdate\":%d,\"disco\":%d}",
+           "\"motorL\":%d,\"motorR\":%d,\"motorTausch\":%d,\"lautstaerke\":%d,\"autoUpdate\":%d,\"disco\":%d,"
+           "\"name\":\"%s\",\"autoName\":\"%s\"}",
            e.tempo, e.lenkung, e.lenkungStand, e.geradeaus, e.crash,
            e.crashG, e.ringHell, e.lichtHell, e.toene, e.figurGroesse,
-           e.motorLInv, e.motorRInv, e.motorTausch, e.lautstaerke, e.autoUpdate, e.disco);
+           e.motorLInv, e.motorRInv, e.motorTausch, e.lautstaerke, e.autoUpdate, e.disco,
+           e.name, autoName());
   return String(json);
 }

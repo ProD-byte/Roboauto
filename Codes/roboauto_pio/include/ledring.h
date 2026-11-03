@@ -15,10 +15,11 @@ enum RingQuelle { RING_NIEMAND = 0, RING_APP = 1, RING_WEB = 2, RING_AUTOWLAN = 
 //  - Webseite / App ueber den Router (Heim-WLAN): tuerkiser Komet, der im Kreis laeuft
 //  - Webseite / App direkt im WLAN "Roboauto" des Autos: violetter Komet
 //  - tankanzeige=true (Tank-Knopf gehalten): Akkustand statt Regenbogen
+//    (akkuProzent 0..100, -1 = USB/laedt)
 //  - modus (wenn verbunden): Polizei = Blaulicht, Team = Farbspiel in Teamfarbe,
 //    Normal = Regenbogen (Bluetooth) bzw. Komet (WLAN). Beim Verbinden zeigt ringVerbunden()
 //    die Farbe kurz in jedem Modus.
-void ringStatus(RingQuelle quelle, bool tankanzeige, int akkuWert, int modus);
+void ringStatus(RingQuelle quelle, bool tankanzeige, int akkuProzent, int modus);
 
 // Kurzes Signal ueber die normale Anzeige legen (ca. 1,2 s):
 // LEDs fuellen sich nacheinander in der Farbe, kurz halten, dann zurueck zur Statusanzeige

@@ -32,7 +32,7 @@ Fahrweg, Balancieren, Jukebox, Auto-Update). Neu dazu kommen:
 | 5V | | LED-Kette (+) | Versorgung der LEDs |
 | 3V3 | | MPU6050 VCC, MAX17048 VDD (falls das Board es braucht) | |
 
-Alle Pins stehen in [`include/config.h`](include/config.h).
+Alle Pins stehen in [`include/config.h`](../include/config.h) (Abschnitte `#ifdef ROBOAUTO_XIAO`).
 
 ### LED-Kette (ein Pin für alle LEDs)
 
@@ -83,7 +83,7 @@ Die Spalte `bild` sagt, welches Kamerabild zu dieser Zeile gehört. So kann am P
 
 ## ⚡ Firmware aufspielen
 
-1. In VS Code den Ordner **`xiao_sense`** öffnen (es ist ein eigenes PlatformIO-Projekt).
+1. In VS Code den Ordner **`roboauto_pio`** öffnen – beide Autos sind ein Projekt, die Umgebung wählt das Board.
 2. `geheim.beispiel.ini` → `geheim.ini`, `include/wlan_zugang.beispiel.h` → `include/wlan_zugang.h`.
 3. Umgebung **`env:roboauto_xiao`** → Upload (→). Klappt der Upload nicht: **BOOT** gedrückt halten, USB einstecken, loslassen.
 4. Später ohne Kabel: **`env:roboauto_xiao_wlan`**.

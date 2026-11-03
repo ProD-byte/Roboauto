@@ -5,8 +5,9 @@
 #  - Der Online-Flasher (GitHub Pages) wird mit der neuesten Firmware aktualisiert
 #
 #  Zwei Autos und die App, drei unabhaengige Builds (laufen gleichzeitig, einer bremst den anderen nicht aus):
-#    mini - ESP32-S3 Super Mini      (Codes/roboauto_pio)            -> Pages: /
-#    xiao - XIAO ESP32S3 Sense       (Codes/roboauto_pio/xiao_sense) -> Pages: /xiao/
+#    mini - ESP32-S3 Super Mini      (Codes/roboauto_pio, env:roboauto)      -> Pages: /
+#    xiao - XIAO ESP32S3 Sense       (Codes/roboauto_pio, env:roboauto_xiao) -> Pages: /xiao/
+#  Beide Autos sind EIN PlatformIO-Projekt, die Umgebung waehlt das Board.
 #    app  - Roboauto-App fuer Android (Codes/roboauto_app)           -> Pages: /roboauto.apk
 #  Danach setzt "veroeffentlichen" die Seite aus dem zusammen, was fertig geworden ist.
 #  Ist ein Build fehlgeschlagen, bleiben dafuer die bisherigen Dateien online.
@@ -85,7 +86,7 @@ jobs:
     runs-on: ubuntu-24.04
     defaults:
       run:
-        working-directory: Codes/roboauto_pio/xiao_sense   # eigenes PlatformIO-Projekt
+        working-directory: Codes/roboauto_pio      # gleiches Projekt, andere Umgebung
     steps:
       - uses: actions/checkout@v7
 
@@ -97,7 +98,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ~/.platformio
-          key: pio-xiao-${{ hashFiles('Codes/roboauto_pio/xiao_sense/platformio.ini') }}
+          key: pio-xiao-${{ hashFiles('Codes/roboauto_pio/platformio.ini') }}
 
       - name: PlatformIO und esptool installieren
         run: pip install platformio esptool==4.8.1
@@ -129,7 +130,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: roboauto-xiao-firmware
-          path: Codes/roboauto_pio/xiao_sense/ausgabe/
+          path: Codes/roboauto_pio/ausgabe/
 
   # ---------- Roboauto-App (Android-APK) ----------
   #  Die Weboberflaeche kommt direkt aus der Firmware (include/webseite.h).
@@ -152,7 +153,7 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v6
         with:
-          gradle-version: '8.11.1'
+          gradle-version: '9.8.2'
 
       - name: Signierschluessel bereitlegen
         env:
@@ -165,13 +166,15 @@ jobs:
             echo "::warning::Kein Signierschluessel hinterlegt - APK laesst sich nicht ueber eine alte Version installieren"
           fi
 
-      - name: APK bauen
+      # github-Variante = APK fuer die Seite (aktualisiert sich selbst)
+      # play-Variante   = App-Bundle (.aab) zum Hochladen in die Google Play Console (nur als Artefakt)
+      - name: APK und Play-Store-Paket bauen
         env:
           ROBOAUTO_KEYSTORE_PASSWORT: ${{ secrets.ROBOAUTO_KEYSTORE_PASSWORT }}
         # Fehler zusaetzlich als Annotation ausgeben - die sieht man auch ohne Anmeldung auf der Lauf-Seite
         run: |
           set -o pipefail
-          if ! gradle assembleRelease --no-daemon 2>&1 | tee build.log; then
+          if ! gradle assembleGithubRelease bundlePlayRelease --no-daemon 2>&1 | tee build.log; then
             grep -E "^e: |error:|What went wrong" -A3 build.log | head -n 30 | while IFS= read -r z; do echo "::error::$z"; done
             exit 1
           fi
@@ -179,7 +182,9 @@ jobs:
       - name: APK + Versionsinfo fuer die Webseite
         run: |
           mkdir -p ausgabe
-          cp app/build/outputs/apk/release/app-release.apk ausgabe/roboauto.apk
+          cp app/build/outputs/apk/github/release/app-github-release.apk ausgabe/roboauto.apk
+          mkdir -p play
+          cp app/build/outputs/bundle/playRelease/app-play-release.aab play/roboauto-play.aab
           GROESSE=$(stat -c %s ausgabe/roboauto.apk)
           echo "{\"version\":\"1.0.${GITHUB_RUN_NUMBER}\",\"groesse\":${GROESSE},\"commit\":\"${GITHUB_SHA::7}\"}" > ausgabe/app.json
           cat ausgabe/app.json
@@ -189,6 +194,13 @@ jobs:
         with:
           name: roboauto-app
           path: Codes/roboauto_app/ausgabe/
+
+      # Eigenes Artefakt, damit es nicht auf der oeffentlichen Seite landet
+      - name: Play-Store-Paket aufheben
+        uses: actions/upload-artifact@v7
+        with:
+          name: roboauto-play-store
+          path: Codes/roboauto_app/play/
 
   # ---------- Release + Online-Flasher aus allen Builds ----------
   veroeffentlichen:

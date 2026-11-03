@@ -5,9 +5,10 @@
 #include "buzzer.h"
 #include "klick.h"
 #include "einstellungen.h"
+#include "ledkette.h"
 
-static Adafruit_NeoPixel front(FRONT_LED_ANZAHL, FRONT_LED_PIN, NEO_GRB + NEO_KHZ800);
-static Adafruit_NeoPixel rear(REAR_LED_ANZAHL,  REAR_LED_PIN,  NEO_GRB + NEO_KHZ800);
+// Front- und Ruecklichter haengen hinter dem Ring in der LED-Kette (siehe ledkette.h)
+static uint8_t lichtHell = LICHT_HELLIGKEIT;
 
 constexpr int FRONT_LED_RECHTS = 1 - FRONT_LED_LINKS;
 constexpr int REAR_LED_RECHTS  = 1 - REAR_LED_LINKS;
@@ -65,24 +66,22 @@ static void setzeLichter(uint32_t vorneL, uint32_t vorneR, uint32_t hintenL, uin
       if ((int)alt != (int)lichtIst[n][c]) { if (n < 2) vorneGeaendert = true; else hintenGeaendert = true; }
     }
   }
-  auto farbe = [](int n) {
-    return Adafruit_NeoPixel::Color((uint8_t)lichtIst[n][0], (uint8_t)lichtIst[n][1], (uint8_t)lichtIst[n][2]);
+  auto setze = [](int nr, int n) {
+    ketteSetze(nr, (uint8_t)lichtIst[n][0], (uint8_t)lichtIst[n][1], (uint8_t)lichtIst[n][2], lichtHell);
   };
   if (vorneGeaendert) {
-    front.setPixelColor(FRONT_LED_LINKS,  farbe(V_L));
-    front.setPixelColor(FRONT_LED_RECHTS, farbe(V_R));
-    front.show();
+    setze(LED_KETTE_FRONT + FRONT_LED_LINKS,  V_L);
+    setze(LED_KETTE_FRONT + FRONT_LED_RECHTS, V_R);
   }
   if (hintenGeaendert) {
-    rear.setPixelColor(REAR_LED_LINKS,  farbe(H_L));
-    rear.setPixelColor(REAR_LED_RECHTS, farbe(H_R));
-    rear.show();
+    setze(LED_KETTE_REAR + REAR_LED_LINKS,  H_L);
+    setze(LED_KETTE_REAR + REAR_LED_RECHTS, H_R);
   }
+  if (vorneGeaendert || hintenGeaendert) ketteZeigen();
 }
 
 void lichtStarten() {
-  front.begin(); front.setBrightness(einst().lichtHell); front.clear(); front.show();
-  rear.begin();  rear.setBrightness(einst().lichtHell);  rear.clear();  rear.show();
+  lichtHell = einst().lichtHell;   // die Kette selbst startet ringStarten()
 }
 
 // Dreieck 1x: Licht an/aus (merkt sich, ob Fernlicht an war)
@@ -260,7 +259,7 @@ void lichtUpdate(bool verbunden, const LichtTasten& tasten, int links, int recht
 }
 
 void lichtHelligkeit(int h) {
-  front.setBrightness(h); rear.setBrightness(h);
+  lichtHell = constrain(h, 0, 255);
   letzteLichtAusgabe = 0;
   for (int n = 0; n < 4; n++) lichtIst[n][0] = lichtIst[n][1] = lichtIst[n][2] = -1;   // neu ausgeben erzwingen
 }

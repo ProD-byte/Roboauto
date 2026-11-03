@@ -3,8 +3,10 @@
 #include "config.h"
 #include "ledring.h"
 #include "einstellungen.h"
+#include "ledkette.h"
 
 // ============================================================
+//  Der Ring hat in der LED-Kette die Plaetze LED_KETTE_RING .., siehe ledkette.h
 //  Lichtdesign "Hightech":
 //  - Alle Animationen zeichnen in einen Puffer ("ziel").
 //  - Ausgegeben wird weich: jede LED gleitet in ca. 120 ms zur Zielfarbe.
@@ -13,7 +15,7 @@
 //  - Bewegungen laufen stufenlos (auch "zwischen" zwei LEDs).
 // ============================================================
 
-static Adafruit_NeoPixel ring(LED_RING_ANZAHL, LED_RING_PIN, NEO_GRB + NEO_KHZ800);
+static uint8_t ringHell = LED_RING_HELLIGKEIT;
 
 static float ziel[LED_RING_ANZAHL][3];      // was die Animation gerade zeigen will (0..255)
 static float aktuell[LED_RING_ANZAHL][3];   // was tatsaechlich leuchtet
@@ -80,13 +82,14 @@ static void komet(float kopf, float r, float g, float b, float schweif) {
 // Puffer ausgeben - weich (Ueberblenden) oder hart
 static void ausgeben(unsigned long jetzt) {
   if (jetzt - letzteAusgabe < 15) return;            // ca. 66 Bilder pro Sekunde
+  bool sofort = letzteAusgabe == 0;                  // 0 = Startanimation/Fortschritt: der loop laeuft nicht
   letzteAusgabe = jetzt;
   const float k = hart ? 1.0f : 0.22f;               // 0.22 je 15 ms -> ca. 120 ms Ueberblendzeit
   for (int i = 0; i < LED_RING_ANZAHL; i++) {
     for (int c = 0; c < 3; c++) aktuell[i][c] += (ziel[i][c] - aktuell[i][c]) * k;
-    ring.setPixelColor(i, ring.Color((uint8_t)aktuell[i][0], (uint8_t)aktuell[i][1], (uint8_t)aktuell[i][2]));
+    ketteSetze(LED_KETTE_RING + i, (uint8_t)aktuell[i][0], (uint8_t)aktuell[i][1], (uint8_t)aktuell[i][2], ringHell);
   }
-  ring.show();
+  ketteZeigen(sofort);
 }
 
 static float atmen(unsigned long jetzt, unsigned long periode) {   // 0..1..0, weich
@@ -94,10 +97,8 @@ static float atmen(unsigned long jetzt, unsigned long periode) {   // 0..1..0, w
 }
 
 void ringStarten() {
-  ring.begin();
-  ring.setBrightness(einst().ringHell);
-  ring.clear();
-  ring.show();
+  ketteStarten();                                    // die Kette gehoert allen LEDs, der Ring startet sie
+  ringHell = einst().ringHell;
 }
 
 // ---------- Startanimation (beim Einschalten, laeuft zusammen mit dem Startklang) ----------
@@ -131,7 +132,7 @@ static void zeigeWarten(unsigned long jetzt) {
 static void zeigeApp(unsigned long jetzt) {
   uint16_t farbton = (jetzt * 9) & 0xFFFF;          // eine Runde ca. 7 s
   for (int i = 0; i < LED_RING_ANZAHL; i++) {
-    uint32_t c = ring.gamma32(ring.ColorHSV(farbton + i * 65536L / LED_RING_ANZAHL, 230, 255));
+    uint32_t c = Adafruit_NeoPixel::gamma32(Adafruit_NeoPixel::ColorHSV(farbton + i * 65536L / LED_RING_ANZAHL, 230, 255));
     setzeFarbe(i, c);
   }
 }
@@ -153,13 +154,12 @@ static void zeigeEinrichtung(unsigned long jetzt) {
 // Tankanzeige: Balken fuellt sich animiert, Farbe je LED von rot ueber gelb nach gruen.
 // Die oberste LED des Balkens "pulsiert" leicht, fast leer blinkt alles rot.
 static void zeigeTank(unsigned long jetzt, int akku) {
-  if (akku > AKKU_LAEDT) {                           // nur USB: blaue Welle
+  if (akku < 0) {                                    // USB / laedt: blaue Welle
     for (int i = 0; i < LED_RING_ANZAHL; i++) setze(i, 0, 40, 120);
     lichtpunkt((jetzt % 1500) * (float)LED_RING_ANZAHL / 1500, 0, 150, 255, 1.5f);
     return;
   }
-  float stand = map(constrain(akku, AKKU_ANZEIGE_MIN, AKKU_ANZEIGE_MAX),
-                    AKKU_ANZEIGE_MIN, AKKU_ANZEIGE_MAX, 0, 1000) / 1000.0f * LED_RING_ANZAHL;
+  float stand = constrain(akku, 0, 100) / 100.0f * LED_RING_ANZAHL;
   float aufbau = min(1.0f, (jetzt - tankSeit) / 450.0f);   // Balken laeuft beim Anzeigen hoch
   stand = max(stand * aufbau, 0.6f);
   bool fastLeer = stand < 2.0f;
@@ -192,7 +192,7 @@ static void zeigeTeam(unsigned long jetzt, int modus) {
     float welle = sinf((winkel + i * 360.0f / LED_RING_ANZAHL) * PI / 180.0f);
     uint16_t hue = TEAM_FARBTON[modus] + (int)(welle * TEAM_SCHWANK[modus]);
     float hell = 0.55f + 0.45f * (welle + 1) / 2;            // Welle auch in der Helligkeit
-    setzeFarbe(i, ring.gamma32(ring.ColorHSV(hue, 255, 230)), hell);
+    setzeFarbe(i, Adafruit_NeoPixel::gamma32(Adafruit_NeoPixel::ColorHSV(hue, 255, 230)), hell);
   }
 }
 
@@ -204,7 +204,7 @@ static bool zeigeSignal(unsigned long jetzt) {
   float pos = min(t / 450.0f, 1.0f) * LED_RING_ANZAHL;
   float aus = t > 800 ? 1.0f - (t - 800) / 500.0f : 1.0f;
   for (int i = 0; i < LED_RING_ANZAHL; i++)
-    if (i < pos) setzeFarbe(i, signalRegenbogen ? ring.gamma32(ring.ColorHSV(i * 65536L / LED_RING_ANZAHL, 230, 255)) : signalFarbe, 0.55f * aus);
+    if (i < pos) setzeFarbe(i, signalRegenbogen ? Adafruit_NeoPixel::gamma32(Adafruit_NeoPixel::ColorHSV(i * 65536L / LED_RING_ANZAHL, 230, 255)) : signalFarbe, 0.55f * aus);
   if (t < 450 && !signalRegenbogen) {
     uint32_t c = signalFarbe;
     lichtpunkt(pos, ((c >> 16) & 0xFF) * 0.5f + 127, ((c >> 8) & 0xFF) * 0.5f + 127, (c & 0xFF) * 0.5f + 127, 1.2f);
@@ -254,7 +254,7 @@ static void zeigeMusik(unsigned long jetzt) {
   int punkt = ((musikNote % LED_RING_ANZAHL) + LED_RING_ANZAHL) % LED_RING_ANZAHL;
   for (int i = 0; i < LED_RING_ANZAHL; i++) {
     float h = fmodf(musikHue + i * 0.04f, 1.0f);
-    uint32_t c = ring.ColorHSV((uint16_t)(h * 65535), 255, 255);
+    uint32_t c = Adafruit_NeoPixel::ColorHSV((uint16_t)(h * 65535), 255, 255);
     float r = (c >> 16) & 255, g = (c >> 8) & 255, b = c & 255;
     float stark = 0.10f + 0.30f * impuls + (i == punkt ? 0.6f * (0.3f + 0.7f * impuls) : 0.0f);
     setze(i, r * stark, g * stark, b * stark);
@@ -263,7 +263,7 @@ static void zeigeMusik(unsigned long jetzt) {
 
 void ringMusik(bool an, int hz, int note) { musikAn = an; musikHz = hz; musikNote = note; }
 
-void ringStatus(RingQuelle quelle, bool tankanzeige, int akkuWert, int modus) {
+void ringStatus(RingQuelle quelle, bool tankanzeige, int akkuProzent, int modus) {
   unsigned long jetzt = millis();
   hart = false;
 
@@ -283,7 +283,7 @@ void ringStatus(RingQuelle quelle, bool tankanzeige, int akkuWert, int modus) {
   else if (musikAn)                           zeigeMusik(jetzt);
   else if (aufnahmeZustand != 0)              zeigeAufnahme(jetzt);
   else if (quelle == RING_NIEMAND)            { if (einrichtung) zeigeEinrichtung(jetzt); else zeigeWarten(jetzt); }
-  else if (tankanzeige)                       zeigeTank(jetzt, akkuWert);
+  else if (tankanzeige)                       zeigeTank(jetzt, akkuProzent);
   else if (modus == MODUS_POLIZEI)            zeigePolizei(jetzt);
   else if (modus >= MODUS_BLAU)               zeigeTeam(jetzt, modus);
   else if (quelle == RING_APP)                zeigeApp(jetzt);
@@ -323,7 +323,7 @@ void ringFortschritt(int prozent, uint32_t farbe) {
   ausgeben(millis());
 }
 
-void ringHelligkeit(int h) { ring.setBrightness(h); }
+void ringHelligkeit(int h) { ringHell = constrain(h, 0, 255); }
 
 // Aktuelle Farbe einer Ring-LED fuer die Webseite
 uint32_t ringAnzeigeFarbe(int i) {

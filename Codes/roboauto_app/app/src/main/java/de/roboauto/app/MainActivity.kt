@@ -92,7 +92,7 @@ class MainActivity : ComponentActivity(), BleVerbindung.Ereignisse, WlanVerbindu
         ble = BleVerbindung(this, this)
         wlan = WlanVerbindung(this, this)
         aktualisierung = Aktualisierung(this, this)
-        aktualisierung.pruefen()                         // gibt es eine neuere App auf GitHub?
+        if (BuildConfig.SELBST_UPDATE) aktualisierung.pruefen()   // gibt es eine neuere App auf GitHub? (nicht im Play Store)
 
         // Rahmen haelt Abstand zu Statusleiste/Kamera-Loch, die Webseite selbst bleibt unveraendert
         val rahmen = FrameLayout(this)

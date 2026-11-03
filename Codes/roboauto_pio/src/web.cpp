@@ -22,9 +22,17 @@
 #include "balance.h"
 #include "gyro.h"
 #include "einstellungen.h"
+#ifdef ROBOAUTO_XIAO
+#include "kamera.h"
+#include "mikro.h"
+#include "karte.h"
+#include "lernen.h"
+#include "medien.h"
+#endif
 
 static WebServer server(80);
 static WiFiUDP appUdp;                        // Fahrbefehle der App im WLAN (gleiches Textformat wie Bluetooth)
+static bool klatschAn = false;               // XIAO: Doppelklatschen schaltet das Licht (fuer die Anzeige)
 static bool serverLaeuft = false;
 static bool staVerbunden = false;           // im Heim-WLAN
 static bool setupAktiv = false;             // eigenes Einrichtungs-WLAN offen
@@ -47,10 +55,16 @@ static bool fehlerGemeldet = false;
 // Name des Autos fuer Bluetooth und eigenes WLAN: Anfang + die letzten 4 Stellen der Chip-Nummer,
 // z. B. "Roboauto-3F2A". Jedes Auto hat so seinen eigenen Namen.
 const char* autoName() {
-  static char name[24] = "";
+  static char name[32] = "";
   if (!name[0]) {
-    uint64_t mac = ESP.getEfuseMac();
-    snprintf(name, sizeof(name), "%s-%02X%02X", AUTO_NAME_ANFANG, (uint8_t)(mac >> 32), (uint8_t)(mac >> 40));
+    // Eigener Name aus den Einstellungen ("Roboauto-Blitz"), sonst die Chip-Nummer ("Roboauto-3F2A").
+    // Einmal beim Start festgelegt - ein neuer Name gilt nach dem Neustart.
+    if (einst().name[0]) {
+      snprintf(name, sizeof(name), "%s-%s", AUTO_NAME_ANFANG, einst().name);
+    } else {
+      uint64_t mac = ESP.getEfuseMac();
+      snprintf(name, sizeof(name), "%s-%02X%02X", AUTO_NAME_ANFANG, (uint8_t)(mac >> 32), (uint8_t)(mac >> 40));
+    }
   }
   return name;
 }
@@ -250,6 +264,9 @@ static void starteEinrichtung() {
 static void starteFahrWlan() {
   WiFi.mode(WIFI_AP_STA);
   WiFi.softAP(autoName());
+#ifdef ROBOAUTO_XIAO
+  medienServerStarten();                  // Video/Ton auch direkt im Auto-WLAN (nicht erst mit Heim-WLAN)
+#endif
   Serial.printf(">> Eigenes WLAN \"%s\" offen (App direkt verbinden: %s)\n",
                 autoName(), WiFi.softAPIP().toString().c_str());
 }
@@ -373,8 +390,8 @@ static String statusJson() {
   for (int i = 0; i < LED_RING_ANZAHL && i < 8; i++)
     snprintf(ringText + strlen(ringText), sizeof(ringText) - strlen(ringText), i ? ",%06lx" : "%06lx",
              (unsigned long)ringAnzeigeFarbe(i));
-  char json[900];
-  snprintf(json, sizeof(json),
+  char json[1200];
+  int n = snprintf(json, sizeof(json),
            "{\"akku\":%d,\"prozent\":%d,\"usb\":%d,\"eco\":%d,\"links\":%d,\"rechts\":%d,\"rssi\":%d,"
            "\"licht\":%d,\"fern\":%d,\"warn\":%d,\"wende\":%d,\"modus\":%d,\"figur\":%d,"
            "\"rec\":%d,\"play\":%d,\"reclen\":%.1f,\"playpos\":%.1f,\"balance\":%d,"
@@ -388,6 +405,16 @@ static String statusJson() {
            autoUpdateBuild(), autoUpdateNeu(), autoUpdateZustand(), autoUpdateProzent(),
            (unsigned long)lichtAnzeigeFarbe(0), (unsigned long)lichtAnzeigeFarbe(1),
            (unsigned long)lichtAnzeigeFarbe(2), (unsigned long)lichtAnzeigeFarbe(3), ringText);
+#ifdef ROBOAUTO_XIAO
+  // XIAO Sense: Kamera, Mikrofon, SD-Karte, Lernen (die schliessende Klammer wird ersetzt)
+  snprintf(json + n - 1, sizeof(json) - n + 1,
+           ",\"kam\":%d,\"aufl\":%d,\"mik\":%d,\"pegel\":%d,\"klatsch\":%d,\"sd\":%d,"
+           "\"lernen\":%d,\"fahrt\":%d,\"bilder\":%d,\"lernsek\":%.0f,\"foto\":%d,\"medien\":%d}",
+           kameraDa(), kameraAufloesungStufe(), mikroDa(), mikroPegel(), klatschAn, karteDa(),
+           lernenAktiv(), lernenFahrt(), lernenBilder(), lernenSekunden(), lernenLetztesFoto(), MEDIEN_PORT);
+#else
+  (void)n;
+#endif
   return String(json);
 }
 
@@ -410,6 +437,22 @@ static String steuerBefehl(const String& pfad, const Param* p, int n, bool app) 
     if (!app) letzteAbfrage = millis();
     return statusJson();
   }
+#ifdef ROBOAUTO_XIAO
+  // Kamera-Aufloesung: /kamera?aufl=0..2
+  if (pfad == "/kamera") {
+    if (hatParam(p, n, "aufl")) kameraAufloesung(param(p, n, "aufl").toInt());
+    return "ok";
+  }
+  // SD-Karte: Ueberblick (Dateiliste und Downloads laufen ueber den Medien-Server)
+  // /karte?formatieren=JA  = Karte als FAT32 neu anlegen (loescht alles, laeuft im Hintergrund)
+  if (pfad == "/karte") {
+    if (param(p, n, "formatieren") == "JA") {
+      antriebStopp();
+      Serial.println(karteFormatieren() ? ">> SD-Karte: Formatieren gestartet" : ">> SD-Karte: Formatieren geht gerade nicht");
+    }
+    return karteJson();
+  }
+#endif
   // Einstellungen lesen: /einstellungen   aendern: /einstellungen?tempo=150&toene=1 ...
   if (pfad == "/einstellungen") {
     if (hatParam(p, n, "standard")) {
@@ -417,10 +460,16 @@ static String steuerBefehl(const String& pfad, const Param* p, int n, bool app) 
     } else if (hatParam(p, n, "motorStandard")) {
       einstellungenMotorStandard();
     } else if (n > 0) {
+      String nameVorher = einst().name;
       for (int i = 0; i < n; i++) einstellungSetzen(p[i].name, p[i].wert);
       einstellungenSpeichern();
       if (hatParam(p, n, "lautstaerke")) buzzerProbe();   // neue Lautstaerke gleich hoerbar
       Serial.println(">> Einstellungen gespeichert: " + einstellungenJson());
+      // Neuer Name: Bluetooth und WLAN bekommen ihn erst beim Start -> kurz danach neu starten
+      if (nameVorher != einst().name) {
+        Serial.printf(">> Neuer Name \"%s\" - starte neu\n", einst().name);
+        neustartUm = millis() + 1500;
+      }
     }
     return einstellungenJson();
   }
@@ -438,7 +487,7 @@ static String steuerBefehl(const String& pfad, const Param* p, int n, bool app) 
     bool da = webWlanDa();
     return String("{\"name\":\"") + WEB_NAME + "\",\"ble\":\"" + autoName() + "\",\"wlan\":" + (da ? 1 : 0) +
            ",\"ip\":\"" + (da ? WiFi.localIP().toString() : String("")) + "\",\"fw\":" + autoUpdateBuild() +
-           ",\"udp\":" + APP_UDP_PORT + ",\"board\":\"mini\"}";   // board: welche Oberflaeche die App zeigt
+           ",\"udp\":" + APP_UDP_PORT + ",\"board\":\"" + BOARD_NAME + "\"}";   // board: welche Oberflaeche die App zeigt
   }
   return "?";
 }
@@ -548,7 +597,7 @@ void webStarten() {
   });
 
   // --- Steuerung (gleiche Befehle kommen von der App auch ueber Bluetooth) ---
-  for (const char* pfad : {"/fahr", "/aktion", "/status", "/einstellungen", "/update", "/verlauf", "/info"})
+  for (const char* pfad : {"/fahr", "/aktion", "/status", "/kamera", "/karte", "/einstellungen", "/update", "/verlauf", "/info"})
     server.on(pfad, HTTP_GET, httpSteuerung);
 
   // Alles andere: im Einrichtungsmodus auf die Einrichtungsseite umleiten.
@@ -652,6 +701,10 @@ void webUpdate() {
     MDNS.begin(WEB_NAME);
     MDNS.addService("http", "tcp", 80);
     starteOta();
+#ifdef ROBOAUTO_XIAO
+    medienServerStarten();                  // Live-Video, Live-Ton, SD-Dateien auf Port 81
+    MDNS.addService("http", "tcp", MEDIEN_PORT);
+#endif
     serverLaeuft = true;
     ereignis = 1;                           // -> Ring + Piepen in main.cpp
     Serial.printf(">> WLAN verbunden! Im Browser oeffnen: http://%s  oder  http://%s.local\n",
@@ -673,6 +726,7 @@ int  webEreignis()  { int e = ereignis; ereignis = 0; return e; }
 // Fahrbefehle kommen von der Webseite oder der App (auch ohne WLAN ueber Bluetooth) - der Totmann regelt beides
 bool webFaehrt()    { return millis() - letzterFahrbefehl < WEB_TOTMANN_MS && (x != 0 || y != 0); }
 void webSetzeModus(int m) { modus = m; }
+void webSetzeKlatschen(bool an) { klatschAn = an; }
 int  webTasten()     { return tasten; }
 int  webAktion()     { int a = aktion; aktion = 0; return a; }
 int  webX()         { return x; }

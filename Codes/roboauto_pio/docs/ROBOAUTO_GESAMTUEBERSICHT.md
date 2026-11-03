@@ -23,7 +23,7 @@ Es gibt zwei Varianten:
 | Variante | Board | Ordner | Besonderheiten |
 |---|---|---|---|
 | **Hauptauto** | ESP32-S3 Super Mini (4 MB Flash) | `Codes/roboauto_pio` | Standardauto |
-| **XIAO Sense** | Seeed Studio XIAO ESP32S3 Sense (8 MB Flash, 8 MB PSRAM) | `Codes/roboauto_pio/xiao_sense` | zusätzlich Kamera, Mikrofon, SD-Karte, alle LEDs an einem Pin, Akku-Chip MAX17048 |
+| **XIAO Sense** | Seeed Studio XIAO ESP32S3 Sense (8 MB Flash, 8 MB PSRAM) | `Codes/roboauto_pio` (env `roboauto_xiao`) | zusätzlich Kamera, Mikrofon, SD-Karte, alle LEDs an einem Pin, Akku-Chip MAX17048 |
 
 ---
 
@@ -241,10 +241,9 @@ Roboauto/
 ├─ README.md
 ├─ .github/workflows/build.yml        automatischer Build (Firmware, XIAO, App, Pages)
 ├─ Codes/
-│  ├─ roboauto_pio/                    Firmware Hauptauto (PlatformIO)
+│  ├─ roboauto_pio/                    Firmware für beide Autos (ein PlatformIO-Projekt)
 │  │  ├─ src/, include/, scripts/
-│  │  ├─ docs/                         Online-Flasher (index.html), app-protokoll.md, Bilder, Schaltpläne
-│  │  └─ xiao_sense/                   Firmware XIAO ESP32S3 Sense (eigenes PlatformIO-Projekt)
+│  │  └─ docs/                         Online-Flasher (index.html), app-protokoll.md, xiao-sense.md, Bilder, Schaltpläne
 │  └─ roboauto_app/                    Android-App (Kotlin, Gradle)
 │     ├─ app/src/main/java/de/roboauto/app/   MainActivity, BleVerbindung, WlanVerbindung
 │     └─ app/web/                      verbinden.html, app.js
@@ -267,9 +266,7 @@ Figuren, Fahrweg, Balancieren → Jukebox → Auto-Update, Online-Flasher → me
 
 ## 10. Offene Punkte / Ideen
 
-- Signier-Secrets in GitHub eintragen (damit App-Updates ohne Neuinstallation gehen).
-- XIAO: Die App zeigt die Oberfläche des Hauptautos – Kamera, Mikrofon, SD-Karte gibt es dort (noch) nur im Browser.
-- Gehäuse Version 7: LED-Ring mittig unter dem Deckel, scheint durch.
+- App in den Google Play Store (Material in `Codes/roboauto_app/playstore/`).
 - Platine mit XIAO ESP32-C6 (Schaltplan liegt in `Platine/`).
 
 ---
@@ -281,5 +278,7 @@ Figuren, Fahrweg, Balancieren → Jukebox → Auto-Update, Online-Flasher → me
   Bluetooth-App gleichzeitig. Neue Knöpfe kommen in `webseite.h`, die App übernimmt sie beim nächsten Build.
 - Grenzwerte und Pins gehören nach `config.h`, Einstellungen, die der Nutzer ändern kann, nach `einstellungen.cpp`.
 - Flash ist beim Hauptauto knapp (ca. 91 % belegt) – große Bibliotheken vermeiden.
-- Hauptauto und `xiao_sense` sind getrennte Projekte mit eigenen Kopien vieler Dateien: Änderungen ggf. in beiden machen.
+- Beide Autos sind **ein** Projekt: XIAO-Teile stehen in `#ifdef ROBOAUTO_XIAO` (C++) bzw. zwischen
+  `<!--XIAO-->…<!--/XIAO-->` und `/*XIAO*/…/*/XIAO*/` (webseite.h). Reine XIAO-Dateien (Kamera, Mikro, SD,
+  MAX17048) schließt `build_src_filter` in `platformio.ini` beim Super Mini aus.
 - Sicherheit zuerst: Totmann (400 ms), Stopp bei Verbindungsabbruch, Crash-Erkennung nicht aushebeln.

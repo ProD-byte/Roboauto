@@ -1,6 +1,5 @@
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
 }
 
 // Versionsnummer: auf GitHub die Build-Nummer, am PC 1
@@ -11,14 +10,34 @@ val schluessel = System.getenv("ROBOAUTO_KEYSTORE")
 
 android {
     namespace = "de.roboauto.app"
-    compileSdk = 35
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "de.roboauto.app"
         minSdk = 26          // Android 8
-        targetSdk = 35
+        targetSdk = 36       // Play Store verlangt seit August 2026 mindestens 36
         versionCode = buildNummer
         versionName = "1.0.$buildNummer"
+    }
+
+    buildFeatures {
+        buildConfig = true
+    }
+
+    // Zwei Varianten derselben App:
+    //   github - von der GitHub-Pages-Seite, aktualisiert sich selbst (Aktualisierung.kt)
+    //   play   - fuer den Google Play Store: Updates kommen ueber den Store, eigene Updates
+    //            und die Erlaubnis "Apps installieren" sind dort verboten (src/play/AndroidManifest.xml)
+    flavorDimensions += "vertrieb"
+    productFlavors {
+        create("github") {
+            dimension = "vertrieb"
+            buildConfigField("boolean", "SELBST_UPDATE", "true")
+        }
+        create("play") {
+            dimension = "vertrieb"
+            buildConfigField("boolean", "SELBST_UPDATE", "false")
+        }
     }
 
     signingConfigs {
@@ -41,10 +60,7 @@ android {
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-    kotlinOptions {
-        jvmTarget = "17"
+        targetCompatibility = JavaVersion.VERSION_17   // gilt auch fuer Kotlin
     }
     lint {
         abortOnError = false
@@ -53,31 +69,31 @@ android {
 }
 
 dependencies {
-    implementation("androidx.core:core-ktx:1.15.0")
-    implementation("androidx.activity:activity-ktx:1.9.3")
-    implementation("androidx.webkit:webkit:1.12.1")
+    implementation("androidx.core:core-ktx:1.19.1")
+    implementation("androidx.activity:activity-ktx:1.13.0")
+    implementation("androidx.webkit:webkit:1.18.0")
 }
 
 // ------------------------------------------------------------
 //  Weboberflaeche aus der Firmware uebernehmen: WEBSEITE aus include/webseite.h
-//  wird zu assets/index.html, die des XIAO Sense (mit Kamera) zu assets/xiao.html.
+//  wird zu assets/index.html (Super Mini) und assets/xiao.html (XIAO Sense mit Kamera).
+//  Teile nur fuer den XIAO stehen zwischen <!--XIAO--> ... <!--/XIAO--> bzw. /*XIAO*/ ... /*/XIAO*/
+//  (genau wie in scripts/webseite_gz.py der Firmware).
 //  Damit sieht die App immer genauso aus wie die Webseite des jeweiligen Autos.
 //  Dazu kommen die App-eigenen Dateien aus app/web (app.js, verbinden.html).
 // ------------------------------------------------------------
 abstract class WebseiteAusziehen : DefaultTask() {
     @get:InputFile abstract val quelle: RegularFileProperty
-    @get:InputFile abstract val quelleXiao: RegularFileProperty
     @get:InputDirectory abstract val webOrdner: DirectoryProperty
     @get:OutputDirectory abstract val ausgabe: DirectoryProperty
 
-    private fun webseite(datei: File): String =
-        Regex("""const char WEBSEITE\[\] PROGMEM = R"==\((.*?)\)==";""", RegexOption.DOT_MATCHES_ALL)
-            .find(datei.readText())?.groupValues?.get(1) ?: throw GradleException("WEBSEITE in $datei nicht gefunden")
-
     @TaskAction
     fun los() {
-        val html = webseite(quelle.get().asFile)
-        val xiao = webseite(quelleXiao.get().asFile)
+        val datei = quelle.get().asFile
+        val alles = Regex("""const char WEBSEITE\[\] PROGMEM = R"==\((.*?)\)==";""", RegexOption.DOT_MATCHES_ALL)
+            .find(datei.readText())?.groupValues?.get(1) ?: throw GradleException("WEBSEITE in $datei nicht gefunden")
+        val html = alles.replace(Regex("""<!--XIAO-->.*?<!--/XIAO-->|/\*XIAO\*/.*?/\*/XIAO\*/""", RegexOption.DOT_MATCHES_ALL), "")
+        val xiao = alles.replace(Regex("""<!--/?XIAO-->|/\*/?XIAO\*/"""), "")
         // Auto-Logo aus der Kopfleiste - der Verbinden-Bildschirm benutzt es auch
         val logo = Regex("""<div class="marke">(<svg.*?</svg>)""", RegexOption.DOT_MATCHES_ALL)
             .find(html)?.groupValues?.get(1) ?: ""
@@ -97,7 +113,6 @@ abstract class WebseiteAusziehen : DefaultTask() {
 
 val webseite = tasks.register<WebseiteAusziehen>("webseiteAusziehen") {
     quelle.set(file("../../roboauto_pio/include/webseite.h"))
-    quelleXiao.set(file("../../roboauto_pio/xiao_sense/include/webseite.h"))
     webOrdner.set(file("web"))
 }
 

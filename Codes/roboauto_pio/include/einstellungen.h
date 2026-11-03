@@ -25,7 +25,10 @@ struct Einstellungen {
   bool disco;            // Lichter blitzen bei Musik im Takt       // automatisch neue Versionen von GitHub installieren
   int  lautstaerke;      // Buzzer-Lautstaerke in Prozent (5..100)
   bool motorTausch;      // Motoren an den falschen Ausgaengen -> links/rechts tauschen
+  char name[17];         // eigener Name ("" = Chip-Nummer) -> "Roboauto-Blitz". Gilt nach einem Neustart.
 };
+
+constexpr int EIGENNAME_MAX = 16;
 
 void einstellungenLaden();                   // einmal in setup (vor allem anderen)
 const Einstellungen& einst();                // aktuelle Werte lesen

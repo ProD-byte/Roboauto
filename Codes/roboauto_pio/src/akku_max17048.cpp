@@ -75,7 +75,6 @@ int  akkuWert()    { return millivolt; }
 bool akkuEco()     { return eco; }
 int  akkuProzent() { return (int)(prozent + 0.5f); }
 bool akkuUsb()     { return !gefunden || rate > AKKU_LAEDT_RATE; }
-bool akkuGefunden(){ return gefunden; }
 
 // ---------- Verlauf: alle AKKU_VERLAUF_MS ein Prozentwert, die letzten AKKU_VERLAUF_PUNKTE ----------
 static uint8_t verlauf[AKKU_VERLAUF_PUNKTE];
