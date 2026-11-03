@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.hardware.Sensor
@@ -40,7 +41,9 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.webkit.WebViewAssetLoader
 import org.json.JSONObject
 
@@ -67,6 +70,7 @@ class MainActivity : ComponentActivity(), BleVerbindung.Ereignisse, WlanVerbindu
     private val speicher by lazy { getSharedPreferences("roboauto", MODE_PRIVATE) }
 
     private var art = ""                 // "ble", "wlan" oder "" (Verbinden-Bildschirm)
+    private var cockpitAn = false        // "Fahren mit Video": quer, ohne Status- und Navigationsleiste
     private var autoVerbinden = true     // bekanntes Auto beim Finden gleich verbinden (nicht nach "Trennen")
     private var autoWlanNetz: ConnectivityManager.NetworkCallback? = null   // direkt im WLAN des Autos (Android 10+)
     private var autoWlanWarten = false   // Android 8/9: Nutzer waehlt "Roboauto" in den WLAN-Einstellungen
@@ -139,7 +143,8 @@ class MainActivity : ComponentActivity(), BleVerbindung.Ereignisse, WlanVerbindu
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                if (art.isNotEmpty()) zumVerbinden(manuell = true) else finish()
+                if (cockpitAn) web.evaluateJavascript("window.cockpitAus && cockpitAus()", null)   // erst das Cockpit verlassen
+                else if (art.isNotEmpty()) zumVerbinden(manuell = true) else finish()
             }
         })
 
@@ -211,6 +216,7 @@ class MainActivity : ComponentActivity(), BleVerbindung.Ereignisse, WlanVerbindu
         @JavascriptInterface fun updateInstallieren() { haupt.post { aktualisierung.installieren() } }
         @JavascriptInterface fun trennen() { haupt.post { zumVerbinden(manuell = true) } }
         @JavascriptInterface fun kippDa(): Boolean = kippSensor != null
+        @JavascriptInterface fun cockpit(an: Boolean) { haupt.post { this@MainActivity.cockpit(an) } }
         @JavascriptInterface fun kipp(): String = schwere.let { "${it[0]},${it[1]},${it[2]}" }
         @JavascriptInterface fun art(): String = art
         @JavascriptInterface fun host(): String = wlan.host ?: ""   // Adresse des Autos im WLAN ("" = Bluetooth)
@@ -285,7 +291,22 @@ class MainActivity : ComponentActivity(), BleVerbindung.Ereignisse, WlanVerbindu
         }
     }
 
+    // "Fahren mit Video": Handy fest quer (beide Richtungen), Status- und Navigationsleiste weg
+    // (Wischen vom Rand holt sie kurz zurueck). Aus = wieder wie vorher, das Handy dreht frei.
+    private fun cockpit(an: Boolean) {
+        cockpitAn = an
+        requestedOrientation = if (an) ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE else ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        val leisten = WindowCompat.getInsetsController(window, window.decorView)
+        if (an) {
+            leisten.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            leisten.hide(WindowInsetsCompat.Type.systemBars())
+        } else {
+            leisten.show(WindowInsetsCompat.Type.systemBars())
+        }
+    }
+
     private fun zumVerbinden(manuell: Boolean) {
+        if (cockpitAn) cockpit(false)
         if (manuell) autoVerbinden = false
         art = ""
         ble.trennen()

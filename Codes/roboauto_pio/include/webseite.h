@@ -387,6 +387,32 @@ const char WEBSEITE[] PROGMEM = R"==(<!doctype html>
   .dt-knoepfe{display:flex;gap:4px}
   .dt-knoepfe a,.dt-knoepfe button{flex:1;height:30px;min-height:0;padding:0;border-radius:8px;display:grid;place-items:center;font-size:14px;text-decoration:none;background:#1c2129;border:1px solid var(--rand2)}
   .dt-leer{color:var(--leise);font-size:14px;padding:8px 2px}
+  /* ---- Fahren mit Video (Cockpit): Handy quer, Video mittig, Joystick links, Knoepfe rechts ---- */
+  #cockpit{position:fixed;inset:0;z-index:50;background:#000;display:grid;grid-template-columns:minmax(150px,1fr) auto minmax(150px,1fr);align-items:center;
+           padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+  #cockpit[hidden]{display:none}
+  body.cockpit{overflow:hidden}
+  .ck-links,.ck-rechts{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;height:100%;padding:8px;min-width:0}
+  #cockpit #feld{--feld:max(140px,min(230px,calc(100dvh - 90px),calc(50vw - 66.7dvh - 20px)))}
+  #cockpit #knopf{width:56px;height:56px;left:calc(50% - 28px);top:calc(50% - 28px)}
+  .ck-mitte{position:relative;height:100dvh;display:grid;place-items:center}
+  #cockpit .video{width:min(133.4dvh,calc(100vw - 300px));border-radius:0;border:0}
+  #cockpit .video.hoch{width:min(75dvh,calc(100vw - 300px));max-height:none}
+  .ck-leiste{position:absolute;top:8px;left:8px;right:8px;display:flex;gap:6px;align-items:center;pointer-events:none;z-index:2}
+  .ck-leiste span{background:#000a;color:#e8ecf2;font-size:12.5px;padding:3px 9px;border-radius:999px}
+  .ck-leiste span:empty{display:none}
+  .ck-leiste button{pointer-events:auto;margin-left:auto;width:38px;height:38px;min-height:0;padding:0;border-radius:50%;background:#000a;border:1px solid #ffffff33;font-size:17px}
+  #cockpit #rec-punkt{top:auto;bottom:10px}
+  .ck-knoepfe{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:min(100%,210px)}
+  .ck-knoepfe button{height:min(56px,calc((100dvh - 60px)/3 - 8px));min-height:40px;padding:0 4px;font-size:13px;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;line-height:1.1}
+  .ck-knoepfe button[hidden]{display:none}
+  .ck-knoepfe button b{font-size:19px;font-weight:400}
+  @media(orientation:portrait){                  /* Browser ohne Drehsperre: untereinander */
+    #cockpit{grid-template-columns:1fr 1fr;grid-template-rows:auto 1fr}
+    .ck-mitte{grid-column:1/-1;height:auto;width:100vw}
+    #cockpit .video,#cockpit .video.hoch{width:100vw}
+    #cockpit #feld{--feld:min(200px,44vw)}
+  }
 /*/XIAO*/
 </style></head><body>
 <header class="kopf">
@@ -462,6 +488,7 @@ const char WEBSEITE[] PROGMEM = R"==(<!doctype html>
         <button id="k-rec" class="klein" title="Video auf die SD-Karte aufnehmen (mit Ton, wenn Ton an ist)">&#9210; Video</button>
         <button id="k-dreh" class="klein" title="Bild 90&deg; nach links drehen">&#10226; Drehen</button>
         <button id="k-fokus" class="klein" hidden title="Autofokus: tippen = jetzt scharfstellen und festhalten, nochmal = wieder automatisch">&#127919; Fokus</button>
+        <button id="k-cockpit" class="klein" title="Vollbild quer: Video in der Mitte, Joystick links, Kn&ouml;pfe rechts">&#127918; Fahren mit Video</button>
         <select id="k-aufl" title="Aufl&ouml;sung"><option value="0">320&times;240</option><option value="1">640&times;480</option><option value="2">800&times;600</option><option value="3">1280&times;720 HD</option></select>
       </div>
     </div>
@@ -497,6 +524,18 @@ const char WEBSEITE[] PROGMEM = R"==(<!doctype html>
     <p class="hinweis" style="margin:10px 0 0;text-align:left">Videos sind AVI-Dateien (MJPEG + Ton) &ndash; zum Ansehen herunterladen, z.&nbsp;B. mit VLC. Fotos und Videos landen in einem Ordner pro Tag.</p>
   </div>
 </section>
+<div id="cockpit" hidden>
+  <div class="ck-links"></div>
+  <div class="ck-mitte"><div class="ck-leiste"><span id="ck-akku"></span><span id="ck-wlan"></span><button id="ck-aus" title="Zur&uuml;ck" aria-label="Zur&uuml;ck">&#10005;</button></div></div>
+  <div class="ck-rechts"><div class="ck-knoepfe">
+    <button data-wie="b-licht" class="gelb" data-aktion="1"><b>&#128161;</b>Licht</button>
+    <button data-wie="b-hupe" data-halt="4"><b>&#128227;</b>Hupe</button>
+    <button data-wie="k-foto" data-aktion="71"><b>&#128248;</b>Foto</button>
+    <button data-wie="k-rec" data-klick="k-rec" class="rot"><b>&#9210;</b>Video</button>
+    <button data-wie="k-ton" data-klick="k-ton"><b>&#128264;</b>Ton</button>
+    <button data-wie="k-fokus" data-klick="k-fokus"><b>&#127919;</b>Fokus</button>
+  </div></div>
+</div>
 <!--/XIAO-->
 
 <section id="live">
@@ -645,11 +684,13 @@ let unterwegs = false, letzteGesendet = "0,0,0";
 const feld = document.getElementById('feld'), knopf = document.getElementById('knopf');
 let ziehen = false;
 // Feld kann je nach Bildschirm kleiner sein (Querformat) -> Weg des Knopfs aus der echten Groesse
-function setzeKnopf(px, py){ knopf.style.left = 'calc(50% - 42px + ' + px + 'px)'; knopf.style.top = 'calc(50% - 42px + ' + py + 'px)'; }
+// (Knopfgroesse aus dem Bildschirm: im Cockpit ist er kleiner)
+const halbKnopf = () => knopf.offsetWidth / 2 || 42;
+function setzeKnopf(px, py){ const h = halbKnopf(); knopf.style.left = 'calc(50% - ' + h + 'px + ' + px + 'px)'; knopf.style.top = 'calc(50% - ' + h + 'px + ' + py + 'px)'; }
 function bewege(e){
   const r = feld.getBoundingClientRect();
   let dx = e.clientX - (r.left + r.width/2), dy = e.clientY - (r.top + r.height/2);
-  const max = r.width/2 - 42, d = Math.hypot(dx, dy);
+  const max = r.width/2 - halbKnopf(), d = Math.hypot(dx, dy);
   if (d > max){ dx *= max/d; dy *= max/d; }
   setzeKnopf(dx, dy);
   jx = Math.round(dx/max*MAX); jy = Math.round(-dy/max*MAX);
@@ -676,7 +717,7 @@ const kippStufe = w => { const a = Math.abs(w) - 4; return a <= 0 ? 0 : Math.sig
 function kippLesen(){
   const w = kippWinkel(); if (!w || !kippNull) return;
   jx = kippStufe(w[0] - kippNull[0]); jy = kippStufe(w[1] - kippNull[1]);
-  const max = feld.getBoundingClientRect().width/2 - 42;
+  const max = feld.getBoundingClientRect().width/2 - halbKnopf();
   setzeKnopf(jx/MAX*max, -jy/MAX*max);
 }
 function setzeKippen(an){
@@ -1083,6 +1124,7 @@ const DE_TEXT = {"mt.los": "Heb das Auto hoch oder stell es so hin, dass sich di
 Object.assign(EN, {"Video: {0}": "Video: {0}", "Verbindung abgerissen": "connection lost", "⟲ Drehen": "⟲ Rotate", "🧹 SD-Karte formatieren": "🧹 Format SD card", "Formatiere als FAT32 … bitte warten (bis 1 Minute).": "Formatting as FAT32 … please wait (up to 1 minute).", "SD-Karte gefunden, aber nicht FAT32 (z. B. exFAT) – bitte formatieren.": "SD card found, but not FAT32 (e.g. exFAT) – please format it.", "Formatieren fehlgeschlagen.": "Formatting failed.", "SD-Karte formatieren? ALLES auf der Karte wird gelöscht (Fahrten, Fotos, Fahrweg) und sie wird als FAT32 neu angelegt.": "Format the SD card? EVERYTHING on the card will be erased (runs, photos, route) and it will be set up again as FAT32."});
 Object.assign(EN, {"Dateien": "Files", "📷 Fotos": "📷 Photos", "🎬 Videos": "🎬 Videos", "🧠 Lernen": "🧠 Learning", "Neueste zuerst": "Newest first", "Älteste zuerst": "Oldest first", "Name A–Z": "Name A–Z", "Größte zuerst": "Largest first", "📁 Dateien": "📁 Files", "⏺ Video": "⏺ Video", "Video": "Video", "Videos sind AVI-Dateien (MJPEG + Ton) – zum Ansehen herunterladen, z. B. mit VLC. Fotos und Videos landen in einem Ordner pro Tag.": "Videos are AVI files (MJPEG + sound) – download them to watch, e.g. with VLC. Photos and videos go into one folder per day.", "ohne Datum": "no date", "herunterladen": "download", "umbenennen": "rename", "löschen": "delete", "Neuer Name für {0}:": "New name for {0}:", "Umbenennen ging nicht: {0}": "Renaming failed: {0}", "Löschen ging nicht.": "Deleting failed.", "{0} wirklich löschen?": "Really delete {0}?", "{0} Dateien · {1}": "{0} files · {1}", "leer": "empty", "Liste konnte nicht geladen werden": "Could not load the list", "ganzen Tag löschen": "delete whole day", "Alle Dateien vom {0} löschen?": "Delete all files from {0}?", "ältere Dateien": "older files", "{0} Fotos · {1} Videos · {2} Fahrten": "{0} photos · {1} videos · {2} runs"});
 Object.assign(EN, {"Fokus": "Focus", "Fokus fest": "Focus locked"});
+Object.assign(EN, {"🎮 Fahren mit Video": "🎮 Drive with video", "Fahren mit Video": "Drive with video", "nur im WLAN": "Wi-Fi only", "gut": "good", "mittel": "fair", "schwach": "weak", "Hupe": "Horn", "Foto": "Photo", "Ton": "Sound", "Licht": "Lights", "Zurück": "Back"});
 Object.assign(EN, {"Kamera": "Camera", "Kamera aus": "Camera off", "keine Kamera": "no camera", "📷 Video": "📷 Video", "🔈 Ton": "🔈 Sound", "📸 Foto": "📸 Photo", "Mikrofon": "Microphone", "👏 Klatschen = Licht": "👏 Clap = lights", "2x klatschen": "clap twice", "Lernen": "Learning", "🧠 Lernen": "🧠 Learn", "SD-Karte": "SD card", "↻ Liste": "↻ Refresh", "Fahrt {0}: {1} s, {2} Bilder": "Run {0}: {1} s, {2} images", "Schreibt beim Fahren Daten und Kamerabilder auf die SD-Karte.": "Records driving data and camera images to the SD card while you drive.", "keine SD-Karte": "no SD card", "{0} von {1} MB belegt": "{0} of {1} MB used", "{0} Fahrten · {1} Fotos": "{0} runs · {1} photos", "Fahrt {0} wirklich löschen?": "Really delete run {0}?", "noch nichts gespeichert": "nothing saved yet", "Mikrofon wird schon gehört": "someone is already listening"});
 /*/XIAO*/
 // Neustart-Anzeige (beide Autos)
@@ -1505,7 +1547,63 @@ function zeigeSense(s){
   // Neues Foto oder Lernen gerade beendet -> Liste neu laden
   if ((letztesFoto >= 0 && s.foto !== letztesFoto) || (warLernen && !s.lernen)) sdListe();
   letztesFoto = s.foto; warLernen = !!s.lernen;
+  cockpitStatus(s);
 }
+
+// ---------- Fahren mit Video (Cockpit) ----------
+// Joystick (samt Kipp-Knopf) und Videobild wandern in eine Vollbild-Ansicht und beim Verlassen zurueck -
+// so gibt es beide nur einmal. In der App dreht die App das Handy fest ins Querformat.
+const cockpit = document.getElementById('cockpit'), ckKnopf = document.getElementById('k-cockpit');
+const ckTeile = [feld, kippKnopf, document.querySelector('.video')];
+let ckPlaetze = null, ckAuflVorher = -1, ckSync = 0;
+function cockpitAn(){
+  if (ckPlaetze || !medienHost) return;
+  ckPlaetze = ckTeile.map(el => { const m = document.createComment('cockpit'); el.before(m); return m; });
+  cockpit.querySelector('.ck-links').append(feld, kippKnopf);
+  cockpit.querySelector('.ck-mitte').append(ckTeile[2]);
+  cockpit.hidden = false; document.body.classList.add('cockpit'); loslassen();   // Knopf mittig in der neuen Groesse
+  if (!videoAn){ videoAn = true; zeigeVideo(); }
+  // Beim Fahren zaehlt eine kurze Verzoegerung mehr als Schaerfe -> hoechstens 640x480
+  const aufl = +document.getElementById('k-aufl').value;
+  ckAuflVorher = aufl > 1 ? aufl : -1;
+  if (ckAuflVorher > 1) fetch('/kamera?aufl=1').catch(()=>{});
+  if (window.Roboauto && Roboauto.cockpit) Roboauto.cockpit(true);
+  else {
+    const d = document.documentElement;
+    if (d.requestFullscreen) d.requestFullscreen().then(() => screen.orientation && screen.orientation.lock && screen.orientation.lock('landscape')).catch(()=>{});
+  }
+  cockpitSpiegeln(); ckSync = setInterval(cockpitSpiegeln, 300);
+}
+function cockpitAus(){
+  if (!ckPlaetze) return;
+  ckTeile.forEach((el, i) => ckPlaetze[i].replaceWith(el));
+  ckPlaetze = null; loslassen();
+  cockpit.hidden = true; document.body.classList.remove('cockpit');
+  clearInterval(ckSync);
+  if (ckAuflVorher > 1) fetch('/kamera?aufl=' + ckAuflVorher).catch(()=>{});
+  if (window.Roboauto && Roboauto.cockpit) Roboauto.cockpit(false);
+  else if (document.fullscreenElement) document.exitFullscreen().catch(()=>{});
+}
+window.cockpitAus = cockpitAus;   // die App ruft das bei der Zurueck-Taste
+// Knoepfe im Cockpit zeigen denselben Zustand wie ihre Vorbilder (an/aus, gesperrt, versteckt)
+function cockpitSpiegeln(){
+  cockpit.querySelectorAll('[data-wie]').forEach(b => {
+    const v = document.getElementById(b.dataset.wie); if (!v) return;
+    b.classList.toggle('an', v.classList.contains('an')); b.disabled = v.disabled; b.hidden = v.hidden;
+  });
+}
+function cockpitStatus(s){
+  ckKnopf.disabled = !s.kam || !medienHost;
+  ckKnopf.textContent = '\ud83c\udfae ' + t('Fahren mit Video') + (medienHost ? '' : ' (' + t('nur im WLAN') + ')');
+  if (!ckPlaetze) return;
+  document.getElementById('ck-akku').textContent = '\ud83d\udd0b ' + (s.usb ? 'USB' : s.prozent + ' %');
+  document.getElementById('ck-wlan').textContent = '\ud83d\udcf6 ' + (s.rssi > -60 ? t('gut') : s.rssi > -72 ? t('mittel') : t('schwach'));
+}
+ckKnopf.addEventListener('click', cockpitAn);
+document.getElementById('ck-aus').addEventListener('click', cockpitAus);
+cockpit.querySelectorAll('[data-klick]').forEach(b => b.addEventListener('click', () => document.getElementById(b.dataset.klick).click()));
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && ckPlaetze && !(window.Roboauto && Roboauto.cockpit)) cockpitAus(); });
+if (!medienHost){ ckKnopf.disabled = true; ckKnopf.title = t('nur im WLAN'); }
 /*/XIAO*/
 
 // ---------- Status 2x pro Sekunde (gleichzeitig Lebenszeichen ans Auto) ----------
