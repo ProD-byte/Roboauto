@@ -370,6 +370,25 @@ const char WEBSEITE[] PROGMEM = R"==(<!doctype html>
   .sdfotos{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px}
   .sdfotos a{display:block;overflow:hidden;border-radius:8px;border:1px solid var(--rand);aspect-ratio:4/3}
   .sdfotos img{width:100%;height:100%;object-fit:cover;display:block;transform:rotate(var(--dreh,0deg)) scale(var(--drehzoom,1))}
+  #k-rec.an{background:#3a1416;border-color:#e53935;color:#ffb3b0;box-shadow:0 0 0 1px #e53935 inset}
+  .dt-kopf{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+  .dt-kopf select{height:36px;border-radius:12px;border:1px solid var(--rand2);background:var(--karte2);color:var(--text);padding:0 10px;font:inherit;font-size:14px}
+  #dt-liste{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+  .dt-tag{border:1px solid var(--rand);border-radius:14px;background:#12161c}
+  .dt-tag>summary{display:flex;align-items:center;gap:10px;padding:8px 10px 8px 14px;cursor:pointer;list-style:none;font-weight:600;font-size:14.5px}
+  .dt-tag>summary::-webkit-details-marker{display:none}
+  .dt-tag>summary .anz{font-weight:400;font-size:13px;color:var(--leise)}
+  .dt-tag>summary .sp{flex:1}
+  .dt-tag>summary button{height:32px;min-height:0;width:38px;padding:0;border-radius:9px}
+  .dt-inhalt{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;padding:0 12px 12px}
+  .dt-datei{display:flex;flex-direction:column;gap:5px;background:var(--karte2);border:1px solid var(--rand);border-radius:12px;padding:8px;min-width:0}
+  .dt-bild{aspect-ratio:4/3;border-radius:8px;overflow:hidden;background:#07090c;display:grid;place-items:center;font-size:34px;text-decoration:none}
+  .dt-bild img{width:100%;height:100%;object-fit:cover;transform:rotate(var(--dreh,0deg)) scale(var(--drehzoom,1))}
+  .dt-name{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .dt-info{font-size:12px;color:var(--leise)}
+  .dt-knoepfe{display:flex;gap:4px}
+  .dt-knoepfe a,.dt-knoepfe button{flex:1;height:30px;min-height:0;padding:0;border-radius:8px;display:grid;place-items:center;font-size:14px;text-decoration:none;background:#1c2129;border:1px solid var(--rand2)}
+  .dt-leer{color:var(--leise);font-size:14px;padding:8px 2px}
 /*/XIAO*/
 </style></head><body>
 <header class="kopf">
@@ -384,7 +403,7 @@ const char WEBSEITE[] PROGMEM = R"==(<!doctype html>
   </div>
   <button id="b-einst" title="Einstellungen">&#9881;&#65039; <span>Einstellungen</span></button>
   <select id="b-sprache" class="sprachwahl" title="Sprache / Language / Idioma / Langue"><option value="de">&#127760; Deutsch</option><option value="en">&#127760; English</option><option value="es">&#127760; Espa&ntilde;ol</option><option value="fr">&#127760; Fran&ccedil;ais</option></select>
-  <nav class="nav"><a href="#steuerung">Steuerung</a><!--XIAO--><a href="#kamera">Kamera</a><!--/XIAO--><a href="#live">Live</a><a href="#programme">Programme</a><a href="#musik">&#127925; Musik</a><a href="#einst">Einstellungen</a></nav>
+  <nav class="nav"><a href="#steuerung">Steuerung</a><!--XIAO--><a href="#kamera">Kamera</a><a href="#dateien">Dateien</a><!--/XIAO--><a href="#live">Live</a><a href="#programme">Programme</a><a href="#musik">&#127925; Musik</a><a href="#einst">Einstellungen</a></nav>
 </header>
 
 <main>
@@ -442,6 +461,7 @@ const char WEBSEITE[] PROGMEM = R"==(<!doctype html>
         <button id="k-video" class="klein">&#128247; Video</button>
         <button id="k-ton" class="klein">&#128264; Ton</button>
         <button id="k-foto" class="klein" data-aktion="71">&#128248; Foto</button>
+        <button id="k-rec" class="klein" title="Video auf die SD-Karte aufnehmen (mit Ton, wenn Ton an ist)">&#9210; Video</button>
         <button id="k-dreh" class="klein" title="Bild 90&deg; nach links drehen">&#10226; Drehen</button>
         <select id="k-aufl" title="Aufl&ouml;sung"><option value="0">320&times;240</option><option value="1">640&times;480</option><option value="2">800&times;600</option><option value="3">1280&times;720 HD</option></select>
       </div>
@@ -458,11 +478,24 @@ const char WEBSEITE[] PROGMEM = R"==(<!doctype html>
       <div class="gruppe"><span class="leise">SD-Karte</span>
         <div class="laufbalken"><div id="sd-balken"></div></div>
         <span class="hinweis" id="sd-info" style="margin:0;text-align:left"></span>
-        <div class="sdliste" id="sd-liste"></div>
-        <div class="sdfotos" id="sd-fotos"></div>
-        <div class="reihe"><button id="sd-neu" class="klein">&#8635; Liste</button><button id="sd-format" class="klein" hidden>&#129529; SD-Karte formatieren</button></div>
+        <div class="reihe"><button id="sd-neu" class="klein">&#8635; Liste</button><button id="sd-dateien" class="klein" onclick="document.getElementById('dateien').scrollIntoView({behavior:'smooth'})">&#128193; Dateien</button><button id="sd-format" class="klein" hidden>&#129529; SD-Karte formatieren</button></div>
       </div>
     </div>
+  </div>
+</section>
+
+<section id="dateien">
+  <h2>Dateien</h2>
+  <div class="karte">
+    <div class="dt-kopf">
+      <div class="wahl" id="dt-tabs"><button data-ordner="/fotos" class="an">&#128247; Fotos</button><button data-ordner="/videos">&#127916; Videos</button><button data-ordner="/lernen">&#129504; Lernen</button></div>
+      <div class="reihe" style="flex:0 1 auto">
+        <select id="dt-sort" title="Sortieren"><option value="neu">Neueste zuerst</option><option value="alt">&Auml;lteste zuerst</option><option value="name">Name A&ndash;Z</option><option value="gross">Gr&ouml;&szlig;te zuerst</option></select>
+        <button id="dt-neu" class="klein" title="neu laden">&#8635;</button>
+      </div>
+    </div>
+    <div id="dt-liste"></div>
+    <p class="hinweis" style="margin:10px 0 0;text-align:left">Videos sind AVI-Dateien (MJPEG + Ton) &ndash; zum Ansehen herunterladen, z.&nbsp;B. mit VLC. Fotos und Videos landen in einem Ordner pro Tag.</p>
   </div>
 </section>
 <!--/XIAO-->
@@ -1053,6 +1086,9 @@ const FR = {"Name des Autos": "Nom de la voiture", "Speichern": "Enregistrer", "
 Object.assign(EN, {"Video: {0}": "Video: {0}", "Verbindung abgerissen": "connection lost", "⟲ Drehen": "⟲ Rotate", "🧹 SD-Karte formatieren": "🧹 Format SD card", "Formatiere als FAT32 … bitte warten (bis 1 Minute).": "Formatting as FAT32 … please wait (up to 1 minute).", "SD-Karte gefunden, aber nicht FAT32 (z. B. exFAT) – bitte formatieren.": "SD card found, but not FAT32 (e.g. exFAT) – please format it.", "Formatieren fehlgeschlagen.": "Formatting failed.", "SD-Karte formatieren? ALLES auf der Karte wird gelöscht (Fahrten, Fotos, Fahrweg) und sie wird als FAT32 neu angelegt.": "Format the SD card? EVERYTHING on the card will be erased (runs, photos, route) and it will be set up again as FAT32."});
 Object.assign(ES, {"Video: {0}": "Vídeo: {0}", "Verbindung abgerissen": "conexión perdida", "⟲ Drehen": "⟲ Girar", "🧹 SD-Karte formatieren": "🧹 Formatear tarjeta SD", "Formatiere als FAT32 … bitte warten (bis 1 Minute).": "Formateando como FAT32 … espera (hasta 1 minuto).", "SD-Karte gefunden, aber nicht FAT32 (z. B. exFAT) – bitte formatieren.": "Tarjeta SD encontrada, pero no es FAT32 (p. ej. exFAT) – formátala.", "Formatieren fehlgeschlagen.": "Error al formatear.", "SD-Karte formatieren? ALLES auf der Karte wird gelöscht (Fahrten, Fotos, Fahrweg) und sie wird als FAT32 neu angelegt.": "¿Formatear la tarjeta SD? Se borrará TODO (recorridos, fotos, ruta) y se creará de nuevo como FAT32."});
 Object.assign(FR, {"Video: {0}": "Vidéo : {0}", "Verbindung abgerissen": "connexion perdue", "⟲ Drehen": "⟲ Pivoter", "🧹 SD-Karte formatieren": "🧹 Formater la carte SD", "Formatiere als FAT32 … bitte warten (bis 1 Minute).": "Formatage en FAT32 … patiente (jusqu’à 1 minute).", "SD-Karte gefunden, aber nicht FAT32 (z. B. exFAT) – bitte formatieren.": "Carte SD trouvée, mais pas en FAT32 (p. ex. exFAT) – formate-la.", "Formatieren fehlgeschlagen.": "Échec du formatage.", "SD-Karte formatieren? ALLES auf der Karte wird gelöscht (Fahrten, Fotos, Fahrweg) und sie wird als FAT32 neu angelegt.": "Formater la carte SD ? TOUT sera effacé (trajets, photos, parcours) et elle sera recréée en FAT32."});
+Object.assign(EN, {"Dateien": "Files", "📷 Fotos": "📷 Photos", "🎬 Videos": "🎬 Videos", "🧠 Lernen": "🧠 Learning", "Neueste zuerst": "Newest first", "Älteste zuerst": "Oldest first", "Name A–Z": "Name A–Z", "Größte zuerst": "Largest first", "📁 Dateien": "📁 Files", "⏺ Video": "⏺ Video", "Video": "Video", "Videos sind AVI-Dateien (MJPEG + Ton) – zum Ansehen herunterladen, z. B. mit VLC. Fotos und Videos landen in einem Ordner pro Tag.": "Videos are AVI files (MJPEG + sound) – download them to watch, e.g. with VLC. Photos and videos go into one folder per day.", "ohne Datum": "no date", "herunterladen": "download", "umbenennen": "rename", "löschen": "delete", "Neuer Name für {0}:": "New name for {0}:", "Umbenennen ging nicht: {0}": "Renaming failed: {0}", "Löschen ging nicht.": "Deleting failed.", "{0} wirklich löschen?": "Really delete {0}?", "{0} Dateien · {1}": "{0} files · {1}", "leer": "empty", "Liste konnte nicht geladen werden": "Could not load the list", "ganzen Tag löschen": "delete whole day", "Alle Dateien vom {0} löschen?": "Delete all files from {0}?", "ältere Dateien": "older files", "{0} Fotos · {1} Videos · {2} Fahrten": "{0} photos · {1} videos · {2} runs"});
+Object.assign(ES, {"Dateien": "Archivos", "📷 Fotos": "📷 Fotos", "🎬 Videos": "🎬 Vídeos", "🧠 Lernen": "🧠 Aprender", "Neueste zuerst": "Más recientes primero", "Älteste zuerst": "Más antiguos primero", "Name A–Z": "Nombre A–Z", "Größte zuerst": "Más grandes primero", "📁 Dateien": "📁 Archivos", "⏺ Video": "⏺ Vídeo", "Video": "Vídeo", "Videos sind AVI-Dateien (MJPEG + Ton) – zum Ansehen herunterladen, z. B. mit VLC. Fotos und Videos landen in einem Ordner pro Tag.": "Los vídeos son archivos AVI (MJPEG + sonido) – descárgalos para verlos, p. ej. con VLC. Fotos y vídeos se guardan en una carpeta por día.", "ohne Datum": "sin fecha", "herunterladen": "descargar", "umbenennen": "renombrar", "löschen": "borrar", "Neuer Name für {0}:": "Nuevo nombre para {0}:", "Umbenennen ging nicht: {0}": "No se pudo renombrar: {0}", "Löschen ging nicht.": "No se pudo borrar.", "{0} wirklich löschen?": "¿Borrar {0}?", "{0} Dateien · {1}": "{0} archivos · {1}", "leer": "vacío", "Liste konnte nicht geladen werden": "No se pudo cargar la lista", "ganzen Tag löschen": "borrar el día entero", "Alle Dateien vom {0} löschen?": "¿Borrar todos los archivos del {0}?", "ältere Dateien": "archivos antiguos", "{0} Fotos · {1} Videos · {2} Fahrten": "{0} fotos · {1} vídeos · {2} recorridos"});
+Object.assign(FR, {"Dateien": "Fichiers", "📷 Fotos": "📷 Photos", "🎬 Videos": "🎬 Vidéos", "🧠 Lernen": "🧠 Apprendre", "Neueste zuerst": "Plus récents d’abord", "Älteste zuerst": "Plus anciens d’abord", "Name A–Z": "Nom A–Z", "Größte zuerst": "Plus grands d’abord", "📁 Dateien": "📁 Fichiers", "⏺ Video": "⏺ Vidéo", "Video": "Vidéo", "Videos sind AVI-Dateien (MJPEG + Ton) – zum Ansehen herunterladen, z. B. mit VLC. Fotos und Videos landen in einem Ordner pro Tag.": "Les vidéos sont des fichiers AVI (MJPEG + son) – à télécharger pour les regarder, p. ex. avec VLC. Photos et vidéos vont dans un dossier par jour.", "ohne Datum": "sans date", "herunterladen": "télécharger", "umbenennen": "renommer", "löschen": "supprimer", "Neuer Name für {0}:": "Nouveau nom pour {0} :", "Umbenennen ging nicht: {0}": "Échec du renommage : {0}", "Löschen ging nicht.": "Échec de la suppression.", "{0} wirklich löschen?": "Supprimer vraiment {0} ?", "{0} Dateien · {1}": "{0} fichiers · {1}", "leer": "vide", "Liste konnte nicht geladen werden": "Impossible de charger la liste", "ganzen Tag löschen": "supprimer toute la journée", "Alle Dateien vom {0} löschen?": "Supprimer tous les fichiers du {0} ?", "ältere Dateien": "fichiers plus anciens", "{0} Fotos · {1} Videos · {2} Fahrten": "{0} photos · {1} vidéos · {2} trajets"});
 Object.assign(EN, {"Kamera": "Camera", "Kamera aus": "Camera off", "keine Kamera": "no camera", "📷 Video": "📷 Video", "🔈 Ton": "🔈 Sound", "📸 Foto": "📸 Photo", "Mikrofon": "Microphone", "👏 Klatschen = Licht": "👏 Clap = lights", "2x klatschen": "clap twice", "Lernen": "Learning", "🧠 Lernen": "🧠 Learn", "SD-Karte": "SD card", "↻ Liste": "↻ Refresh", "Fahrt {0}: {1} s, {2} Bilder": "Run {0}: {1} s, {2} images", "Schreibt beim Fahren Daten und Kamerabilder auf die SD-Karte.": "Records driving data and camera images to the SD card while you drive.", "keine SD-Karte": "no SD card", "{0} von {1} MB belegt": "{0} of {1} MB used", "{0} Fahrten · {1} Fotos": "{0} runs · {1} photos", "Fahrt {0} wirklich löschen?": "Really delete run {0}?", "noch nichts gespeichert": "nothing saved yet", "Mikrofon wird schon gehört": "someone is already listening"});
 Object.assign(ES, {"Kamera": "Cámara", "Kamera aus": "Cámara apagada", "keine Kamera": "sin cámara", "📷 Video": "📷 Vídeo", "🔈 Ton": "🔈 Sonido", "📸 Foto": "📸 Foto", "Mikrofon": "Micrófono", "👏 Klatschen = Licht": "👏 Palmada = luces", "2x klatschen": "2 palmadas", "Lernen": "Aprender", "🧠 Lernen": "🧠 Aprender", "SD-Karte": "Tarjeta SD", "↻ Liste": "↻ Actualizar", "Fahrt {0}: {1} s, {2} Bilder": "Recorrido {0}: {1} s, {2} imágenes", "Schreibt beim Fahren Daten und Kamerabilder auf die SD-Karte.": "Guarda datos de conducción e imágenes de la cámara en la tarjeta SD.", "keine SD-Karte": "sin tarjeta SD", "{0} von {1} MB belegt": "{0} de {1} MB usados", "{0} Fahrten · {1} Fotos": "{0} recorridos · {1} fotos", "Fahrt {0} wirklich löschen?": "¿Borrar el recorrido {0}?", "noch nichts gespeichert": "aún no hay nada guardado", "Mikrofon wird schon gehört": "alguien ya está escuchando"});
 Object.assign(FR, {"Kamera": "Caméra", "Kamera aus": "Caméra éteinte", "keine Kamera": "pas de caméra", "📷 Video": "📷 Vidéo", "🔈 Ton": "🔈 Son", "📸 Foto": "📸 Photo", "Mikrofon": "Micro", "👏 Klatschen = Licht": "👏 Applaudir = phares", "2x klatschen": "applaudir 2x", "Lernen": "Apprendre", "🧠 Lernen": "🧠 Apprendre", "SD-Karte": "Carte SD", "↻ Liste": "↻ Actualiser", "Fahrt {0}: {1} s, {2} Bilder": "Trajet {0} : {1} s, {2} images", "Schreibt beim Fahren Daten und Kamerabilder auf die SD-Karte.": "Enregistre les données de conduite et les images de la caméra sur la carte SD.", "keine SD-Karte": "pas de carte SD", "{0} von {1} MB belegt": "{0} sur {1} Mo utilisés", "{0} Fahrten · {1} Fotos": "{0} trajets · {1} photos", "Fahrt {0} wirklich löschen?": "Supprimer vraiment le trajet {0} ?", "noch nichts gespeichert": "rien d’enregistré", "Mikrofon wird schon gehört": "quelqu’un écoute déjà"});
@@ -1277,7 +1313,7 @@ function zeigeDrehung(grad){
   if (grad === kamDreh) return;
   kamDreh = grad;
   const hoch = grad === 90 || grad === 270;
-  for (const el of [document.querySelector('.video'), document.getElementById('sd-fotos')]){
+  for (const el of [document.querySelector('.video'), document.getElementById('dt-liste')]){
     el.style.setProperty('--dreh', grad + 'deg');
     el.style.setProperty('--drehzoom', hoch ? 1.34 : 1);
   }
@@ -1291,7 +1327,6 @@ document.getElementById('k-dreh').addEventListener('click', () => {
 document.getElementById('k-aufl').addEventListener('change', e => fetch('/kamera?aufl=' + e.target.value).catch(()=>{}));
 
 async function sdListe(){
-  const liste = document.getElementById('sd-liste'), fotos = document.getElementById('sd-fotos');
   try{
     const k = await (await fetch('/karte')).json();
     sdDa = !!k.da;
@@ -1304,39 +1339,138 @@ async function sdListe(){
         k.fmt === 1 ? t('Formatiere als FAT32 … bitte warten (bis 1 Minute).')
       : !k.da ? (k.unlesbar ? t('SD-Karte gefunden, aber nicht FAT32 (z. B. exFAT) – bitte formatieren.')
                             : t('keine SD-Karte') + (k.fmt === 3 ? ' · ' + t('Formatieren fehlgeschlagen.') : ''))
-      : t('{0} von {1} MB belegt', k.belegt, k.gesamt) + ' · ' + t('{0} Fahrten · {1} Fotos', k.fahrten, k.fotos);
-    liste.innerHTML = ''; fotos.innerHTML = '';
+      : t('{0} von {1} MB belegt', k.belegt, k.gesamt) + ' · ' + t('{0} Fotos · {1} Videos · {2} Fahrten', k.fotos, k.videos || 0, k.fahrten);
     if (k.fmt === 1) { setTimeout(sdListe, 2000); return; }       // weiter nachsehen, bis es fertig ist
-    if (!k.da) return;
-    const fahrten = (await (await fetch(medien('/dateien?pfad=/lernen'))).json()).filter(f => f.o).map(f => f.n).sort().reverse();
-    for (const n of fahrten){
-      const z = document.createElement('div'); z.className = 'sdzeile';
-      const nr = parseInt(n.split('_')[1], 10);
-      z.innerHTML = '<span>&#129504; ' + n + '</span><a href="' + medienLink('/datei?pfad=/lernen/' + n + '/daten.csv') + '">CSV</a>'
-                  + '<a href="' + medienLink('/dateien?pfad=/lernen/' + n) + '" target="_blank">&#128193;</a><span class="weg" title="l&ouml;schen" style="flex:none">&#10005;</span>';
-      z.querySelector('.weg').addEventListener('click', async () => {
-        if (!confirm(t('Fahrt {0} wirklich löschen?', nr))) return;
-        await fetch(medien('/datei?pfad=/lernen/' + n + '&weg=1')).catch(()=>{});
-        sdListe();
-      });
-      liste.appendChild(z);
-    }
-    const bilder = (await (await fetch(medien('/dateien?pfad=/fotos'))).json()).filter(f => !f.o).map(f => f.n).sort().reverse().slice(0, 12);
-    for (const n of bilder){
-      const a = document.createElement('a'); a.href = medienLink('/datei?pfad=/fotos/' + n); a.target = '_blank';
-      a.innerHTML = '<img loading="lazy" alt="' + n + '" src="' + medien('/datei?pfad=/fotos/' + n) + '">';
-      fotos.appendChild(a);
-    }
-    if (!fahrten.length && !bilder.length) liste.innerHTML = '<span class="hinweis" style="margin:0;text-align:left">' + t('noch nichts gespeichert') + '</span>';
+    if (k.da) dtLaden();
   } catch(e){}
 }
 document.getElementById('sd-neu').addEventListener('click', sdListe);
+document.getElementById('dt-neu').addEventListener('click', sdListe);
 document.getElementById('sd-format').addEventListener('click', async () => {
   if (!confirm(t('SD-Karte formatieren? ALLES auf der Karte wird gelöscht (Fahrten, Fotos, Fahrweg) und sie wird als FAT32 neu angelegt.'))) return;
   await fetch('/karte?formatieren=JA').catch(()=>{});
   sdListe();
 });
 sdListe();
+
+// ---------- Uhrzeit ans Auto (fuer Datum/Uhrzeit in den Dateinamen) ----------
+const zeitSenden = () => fetch('/zeit?t=' + Math.floor(Date.now() / 1000)).catch(()=>{});
+zeitSenden(); setInterval(zeitSenden, 600000);
+
+// ---------- Video-Aufnahme ----------
+let vidAn = false, vidZ = -1;
+const mmss = s => Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+document.getElementById('k-rec').addEventListener('click', () =>
+  fetch('/video?an=' + (vidAn ? 0 : 1) + '&ton=' + (tonAn ? 1 : 0)).catch(()=>{}));
+
+// ---------- Dateien: Fotos / Videos / Lernen, Tagesordner, sortieren, umbenennen, loeschen ----------
+let dtOrdner = '/fotos';
+const dtSort = document.getElementById('dt-sort');
+try { dtSort.value = localStorage.getItem('dtSort') || 'neu'; } catch(e){}
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+const enc = encodeURIComponent;
+const groesseText = b => b >= 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
+const uhrText = s => s > 1700000000 ? new Date(s * 1000).toLocaleTimeString(sprache, {hour: '2-digit', minute: '2-digit', second: '2-digit'}) : '';
+function tagText(n){
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(n)) return n === 'ohne-datum' ? t('ohne Datum') : n;
+  return new Date(n + 'T12:00:00').toLocaleDateString(sprache, {weekday: 'short', day: 'numeric', month: 'long', year: 'numeric'});
+}
+function sortiere(liste){
+  const art = dtSort.value, nm = (a, b) => a.n.localeCompare(b.n, undefined, {numeric: true});
+  return liste.sort((a, b) => art === 'name' ? nm(a, b) : art === 'gross' ? (b.g - a.g) || nm(a, b)
+    : art === 'alt' ? (a.t - b.t) || nm(a, b) : (b.t - a.t) || nm(b, a));
+}
+async function holeListe(pfad){
+  const r = await fetch(medien('/dateien?pfad=' + enc(pfad)));
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.json();
+}
+async function loeschen(pfad, frage){
+  if (!confirm(frage)) return false;
+  const r = await fetch(medien('/datei?pfad=' + enc(pfad) + '&weg=1')).then(x => x.text()).catch(() => 'fehler');
+  if (r !== 'ok') alert(t('Löschen ging nicht.'));
+  return r === 'ok';
+}
+function dateiKarte(pfad, f){
+  const bild = /\.jpe?g$/i.test(f.n), video = /\.avi$/i.test(f.n);
+  const link = medienLink('/datei?pfad=' + enc(pfad));
+  const k = document.createElement('div'); k.className = 'dt-datei';
+  k.innerHTML = '<a class="dt-bild" href="' + link + '" target="_blank">' +
+      (bild ? '<img loading="lazy" alt="" src="' + medien('/datei?pfad=' + enc(pfad)) + '">' : video ? '&#127916;' : '&#128196;') + '</a>' +
+    '<div class="dt-name" title="' + esc(f.n) + '">' + esc(f.n) + '</div>' +
+    '<div class="dt-info">' + groesseText(f.g) + (uhrText(f.t) ? ' &middot; ' + uhrText(f.t) : '') + '</div>' +
+    '<div class="dt-knoepfe"><a href="' + link + '" download="' + esc(f.n) + '" title="' + esc(t('herunterladen')) + '">&#11015;&#65039;</a>' +
+    '<button class="um" title="' + esc(t('umbenennen')) + '">&#9999;&#65039;</button>' +
+    '<button class="weg" title="' + esc(t('löschen')) + '">&#128465;&#65039;</button></div>';
+  k.querySelector('.um').addEventListener('click', async () => {
+    const alt = f.n.replace(/\.[^.]+$/, '');
+    const neu = prompt(t('Neuer Name für {0}:', f.n), alt);
+    if (!neu || neu.trim() === alt) return;
+    const r = await fetch(medien('/datei?pfad=' + enc(pfad) + '&neu=' + enc(neu.trim()))).then(x => x.text()).catch(() => 'fehler: keine Verbindung');
+    if (r.startsWith('fehler')) alert(t('Umbenennen ging nicht: {0}', r.replace(/^fehler:?\s*/, '')));
+    dtLaden();
+  });
+  k.querySelector('.weg').addEventListener('click', async () => {
+    if (await loeschen(pfad, t('{0} wirklich löschen?', f.n))){ k.remove(); sdListe(); }
+  });
+  return k;
+}
+async function inhaltLaden(d, pfad, vorhanden){
+  const box = d.querySelector('.dt-inhalt');
+  try {
+    const dateien = sortiere((vorhanden || await holeListe(pfad)).filter(f => !f.o));
+    box.innerHTML = '';
+    d.querySelector('.anz').textContent = t('{0} Dateien · {1}', dateien.length, groesseText(dateien.reduce((s, f) => s + f.g, 0)));
+    for (const f of dateien) box.appendChild(dateiKarte(pfad + '/' + f.n, f));
+    if (!dateien.length) box.innerHTML = '<div class="dt-leer">' + t('leer') + '</div>';
+    d.dataset.geladen = '1';
+  } catch(e){ box.innerHTML = '<div class="dt-leer">' + t('Liste konnte nicht geladen werden') + '</div>'; }
+}
+function tagOrdner(name, pfad, oeffnen, vorhanden){
+  const d = document.createElement('details'); d.className = 'dt-tag'; d.dataset.pfad = pfad;
+  d.innerHTML = '<summary>&#128197; <span>' + esc(tagText(name)) + '</span><span class="anz"></span><span class="sp"></span>' +
+    (vorhanden ? '' : '<button class="klein weg" title="' + esc(t('ganzen Tag löschen')) + '">&#128465;&#65039;</button>') +
+    '</summary><div class="dt-inhalt"></div>';
+  const weg = d.querySelector('.weg');
+  if (weg) weg.addEventListener('click', async e => {
+    e.preventDefault(); e.stopPropagation();
+    if (await loeschen(pfad, t('Alle Dateien vom {0} löschen?', tagText(name)))){ d.remove(); sdListe(); }
+  });
+  d.addEventListener('toggle', () => { if (d.open && !d.dataset.geladen) inhaltLaden(d, pfad, vorhanden); });
+  if (oeffnen) d.open = true;
+  return d;
+}
+function fahrtZeile(f){
+  const pfad = '/lernen/' + f.n;
+  const z = document.createElement('div'); z.className = 'sdzeile';
+  z.innerHTML = '<span>&#129504; ' + esc(f.n) + (f.t > 1700000000 ? ' <small class="leise">' + new Date(f.t * 1000).toLocaleString(sprache) + '</small>' : '') + '</span>' +
+    '<a href="' + medienLink('/datei?pfad=' + enc(pfad + '/daten.csv')) + '">CSV</a>' +
+    '<a href="' + medienLink('/dateien?pfad=' + enc(pfad)) + '" target="_blank">&#128193;</a>' +
+    '<span class="weg" title="' + esc(t('löschen')) + '" style="flex:none">&#10005;</span>';
+  z.querySelector('.weg').addEventListener('click', async () => { if (await loeschen(pfad, t('{0} wirklich löschen?', f.n))) z.remove(); });
+  return z;
+}
+async function dtLaden(){
+  const ziel = document.getElementById('dt-liste');
+  if (!sdDa){ ziel.innerHTML = '<div class="dt-leer">' + t('keine SD-Karte') + '</div>'; return; }
+  let liste;
+  try { liste = await holeListe(dtOrdner); } catch(e){ ziel.innerHTML = '<div class="dt-leer">' + t('Liste konnte nicht geladen werden') + '</div>'; return; }
+  const offen = new Set([...ziel.querySelectorAll('details[open]')].map(d => d.dataset.pfad));
+  const ersterAufbau = ziel.dataset.ordner !== dtOrdner;
+  ziel.dataset.ordner = dtOrdner;
+  ziel.innerHTML = '';
+  const ordner = sortiere(liste.filter(f => f.o)), lose = liste.filter(f => !f.o);
+  if (!ordner.length && !lose.length){ ziel.innerHTML = '<div class="dt-leer">' + t('noch nichts gespeichert') + '</div>'; return; }
+  if (dtOrdner === '/lernen'){ for (const o of ordner) ziel.appendChild(fahrtZeile(o)); return; }
+  ordner.forEach((o, i) => { const pf = dtOrdner + '/' + o.n; ziel.appendChild(tagOrdner(o.n, pf, ersterAufbau ? i === 0 : offen.has(pf))); });
+  // aeltere Dateien direkt im Ordner (von frueher, ohne Tagesordner)
+  if (lose.length) ziel.appendChild(tagOrdner(t('ältere Dateien'), dtOrdner, !ordner.length || offen.has(dtOrdner), lose));
+}
+document.querySelectorAll('#dt-tabs button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#dt-tabs button').forEach(x => x.classList.toggle('an', x === b));
+  dtOrdner = b.dataset.ordner; dtLaden();
+}));
+dtSort.addEventListener('change', () => { try { localStorage.setItem('dtSort', dtSort.value); } catch(e){} dtLaden(); });
 
 function zeigeSense(s){
   if (s.medien) medienPort = s.medien;
@@ -1352,7 +1486,15 @@ function zeigeSense(s){
   kl.classList.toggle('an', !!s.klatsch); kl.disabled = !s.mik;
   const le = document.getElementById('k-lernen');
   le.classList.toggle('an', !!s.lernen); le.disabled = !s.sd;
-  document.getElementById('rec-punkt').hidden = !s.lernen;
+  // Video-Aufnahme: Knopf zeigt die Laufzeit, oben im Bild "REC"
+  vidAn = !!s.vid;
+  const rec = document.getElementById('k-rec');
+  rec.classList.toggle('an', vidAn); rec.disabled = !s.kam || !s.sd;
+  rec.textContent = vidAn ? '\u23f9 ' + mmss(s.vidsek || 0) + (s.vidton ? ' \ud83d\udd0a' : '') : '\u23fa ' + t('Video');
+  const rp = document.getElementById('rec-punkt');
+  rp.hidden = !s.lernen && !vidAn;
+  rp.textContent = '\u25cf REC' + (vidAn ? ' ' + mmss(s.vidsek || 0) : '');
+  if (s.vidz !== undefined){ if (vidZ >= 0 && s.vidz !== vidZ) sdListe(); vidZ = s.vidz; }
   document.getElementById('k-lerninfo').textContent = s.lernen ? t('Fahrt {0}: {1} s, {2} Bilder', s.fahrt, s.lernsek, s.bilder)
     : (s.sd ? t('Schreibt beim Fahren Daten und Kamerabilder auf die SD-Karte.') : t('keine SD-Karte'));
   // Neues Foto oder Lernen gerade beendet -> Liste neu laden

@@ -36,4 +36,4 @@ float lernenSekunden();
 
 // Ein Foto auf die SD-Karte (/fotos/foto_0001.jpg). Liefert false ohne Karte/Kamera
 bool lernenFoto();
-int  lernenLetztesFoto();  // Nummer des zuletzt gespeicherten Fotos (0 = noch keins)
+int  lernenLetztesFoto();  // zaehlt jedes gespeicherte Foto hoch (0 = noch keins) - Webseite laedt dann die Liste neu

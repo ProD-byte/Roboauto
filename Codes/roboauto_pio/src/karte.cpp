@@ -2,6 +2,7 @@
 #include <SPI.h>
 #include <SD.h>
 #include <esp_http_server.h>
+#include <esp_heap_caps.h>
 #include <sd_diskio.h>
 #include <esp_task_wdt.h>
 #include "ff.h"
@@ -47,6 +48,7 @@ bool karteStarten() {
   }
   SD.mkdir("/lernen");
   SD.mkdir("/fotos");
+  SD.mkdir("/videos");
   Serial.printf(">> SD-Karte: %u MB, davon %u MB belegt\n", (unsigned)karteGesamtMB(), (unsigned)karteBelegtMB());
   return true;
 }
@@ -117,6 +119,18 @@ int karteNaechsteNummer(const char* ordner, const char* name) {
   return hoechste + 1;
 }
 
+// Dateien in den Tagesordnern zaehlen (/fotos/2026-11-03/...) - lose Dateien direkt im Ordner zaehlen mit
+static int zaehleTief(const char* ordner) {
+  int n = 0;
+  File d = SD.open(ordner);
+  if (!d) return 0;
+  for (File f = d.openNextFile(); f; f = d.openNextFile()) {
+    if (!f.isDirectory()) { n++; continue; }
+    for (File g = f.openNextFile(); g; g = f.openNextFile()) if (!g.isDirectory()) n++;
+  }
+  return n;
+}
+
 static int zaehle(const char* ordner) {
   int n = 0;
   File d = SD.open(ordner);
@@ -130,29 +144,61 @@ String karteJson() {
   String z = ",\"unlesbar\":" + String(unlesbar ? 1 : 0) + ",\"fmt\":" + String(fmtZustand) + "}";
   if (!da || fmtZustand == KARTE_FMT_LAEUFT) return "{\"da\":0" + z;
   return "{\"da\":1,\"gesamt\":" + String(karteGesamtMB()) + ",\"belegt\":" + String(karteBelegtMB()) +
-         ",\"fahrten\":" + String(zaehle("/lernen")) + ",\"fotos\":" + String(zaehle("/fotos")) + z;
+         ",\"fahrten\":" + String(zaehle("/lernen")) + ",\"fotos\":" + String(zaehleTief("/fotos")) + ",\"videos\":" + String(zaehleTief("/videos")) + z;
 }
 
 // ---------- Seiten fuer den Medien-Server ----------
 
 // "pfad" aus der Adresse holen (mit %xx-Entschluesselung), ".." ist verboten
-static bool holePfad(httpd_req_t* req, char* pfad, size_t groesse, bool* loeschen = nullptr) {
-  char anfrage[200], roh[160];
+// Einen Wert aus der Adresse holen und %xx entschluesseln. false = nicht vorhanden
+static bool holeWert(const char* anfrage, const char* name, char* ziel, size_t groesse) {
+  char roh[200];
+  if (httpd_query_key_value(anfrage, name, roh, sizeof(roh)) != ESP_OK) return false;
+  size_t j = 0;
+  for (size_t i = 0; roh[i] && j < groesse - 1; i++) {
+    if (roh[i] == '%' && isxdigit(roh[i + 1]) && isxdigit(roh[i + 2])) {
+      char hex[3] = { roh[i + 1], roh[i + 2], 0 };
+      ziel[j++] = (char)strtol(hex, nullptr, 16);
+      i += 2;
+    } else ziel[j++] = roh[i] == '+' ? ' ' : roh[i];
+  }
+  ziel[j] = 0;
+  return true;
+}
+
+// "pfad" aus der Adresse holen, ".." ist verboten. Optional: &weg=1 (loeschen), &neu=Name (umbenennen)
+static bool holePfad(httpd_req_t* req, char* pfad, size_t groesse, bool* loeschen = nullptr, char* neu = nullptr, size_t neuGroesse = 0) {
+  char anfrage[300];
+  if (neu) neu[0] = 0;
   if (httpd_req_get_url_query_str(req, anfrage, sizeof(anfrage)) != ESP_OK) { strcpy(pfad, "/"); }
   else {
-    if (httpd_query_key_value(anfrage, "pfad", roh, sizeof(roh)) != ESP_OK) strcpy(roh, "/");
-    size_t j = 0;
-    for (size_t i = 0; roh[i] && j < groesse - 1; i++) {
-      if (roh[i] == '%' && isxdigit(roh[i + 1]) && isxdigit(roh[i + 2])) {
-        char hex[3] = { roh[i + 1], roh[i + 2], 0 };
-        pfad[j++] = (char)strtol(hex, nullptr, 16);
-        i += 2;
-      } else pfad[j++] = roh[i] == '+' ? ' ' : roh[i];
-    }
-    pfad[j] = 0;
+    if (!holeWert(anfrage, "pfad", pfad, groesse)) strcpy(pfad, "/");
     if (loeschen) { char w[4]; *loeschen = httpd_query_key_value(anfrage, "weg", w, sizeof(w)) == ESP_OK; }
+    if (neu) holeWert(anfrage, "neu", neu, neuGroesse);
   }
   return pfad[0] == '/' && strstr(pfad, "..") == nullptr;
+}
+
+// Neuen Namen pruefen: nur Buchstaben, Ziffern, Leerzeichen, - _ . (kein Ordnerwechsel).
+// Fehlt die Endung (.jpg, .avi ...), wird die alte angehaengt - sonst laesst sich die Datei nicht mehr oeffnen.
+static bool neuerName(const char* altPfad, const char* wunsch, char* neuPfad, size_t groesse) {
+  char name[64]; size_t j = 0;
+  for (size_t i = 0; wunsch[i] && j < sizeof(name) - 1; i++) {
+    char c = wunsch[i];
+    if (isalnum((unsigned char)c) || c == '-' || c == '_' || c == '.' || (c == ' ' && j > 0)) name[j++] = c;
+  }
+  while (j > 0 && (name[j - 1] == ' ' || name[j - 1] == '.')) j--;
+  name[j] = 0;
+  if (!j) return false;
+  const char* altName = strrchr(altPfad, '/') + 1;
+  const char* altEndung = strrchr(altName, '.');
+  const char* neuEndung = strrchr(name, '.');
+  size_t ordner = altName - altPfad;                         // inklusive des letzten '/'
+  if (ordner + j + 8 >= groesse) return false;
+  memcpy(neuPfad, altPfad, ordner);
+  snprintf(neuPfad + ordner, groesse - ordner, "%s%s", name,
+           altEndung && (!neuEndung || strcasecmp(neuEndung, altEndung)) ? altEndung : "");
+  return true;
 }
 
 // /dateien?pfad=/lernen  ->  [{"n":"fahrt_0001","g":0,"o":1}, ...]   (o = Ordner)
@@ -167,8 +213,9 @@ esp_err_t karteListeSenden(httpd_req_t* req) {
   bool erster = true;
   char zeile[200];
   for (File f = d.openNextFile(); f; f = d.openNextFile()) {
-    int n = snprintf(zeile, sizeof(zeile), "%s{\"n\":\"%s\",\"g\":%u,\"o\":%d}", erster ? "" : ",",
-                     f.name(), (unsigned)f.size(), f.isDirectory() ? 1 : 0);
+    // t = zuletzt geaendert (Unix-Zeit) - zum Sortieren; stimmt, sobald das Auto die Uhrzeit kennt
+    int n = snprintf(zeile, sizeof(zeile), "%s{\"n\":\"%s\",\"g\":%u,\"o\":%d,\"t\":%ld}", erster ? "" : ",",
+                     f.name(), (unsigned)f.size(), f.isDirectory() ? 1 : 0, (long)f.getLastWrite());
     httpd_resp_send_chunk(req, zeile, n);
     erster = false;
     f.close();
@@ -201,10 +248,10 @@ static bool loescheAlles(const char* pfad) {
 
 // /datei?pfad=/fotos/foto_0001.jpg  herunterladen,  &weg=1 = loeschen (auch ganze Ordner)
 esp_err_t karteDateiSenden(httpd_req_t* req) {
-  char pfad[160];
+  char pfad[160], neu[80], neuPfad[200];
   bool loeschen = false;
   if (!da) { httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "keine SD-Karte"); return ESP_FAIL; }
-  if (!holePfad(req, pfad, sizeof(pfad), &loeschen) || strcmp(pfad, "/") == 0) {
+  if (!holePfad(req, pfad, sizeof(pfad), &loeschen, neu, sizeof(neu)) || strcmp(pfad, "/") == 0) {
     httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "pfad?");
     return ESP_FAIL;
   }
@@ -212,6 +259,14 @@ esp_err_t karteDateiSenden(httpd_req_t* req) {
     bool ok = loescheAlles(pfad);
     Serial.printf(">> SD: %s %s\n", pfad, ok ? "geloescht" : "nicht geloescht");
     return httpd_resp_sendstr(req, ok ? "ok" : "fehler");
+  }
+  // &neu=Name: umbenennen (bleibt im selben Ordner). Antwort: neuer Pfad oder "fehler: ..."
+  if (neu[0]) {
+    if (!neuerName(pfad, neu, neuPfad, sizeof(neuPfad))) return httpd_resp_sendstr(req, "fehler: ungueltiger Name");
+    if (SD.exists(neuPfad)) return httpd_resp_sendstr(req, "fehler: Name gibt es schon");
+    bool ok = SD.rename(pfad, neuPfad);
+    Serial.printf(">> SD: %s -> %s %s\n", pfad, neuPfad, ok ? "umbenannt" : "NICHT umbenannt");
+    return httpd_resp_sendstr(req, ok ? neuPfad : "fehler: Umbenennen ging nicht");
   }
   File f = SD.open(pfad);
   if (!f || f.isDirectory()) { httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "nicht gefunden"); return ESP_FAIL; }
@@ -224,10 +279,14 @@ esp_err_t karteDateiSenden(httpd_req_t* req) {
   char name[200];
   snprintf(name, sizeof(name), "%s; filename=\"%s\"", strcmp(typ, "image/jpeg") ? "attachment" : "inline", strrchr(pfad, '/') + 1);
   httpd_resp_set_hdr(req, "Content-Disposition", name);
-  uint8_t puffer[2048];
+  // grosse Stuecke (32 KB, im PSRAM) - je weniger Bloecke, desto schneller der Download
+  const size_t N = 32 * 1024;
+  uint8_t* puffer = (uint8_t*)heap_caps_malloc(N, MALLOC_CAP_SPIRAM);
+  if (!puffer) { f.close(); httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "kein Speicher"); return ESP_FAIL; }
   esp_err_t ok = ESP_OK;
   size_t n;
-  while (ok == ESP_OK && (n = f.read(puffer, sizeof(puffer))) > 0) ok = httpd_resp_send_chunk(req, (const char*)puffer, n);
+  while (ok == ESP_OK && (n = f.read(puffer, N)) > 0) ok = httpd_resp_send_chunk(req, (const char*)puffer, n);
+  heap_caps_free(puffer);
   f.close();
   if (ok == ESP_OK) ok = httpd_resp_send_chunk(req, nullptr, 0);
   return ok;

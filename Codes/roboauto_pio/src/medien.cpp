@@ -3,6 +3,7 @@
 #include <atomic>
 #include <freertos/idf_additions.h>
 #include <esp_heap_caps.h>
+#include <lwip/sockets.h>
 #include "config.h"
 #include "medien.h"
 
@@ -16,7 +17,13 @@ static httpd_handle_t server = nullptr;
 struct Auftrag { httpd_req_t* req; esp_err_t (*seite)(httpd_req_t*); };
 
 // Die Roboauto-App zeigt die Oberflaeche von einer eigenen Adresse aus -> Antworten fuer alle freigeben (CORS)
-static void freigeben(httpd_req_t* req) { httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*"); }
+// Ausserdem: kleine Pakete sofort senden (TCP_NODELAY). Sonst wartet jedes kleine Stueck (z.B. der Vorspann
+// eines Datenblocks) auf die Bestaetigung des vorigen - mit verzoegerten Bestaetigungen bis zu 200 ms.
+static void freigeben(httpd_req_t* req) {
+  httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+  int ein = 1, fd = httpd_req_to_sockfd(req);
+  if (fd >= 0) setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &ein, sizeof(ein));
+}
 
 static esp_err_t kurz(httpd_req_t* req) {
   freigeben(req);

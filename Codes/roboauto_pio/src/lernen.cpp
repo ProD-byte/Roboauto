@@ -5,6 +5,7 @@
 #include "lernen.h"
 #include "karte.h"
 #include "kamera.h"
+#include "zeit.h"
 
 // Schreiben auf die SD-Karte dauert mal 5, mal 50 ms - deshalb in einer eigenen Aufgabe auf
 // Kern 0, damit Fahren und Lichter (loop auf Kern 1) davon nichts merken.
@@ -61,9 +62,13 @@ static void lernAufgabe(void*) {
 
     if (fotoWunsch) {
       fotoWunsch = false;
-      int nr = karteNaechsteNummer("/fotos", "foto");
-      snprintf(pfad, sizeof(pfad), "/fotos/foto_%04d.jpg", nr);
-      if (speichereBild(pfad)) { letztesFoto = nr; Serial.printf(">> Foto gespeichert: %s\n", pfad); }
+      // /fotos/2026-11-03/foto_15-42-07.jpg - gibt es den Namen schon (gleiche Sekunde), mit -2, -3 ...
+      char tag[16], uhr[24];
+      zeitTag(tag, sizeof(tag)); zeitUhr(uhr, sizeof(uhr));
+      snprintf(pfad, sizeof(pfad), "/fotos/%s", tag); SD.mkdir(pfad);
+      snprintf(pfad, sizeof(pfad), "/fotos/%s/foto_%s.jpg", tag, uhr);
+      for (int k = 2; SD.exists(pfad) && k < 100; k++) snprintf(pfad, sizeof(pfad), "/fotos/%s/foto_%s-%d.jpg", tag, uhr, k);
+      if (speichereBild(pfad)) { letztesFoto = letztesFoto + 1; Serial.printf(">> Foto gespeichert: %s\n", pfad); }
       else Serial.println(">> Foto: Speichern fehlgeschlagen");
     }
 

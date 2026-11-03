@@ -23,12 +23,14 @@
 #include "gyro.h"
 #include "einstellungen.h"
 #include "neustart.h"
+#include "zeit.h"
 #ifdef ROBOAUTO_XIAO
 #include "kamera.h"
 #include "mikro.h"
 #include "karte.h"
 #include "lernen.h"
 #include "medien.h"
+#include "video.h"
 #endif
 
 static WebServer server(80);
@@ -410,9 +412,11 @@ static String statusJson() {
   // XIAO Sense: Kamera, Mikrofon, SD-Karte, Lernen (die schliessende Klammer wird ersetzt)
   snprintf(json + n - 1, sizeof(json) - n + 1,
            ",\"kam\":%d,\"aufl\":%d,\"mik\":%d,\"pegel\":%d,\"klatsch\":%d,\"sd\":%d,"
-           "\"lernen\":%d,\"fahrt\":%d,\"bilder\":%d,\"lernsek\":%.0f,\"foto\":%d,\"medien\":%d}",
+           "\"lernen\":%d,\"fahrt\":%d,\"bilder\":%d,\"lernsek\":%.0f,\"foto\":%d,\"medien\":%d,"
+           "\"vid\":%d,\"vidsek\":%.0f,\"vidton\":%d,\"vidz\":%d}",
            kameraDa(), kameraAufloesungStufe(), mikroDa(), mikroPegel(), klatschAn, karteDa(),
-           lernenAktiv(), lernenFahrt(), lernenBilder(), lernenSekunden(), lernenLetztesFoto(), MEDIEN_PORT);
+           lernenAktiv(), lernenFahrt(), lernenBilder(), lernenSekunden(), lernenLetztesFoto(), MEDIEN_PORT,
+           videoLaeuft(), videoSekunden(), videoMitTon(), videoZaehler());
 #else
   (void)n;
 #endif
@@ -440,6 +444,12 @@ static String steuerBefehl(const String& pfad, const Param* p, int n, bool app) 
   }
 #ifdef ROBOAUTO_XIAO
   // Kamera-Aufloesung: /kamera?aufl=0..2
+  // Video-Aufnahme: /video?an=1&ton=1 (Ton nur, wenn er auf der Seite eingeschaltet ist), /video?an=0
+  if (pfad == "/video") {
+    if (param(p, n, "an") == "1") { if (videoAufnahmeStarten(param(p, n, "ton") == "1")) buzzerEin(); else buzzerWarnung(); }
+    else if (param(p, n, "an") == "0") { videoAufnahmeStoppen(); buzzerAus(); }
+    return "ok";
+  }
   if (pfad == "/kamera") {
     if (hatParam(p, n, "aufl")) kameraAufloesung(param(p, n, "aufl").toInt());
     if (hatParam(p, n, "quali")) kameraQualitaet(param(p, n, "quali").toInt());
@@ -485,6 +495,8 @@ static String steuerBefehl(const String& pfad, const Param* p, int n, bool app) 
   }
   if (pfad == "/verlauf") return akkuVerlaufJson();
   // Fuer die App: ueber welche Adresse ist das Auto im WLAN erreichbar?
+  // Uhrzeit vom Browser/App: /zeit?t=Sekunden seit 1970 (UTC) - fuer Datum/Uhrzeit in Dateinamen
+  if (pfad == "/zeit") { zeitSetzen(strtoul(param(p, n, "t").c_str(), nullptr, 10)); return "ok"; }
   if (pfad == "/info") {
     if (param(p, n, "abstuerzeLoeschen") == "1") neustartZaehlerLoeschen();
     bool da = webWlanDa();
@@ -603,7 +615,7 @@ void webStarten() {
   });
 
   // --- Steuerung (gleiche Befehle kommen von der App auch ueber Bluetooth) ---
-  for (const char* pfad : {"/fahr", "/aktion", "/status", "/kamera", "/karte", "/einstellungen", "/update", "/verlauf", "/info"})
+  for (const char* pfad : {"/fahr", "/aktion", "/status", "/kamera", "/karte", "/video", "/zeit", "/einstellungen", "/update", "/verlauf", "/info"})
     server.on(pfad, HTTP_GET, httpSteuerung);
 
   // Alles andere: im Einrichtungsmodus auf die Einrichtungsseite umleiten.
@@ -707,6 +719,7 @@ void webUpdate() {
     MDNS.begin(WEB_NAME);
     MDNS.addService("http", "tcp", 80);
     starteOta();
+    zeitInternet();                         // Uhrzeit aus dem Internet holen
 #ifdef ROBOAUTO_XIAO
     medienServerStarten();                  // Live-Video, Live-Ton, SD-Dateien auf Port 81
 #endif

@@ -44,12 +44,14 @@
 #include "balance.h"
 #include "einstellungen.h"
 #include "neustart.h"
+#include "zeit.h"
 #include "ledkette.h"
 #ifdef ROBOAUTO_XIAO
 #include "kamera.h"
 #include "mikro.h"
 #include "karte.h"
 #include "lernen.h"
+#include "video.h"
 #endif
 
 static bool verbunden = false;     // App ODER Webseite (fuer Ring, Lichter, Fahren)
@@ -94,6 +96,7 @@ void setup() {
   delay(1000);
 
   neustartMerken();                       // Grund des Starts merken, Abstuerze mitzaehlen (Webseite: System)
+  zeitStarten();                          // Zeitzone fuer Datum/Uhrzeit in Dateinamen
   autoUpdateStart();                      // nach einem Auto-Update: startet die neue Version sauber? sonst zurueck
   einstellungenLaden();                   // gespeicherte Einstellungen (vor allem anderen)
   antriebStarten();
@@ -108,6 +111,7 @@ void setup() {
   kameraStarten();
   mikroStarten();
   lernenStarten();
+  videoStarten();                         // Video-Aufnahme auf die SD-Karte
 #endif
   appBleStarten();                        // Bluetooth fuer die Roboauto-App
   webStarten();                           // WLAN + Webseite (oder Einrichtungs-WLAN)

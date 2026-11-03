@@ -20,6 +20,8 @@ static volatile int pegel = 0;
 static volatile bool doppelKlatsch = false;
 static std::atomic<int> zuhoerer{0};
 static StreamBufferHandle_t puffer = nullptr;   // Ton fuer den Live-Stream
+static StreamBufferHandle_t aufnahmePuffer = nullptr;   // Ton fuer die Video-Aufnahme (im PSRAM)
+static volatile bool aufnahmeAn = false;
 
 constexpr int BLOCK = 512;                      // 512 Werte = 32 ms bei 16 kHz
 
@@ -59,6 +61,7 @@ static void mikroAufgabe(void*) {
 
     // Hoert jemand zu? Dann den Ton weiterreichen (ist der Puffer voll, fallen alte Daten weg)
     if (zuhoerer > 0) xStreamBufferSend(puffer, ton, n * sizeof(int16_t), 0);
+    if (aufnahmeAn) xStreamBufferSend(aufnahmePuffer, ton, n * sizeof(int16_t), 0);
   }
 }
 
@@ -79,6 +82,19 @@ bool mikroStarten() {
 bool mikroDa()       { return da; }
 int  mikroPegel()    { return pegel; }
 int  mikroZuhoerer() { return zuhoerer; }
+// Video-Aufnahme: Ton sammeln (1 Sekunde Puffer im PSRAM - der interne Speicher ist knapp)
+bool mikroAufnahme(bool an) {
+  if (an && !da) return false;
+  if (an && !aufnahmePuffer) aufnahmePuffer = xStreamBufferCreateWithCaps(MIKRO_RATE * 2, 1, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+  if (!aufnahmePuffer) return false;
+  if (an) xStreamBufferReset(aufnahmePuffer);
+  aufnahmeAn = an;
+  return true;
+}
+size_t mikroAufnahmeLesen(void* ziel, size_t max) {
+  return aufnahmePuffer ? xStreamBufferReceive(aufnahmePuffer, ziel, max & ~1u, 0) : 0;
+}
+
 bool mikroDoppelKlatsch() { bool k = doppelKlatsch; doppelKlatsch = false; return k; }
 
 // ---------- Live-Ton: WAV-Datei ohne Ende (der Browser spielt sie einfach ab) ----------
