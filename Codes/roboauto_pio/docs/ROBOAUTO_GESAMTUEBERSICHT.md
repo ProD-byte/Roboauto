@@ -109,7 +109,7 @@ Befehle. Dadurch funktioniert jede neue Funktion sofort überall.
 | `main.cpp` | Hauptprogramm, verbindet alles |
 | `config.h` | alle Pins, Grenzwerte, Namen, Ports |
 | `web.cpp / web.h` | WLAN (Heim-WLAN, Einrichtung, eigenes WLAN „Roboauto-XXXX“), Webserver, Befehlsverteiler, UDP, OTA |
-| `webseite.h` | komplette Weboberfläche (HTML/CSS/JS in einer Datei), Deutsch/Englisch/Spanisch/Französisch |
+| `webseite.h` | komplette Weboberfläche (HTML/CSS/JS in einer Datei), Deutsch/Englisch |
 | `app_ble.cpp / .h` | Bluetooth-Dienst für die App |
 | `antrieb.cpp` | Motoren, Panzerlenkung, Geradeauslauf, Wende, Motortest |
 | `gyro.cpp` | MPU6050, Kalibrierung, Winkel, Neigung |
@@ -200,7 +200,7 @@ Modernes dunkles Dashboard, eine Datei, keine externen Bibliotheken:
 - **Handy hochkant:** aufgeräumt, keine Tastatur-Hinweise, Statuszeile mit Symbolen.
 - **Handy quer:** Gamepad-Ansicht – Joystick links, Knöpfe rechts, alles ohne Scrollen.
 - Scrollen geht auch auf Knöpfen; nur Halte-Knöpfe und Joystick sperren Wischen.
-- Sprachen: Deutsch, Englisch, Spanisch, Französisch.
+- Sprachen: Deutsch und Englisch.
 
 **LED-Ring-Bedeutung:**
 
