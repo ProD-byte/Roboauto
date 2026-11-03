@@ -117,11 +117,34 @@ static void videoAufgabe(void*) {
       Eintrag& e = index[eintraege++];
       memcpy(&e.id, id, 4); e.flags = 0x10; e.ort = ort - moviOrt; e.laenge = laenge;
     };
+    // An Stelle 'wo' schreiben (bis zu drei Teile hintereinander). Grosse SD-Karten sind beim internen Aufraeumen
+    // manchmal laenger als 500 ms beschaeftigt - dann gibt der SD-Treiber auf, und FatFs sperrt die Datei.
+    // Deshalb: Datei schliessen, kurz warten, neu oeffnen und dasselbe Stueck noch einmal an dieselbe Stelle.
+    int schreibfehler = 0;
+    auto schreibeAn = [&](uint32_t wo, const uint8_t* a, size_t na, const uint8_t* b, size_t nb, const uint8_t* c, size_t nc) {
+      for (int versuch = 0; versuch < 5; versuch++) {
+        if (versuch > 0) {
+          schreibfehler++;
+          Serial.printf(">> Video: Schreibfehler an Stelle %u, Versuch %d (SD-Karte beschaeftigt?)\n", (unsigned)wo, versuch + 1);
+          f.close();
+          delay(200 * versuch);
+          f = SD.open(pfad, "r+");
+          if (!f) continue;
+        }
+        if ((uint32_t)f.position() != wo && !f.seek(wo)) continue;
+        if (f.write(a, na) != na) continue;
+        if (nb && f.write(b, nb) != nb) continue;
+        if (nc && f.write(c, nc) != nc) continue;
+        return true;
+      }
+      return false;
+    };
+    static const uint8_t fuell = 0;
     auto stueck = [&](const char* id, const uint8_t* daten, uint32_t laenge) {
-      eintragen(id, laenge);
+      if (!ok) return;
       uint8_t k[8]; memcpy(k, id, 4); memcpy(k + 4, &laenge, 4);
-      uint8_t fuell = 0;
-      ok = ok && f.write(k, 8) == 8 && f.write(daten, laenge) == laenge && (!(laenge & 1) || f.write(&fuell, 1) == 1);
+      if (!schreibeAn(ort, k, 8, daten, laenge, &fuell, laenge & 1)) { ok = false; return; }
+      eintragen(id, laenge);                          // (merkt sich 'ort' = Anfang dieses Stuecks)
       ort += 8 + laenge + (laenge & 1);
     };
 
@@ -154,23 +177,24 @@ static void videoAufgabe(void*) {
     }
     laeuft = false;
 
-    // Inhaltsverzeichnis anhaengen, dann den Kopf mit den echten Werten schreiben
+    // Inhaltsverzeichnis anhaengen, dann den Kopf mit den echten Werten schreiben - auch nach einem
+    // Abbruch: so bleibt alles bis dahin Aufgenommene ein abspielbares Video
     uint32_t moviGroesse = ort - moviOrt;
-    f.write((const uint8_t*)"idx1", 4);
     uint32_t idxLaenge = eintraege * sizeof(Eintrag);
-    f.write((const uint8_t*)&idxLaenge, 4);
-    if (eintraege) f.write((const uint8_t*)index, idxLaenge);
+    uint8_t idxKopf[8]; memcpy(idxKopf, "idx1", 4); memcpy(idxKopf + 4, &idxLaenge, 4);
+    bool fertig = schreibeAn(ort, idxKopf, 8, (const uint8_t*)index, idxLaenge, nullptr, 0);
     uint32_t dateiGroesse = ort + 8 + idxLaenge;
     float fps = dauer > 0 ? bilder / dauer : 0;
     Puffer k;
     kopfBauen(k, tonAn, breite, hoehe, bilder, fps, maxBild, tonBytes, moviGroesse, dateiGroesse);
-    f.seek(0);
-    f.write(k.d, k.n);
-    f.close();
+    fertig = schreibeAn(0, k.d, k.n, nullptr, 0, nullptr, 0) && fertig;
+    if (f) f.close();
     if (index) { heap_caps_free(index); index = nullptr; indexPlatz = 0; }
     zaehler = zaehler + 1;
-    Serial.printf(">> Video gespeichert: %.1f s, %u Bilder (%.1f/s)%s%s\n", dauer, (unsigned)bilder, fps,
-                  tonAn ? ", mit Ton" : "", ok ? "" : " - ABGEBROCHEN (Karte voll?)");
+    Serial.printf(">> Video gespeichert: %.1f s, %u Bilder (%.1f/s)%s%s%s\n", dauer, (unsigned)bilder, fps,
+                  tonAn ? ", mit Ton" : "", ok ? "" : " - ABGEBROCHEN (SD-Karte antwortet nicht mehr)",
+                  fertig ? "" : " - Kopf/Index NICHT geschrieben");
+    if (schreibfehler) Serial.printf(">> Video: %d Schreibfehler unterwegs (jeweils wiederholt)\n", schreibfehler);
   }
 }
 

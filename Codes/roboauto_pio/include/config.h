@@ -243,6 +243,9 @@ constexpr int  MEDIEN_PORT        = 81;
 // --- Kamera (Sense-Board) ---
 constexpr int  KAMERA_JPEG_QUALI  = 12;          // 10 = schoen, 20 = klein und schnell
 constexpr unsigned long KAMERA_STREAM_MS = 45;   // hoechstens ca. 22 Bilder/s - die OV5640 schafft bei 640x480 gut 20
+// Hoert jemand den Live-Ton, hat der Vorrang: das Video teilt sich die (knappe) Funkstrecke sonst so
+// gierig, dass Tonstuecke verloren gehen - das klingt nach Knacken/"Schnurren".
+constexpr unsigned long KAMERA_STREAM_MIT_TON_MS = 83;   // dann hoechstens ca. 12 Bilder/s
 constexpr bool KAMERA_DREHEN      = false;       // Bild steht auf dem Kopf? -> true (dreht um 180 Grad)
 // So viel wird das Bild auf der Webseite im Uhrzeigersinn gedreht (0/90/180/270). Der Sensor kann nur
 // spiegeln, nicht um 90 Grad drehen - das macht der Browser. 0 passt fuer die OV5640 im V7

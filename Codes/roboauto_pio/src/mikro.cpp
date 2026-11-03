@@ -71,7 +71,8 @@ bool mikroStarten() {
     Serial.println(">> FEHLER: Mikrofon startet nicht");
     return false;
   }
-  puffer = xStreamBufferCreate(MIKRO_RATE, 1024);   // MIKRO_RATE Bytes = eine halbe Sekunde Ton (16 Bit)
+  // 2 Sekunden Vorrat (im PSRAM): so uebersteht der Live-Ton auch kurze Funkstoerungen ohne Luecke
+  puffer = xStreamBufferCreateWithCaps(MIKRO_RATE * 2 * 2, 1024, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
   // Stapelspeicher im PSRAM - der interne Arbeitsspeicher wird fuer WLAN, Bluetooth und Kamera gebraucht
   xTaskCreatePinnedToCoreWithCaps(mikroAufgabe, "mikro", 4096, nullptr, 3, nullptr, 0, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
   da = true;
@@ -98,11 +99,22 @@ size_t mikroAufnahmeLesen(void* ziel, size_t max) {
 bool mikroDoppelKlatsch() { bool k = doppelKlatsch; doppelKlatsch = false; return k; }
 
 // ---------- Live-Ton: WAV-Datei ohne Ende (der Browser spielt sie einfach ab) ----------
-static void wavKopf(uint8_t* k) {
-  const uint32_t rate = MIKRO_RATE, bytesProSek = MIKRO_RATE * 2, riesig = 0x7FFFFFFF;
+// G.711 mu-law (wie beim Telefon): 16 Bit -> 8 Bit, halbe Datenmenge, kaum hoerbarer Unterschied
+static uint8_t ulaw(int16_t wert) {
+  int s = wert, vorzeichen = 0;
+  if (s < 0) { s = -s; vorzeichen = 0x80; }
+  if (s > 32635) s = 32635;
+  s += 0x84;
+  int stufe = 7;
+  for (int maske = 0x4000; (s & maske) == 0 && stufe > 0; maske >>= 1) stufe--;
+  return ~(vorzeichen | (stufe << 4) | ((s >> (stufe + 3)) & 0x0F));
+}
+
+static void wavKopf(uint8_t* k, bool mulaw) {
+  const uint32_t rate = MIKRO_RATE, bytesProSek = MIKRO_RATE * (mulaw ? 1 : 2), riesig = 0x7FFFFFFF;
   memcpy(k, "RIFF", 4);       memcpy(k + 4, &riesig, 4);  memcpy(k + 8, "WAVEfmt ", 8);
   uint32_t fmtLaenge = 16;    memcpy(k + 16, &fmtLaenge, 4);
-  uint16_t pcm = 1, kanaele = 1, block = 2, bits = 16;
+  uint16_t pcm = mulaw ? 7 : 1, kanaele = 1, block = mulaw ? 1 : 2, bits = mulaw ? 8 : 16;   // 7 = mu-law
   memcpy(k + 20, &pcm, 2);    memcpy(k + 22, &kanaele, 2);
   memcpy(k + 24, &rate, 4);   memcpy(k + 28, &bytesProSek, 4);
   memcpy(k + 32, &block, 2);  memcpy(k + 34, &bits, 2);
@@ -113,17 +125,25 @@ esp_err_t mikroTonSenden(httpd_req_t* req) {
   if (!da) { httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "kein Mikrofon"); return ESP_FAIL; }
   // Der Tonpuffer hat nur einen Ausgang -> immer nur ein Zuhoerer gleichzeitig
   if (zuhoerer > 0) { httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "es hoert schon jemand zu"); return ESP_FAIL; }
+  // ?fmt=ulaw: halbe Datenmenge (die Webseite nimmt das - das 2,4-GHz-WLAN ist oft knapp)
+  char anfrage[64], fmt[8] = "";
+  if (httpd_req_get_url_query_str(req, anfrage, sizeof(anfrage)) == ESP_OK) httpd_query_key_value(anfrage, "fmt", fmt, sizeof(fmt));
+  const bool mulaw = !strcmp(fmt, "ulaw");
   httpd_resp_set_type(req, "audio/wav");
   httpd_resp_set_hdr(req, "Cache-Control", "no-store");
   uint8_t kopf[44];
-  wavKopf(kopf);
+  wavKopf(kopf, mulaw);
   esp_err_t ok = httpd_resp_send_chunk(req, (const char*)kopf, sizeof(kopf));
   xStreamBufferReset(puffer);
   zuhoerer++;
-  uint8_t daten[2048];
+  alignas(4) uint8_t daten[2048];   // ausgerichtet: wird auch als 16-Bit-Werte gelesen
   while (ok == ESP_OK) {
     size_t n = xStreamBufferReceive(puffer, daten, sizeof(daten), pdMS_TO_TICKS(500));
-    if (n > 0) ok = httpd_resp_send_chunk(req, (const char*)daten, n & ~1u);
+    if (n > 1 && mulaw) {
+      const int16_t* w = (const int16_t*)daten;
+      for (size_t i = 0; i < n / 2; i++) daten[i] = ulaw(w[i]);   // vorne ueberschreiben geht: Ziel <= Quelle
+      ok = httpd_resp_send_chunk(req, (const char*)daten, n / 2);
+    } else if (n > 0) ok = httpd_resp_send_chunk(req, (const char*)daten, n & ~1u);
   }
   zuhoerer--;
   return ok;

@@ -1267,30 +1267,31 @@ document.getElementById('k-video').addEventListener('click', () => {
 // Chrome & Co. spielen einen endlosen WAV-Strom im <audio>-Element nicht ab ("Format error").
 // Deshalb holt die Seite den Ton selbst (16 kHz, 16 Bit, mono) und spielt ihn ueber Web Audio.
 let tonCtx = null, tonStopp = null;
+// Ton kommt als mu-law (8 Bit, halbe Datenmenge) - Tabelle zum Zurueckwandeln in -1..1
+const ULAW = new Float32Array(256);
+for (let i = 0; i < 256; i++){ const u = ~i & 255, e = (u >> 4) & 7, s = (((u & 15) << 3) + 0x84 << e) - 0x84; ULAW[i] = (u & 0x80 ? -s : s) / 32768; }
 async function tonLauf(){
   tonCtx = new (window.AudioContext || window.webkitAudioContext)();
   await tonCtx.resume();
   tonStopp = new AbortController();
-  const r = await fetch(medien('/ton?t=' + Date.now()), {signal: tonStopp.signal, cache: 'no-store'});
+  const r = await fetch(medien('/ton?fmt=ulaw&t=' + Date.now()), {signal: tonStopp.signal, cache: 'no-store'});
   if (!r.ok) throw new Error(r.status === 500 ? t('Mikrofon wird schon gehört') : 'HTTP ' + r.status);
   const leser = r.body.getReader();
-  let kopf = 44, rest = null, zeit = 0;
+  let kopf = 44, zeit = 0;
   for (;;){
     const {value, done} = await leser.read();
     if (done || !tonCtx) break;
     let d = value;
-    if (rest){ const z = new Uint8Array(rest.length + d.length); z.set(rest); z.set(d, rest.length); d = z; rest = null; }
     if (kopf > 0){ const n = Math.min(kopf, d.length); d = d.subarray(n); kopf -= n; }
-    const n = d.length & ~1;
-    if (n < d.length) rest = d.slice(n);
-    if (!n) continue;
-    const roh = new DataView(d.buffer, d.byteOffset, n), anz = n / 2;
+    const anz = d.length;                                    // mu-law: ein Byte = ein Wert
+    if (!anz) continue;
     const puffer = tonCtx.createBuffer(1, anz, 16000), kanal = puffer.getChannelData(0);
-    for (let i = 0; i < anz; i++) kanal[i] = roh.getInt16(i * 2, true) / 32768;
+    for (let i = 0; i < anz; i++) kanal[i] = ULAW[d[i]];
     const quelle = tonCtx.createBufferSource();
     quelle.buffer = puffer; quelle.connect(tonCtx.destination);
     const jetzt = tonCtx.currentTime;
-    if (zeit < jetzt + 0.03 || zeit > jetzt + 0.8) zeit = jetzt + 0.15;   // Luecke oder zu viel Verzoegerung -> neu ansetzen
+    // 0,3 s Vorrat: kleine Verzoegerungen im WLAN werden so nicht gleich zur hoerbaren Luecke (Knacken)
+    if (zeit < jetzt + 0.02 || zeit > jetzt + 1.0) zeit = jetzt + 0.3;   // Luecke oder zu viel Verzoegerung -> neu ansetzen
     quelle.start(zeit); zeit += puffer.duration;
   }
 }

@@ -5,6 +5,7 @@
 #include "config.h"
 #include "kamera.h"
 #include "medien.h"
+#include "mikro.h"
 
 // ============================================================
 //  Kamera des XIAO ESP32S3 Sense (OV2640 oder OV3660).
@@ -104,7 +105,8 @@ esp_err_t kameraStreamSenden(httpd_req_t* req) {
     if (ok == ESP_OK) ok = httpd_resp_send_chunk(req, kopf, n);
     if (ok == ESP_OK) ok = httpd_resp_send_chunk(req, (const char*)fb->buf, fb->len);
     esp_camera_fb_return(fb);
-    long rest = (long)KAMERA_STREAM_MS - (long)(millis() - start);   // Bildrate begrenzen (WLAN schonen)
+    const long takt = mikroZuhoerer() > 0 ? KAMERA_STREAM_MIT_TON_MS : KAMERA_STREAM_MS;   // Ton hat Vorrang
+    long rest = takt - (long)(millis() - start);   // Bildrate begrenzen (WLAN schonen)
     if (rest > 0) delay(rest);
   }
   zuschauer--;
