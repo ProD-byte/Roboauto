@@ -10,7 +10,7 @@ bool kameraStarten();
 bool kameraDa();
 int  kameraZuschauer();      // wie viele Browser gerade das Live-Video ansehen
 
-// Aufloesung umstellen: 0 = 320x240, 1 = 640x480, 2 = 800x600
+// Aufloesung umstellen: 0 = 320x240, 1 = 640x480, 2 = 800x600, 3 = 1280x720 (HD)
 void kameraAufloesung(int stufe);
 int  kameraAufloesungStufe();
 

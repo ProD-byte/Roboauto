@@ -441,7 +441,7 @@ const char WEBSEITE[] PROGMEM = R"==(<!doctype html>
         <button id="k-ton" class="klein">&#128264; Ton</button>
         <button id="k-foto" class="klein" data-aktion="71">&#128248; Foto</button>
         <button id="k-dreh" class="klein" title="Bild 90&deg; nach links drehen">&#10226; Drehen</button>
-        <select id="k-aufl" title="Aufl&ouml;sung"><option value="0">320&times;240</option><option value="1">640&times;480</option><option value="2">800&times;600</option></select>
+        <select id="k-aufl" title="Aufl&ouml;sung"><option value="0">320&times;240</option><option value="1">640&times;480</option><option value="2">800&times;600</option><option value="3">1280&times;720 HD</option></select>
       </div>
     </div>
     <div class="karte">

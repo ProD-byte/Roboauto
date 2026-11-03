@@ -16,7 +16,8 @@ static bool da = false;
 static std::atomic<int> zuschauer{0};       // mehrere Browser = mehrere Aufgaben gleichzeitig
 static int stufe = 1;
 
-static const framesize_t GROESSEN[] = { FRAMESIZE_QVGA, FRAMESIZE_VGA, FRAMESIZE_SVGA };
+static const framesize_t GROESSEN[] = { FRAMESIZE_QVGA, FRAMESIZE_VGA, FRAMESIZE_SVGA, FRAMESIZE_HD };
+constexpr int STUFEN = sizeof(GROESSEN) / sizeof(GROESSEN[0]);
 
 bool kameraStarten() {
   camera_config_t k = {};
@@ -30,7 +31,9 @@ bool kameraStarten() {
   k.ledc_channel = LEDC_CHANNEL_7;
   k.ledc_timer   = LEDC_TIMER_3;
   k.pixel_format = PIXFORMAT_JPEG;
-  k.frame_size   = GROESSEN[stufe];
+  // Die Bildpuffer werden beim Start fuer diese Groesse angelegt -> gleich fuer die groesste Stufe (HD),
+  // sonst laufen sie beim spaeteren Umschalten ueber. Danach wird auf die normale Stufe umgestellt.
+  k.frame_size   = GROESSEN[STUFEN - 1];
   k.jpeg_quality = KAMERA_JPEG_QUALI;
   k.fb_count     = 3;                        // Live-Video und SD-Karte holen sich gleichzeitig Bilder
   k.fb_location  = CAMERA_FB_IN_PSRAM;
@@ -43,8 +46,10 @@ bool kameraStarten() {
   }
   sensor_t* s = esp_camera_sensor_get();
   if (s && KAMERA_DREHEN) { s->set_vflip(s, 1); s->set_hmirror(s, 1); }
+  if (s) s->set_framesize(s, GROESSEN[stufe]);
   da = true;
-  Serial.printf(">> Kamera bereit (Sensor %s)\n", s && s->id.PID == OV3660_PID ? "OV3660" : "OV2640");
+  camera_sensor_info_t* info = s ? esp_camera_sensor_get_info(&s->id) : nullptr;   // OV2640, OV3660, OV5640 ...
+  Serial.printf(">> Kamera bereit (Sensor %s)\n", info ? info->name : "unbekannt");
   return true;
 }
 
@@ -54,9 +59,10 @@ int  kameraAufloesungStufe() { return stufe; }
 
 void kameraAufloesung(int neu) {
   if (!da) return;
-  stufe = constrain(neu, 0, 2);
+  stufe = constrain(neu, 0, STUFEN - 1);
   sensor_t* s = esp_camera_sensor_get();
-  if (s) s->set_framesize(s, GROESSEN[stufe]);
+  int r = s ? s->set_framesize(s, GROESSEN[stufe]) : -1;
+  Serial.printf(">> Kamera: Aufloesung Stufe %d -> %s\n", stufe, r == 0 ? "ok" : "abgelehnt");
 }
 
 camera_fb_t* kameraBild() { return da ? esp_camera_fb_get() : nullptr; }
