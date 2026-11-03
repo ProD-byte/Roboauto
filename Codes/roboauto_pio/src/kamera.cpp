@@ -57,6 +57,16 @@ bool kameraDa()          { return da; }
 int  kameraZuschauer()   { return zuschauer; }
 int  kameraAufloesungStufe() { return stufe; }
 
+static int quali = KAMERA_JPEG_QUALI;
+int kameraQualitaetWert() { return quali; }
+void kameraQualitaet(int q) {
+  if (!da) return;
+  quali = constrain(q, 4, 40);
+  sensor_t* s = esp_camera_sensor_get();
+  if (s) s->set_quality(s, quali);
+  Serial.printf(">> Kamera: JPEG-Qualitaet %d\n", quali);
+}
+
 void kameraAufloesung(int neu) {
   if (!da) return;
   stufe = constrain(neu, 0, STUFEN - 1);

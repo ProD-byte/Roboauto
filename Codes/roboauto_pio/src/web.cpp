@@ -442,6 +442,7 @@ static String steuerBefehl(const String& pfad, const Param* p, int n, bool app) 
   // Kamera-Aufloesung: /kamera?aufl=0..2
   if (pfad == "/kamera") {
     if (hatParam(p, n, "aufl")) kameraAufloesung(param(p, n, "aufl").toInt());
+    if (hatParam(p, n, "quali")) kameraQualitaet(param(p, n, "quali").toInt());
     return "ok";
   }
   // SD-Karte: Ueberblick (Dateiliste und Downloads laufen ueber den Medien-Server)
@@ -708,7 +709,6 @@ void webUpdate() {
     starteOta();
 #ifdef ROBOAUTO_XIAO
     medienServerStarten();                  // Live-Video, Live-Ton, SD-Dateien auf Port 81
-    MDNS.addService("http", "tcp", MEDIEN_PORT);
 #endif
     serverLaeuft = true;
     ereignis = 1;                           // -> Ring + Piepen in main.cpp

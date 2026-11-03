@@ -1125,34 +1125,81 @@ const medien = (window.Roboauto && medienHost) ? (p => location.origin + '/medie
 const video = document.getElementById('video'), ton = new Audio();
 let videoAn = true, tonAn = false, kamDa = false, sdDa = false, letztesFoto = -1, warLernen = false;
 try { videoAn = localStorage.getItem('video') !== '0'; } catch(e){}
-// Browser: MJPEG-Strom (/stream) im <img>, fluessig und sparsam.
-// App: fortlaufend Einzelbilder (/bild) - die WebView zeigt den durchgereichten MJPEG-Strom nicht an.
+// Browser: MJPEG-Strom (/stream) direkt im <img>, fluessig und sparsam.
+// App: das <img> zeigt den durchgereichten Strom nicht an -> die Seite liest den Strom selbst (fetch) und
+// zeigt Bild fuer Bild an (so schnell wie die Kamera, ca. 20/s). Klappt das nicht, Einzelbilder (/bild).
 const videoEinzelbilder = !!(window.Roboauto && medienHost);
-let videoFehler = '', bildSchleifeLaeuft = false;
+let videoFehler = '', bildSchleifeLaeuft = false, videoStoppen = null, appStromGeht = true;
 const warte = ms => new Promise(r => setTimeout(r, ms));
+let videoVorher = '';
+function zeigeBild(daten){
+  const url = URL.createObjectURL(daten);
+  video.src = url; video.hidden = false;
+  if (videoVorher) URL.revokeObjectURL(videoVorher);   // das vorletzte Bild freigeben (das letzte wird gerade angezeigt)
+  videoVorher = url; videoFehler = '';
+}
+const LAENGE = new TextEncoder().encode('Content-Length: '), KOPFENDE = new TextEncoder().encode('\r\n\r\n');
+function suche(a, muster, ab){
+  aussen: for (let i = ab; i <= a.length - muster.length; i++){
+    for (let k = 0; k < muster.length; k++) if (a[i + k] !== muster[k]) continue aussen;
+    return i;
+  }
+  return -1;
+}
+// Liest den MJPEG-Strom: jedes Bild steht hinter "Content-Length: N" + Leerzeile. Rueckgabe: so viele Bilder
+async function stromLesen(){
+  const abbruch = new AbortController(); videoStoppen = abbruch;
+  const r = await fetch(medien('/stream?t=' + Date.now()), {signal: abbruch.signal, cache: 'no-store'});
+  if (!r.ok) throw new Error('HTTP ' + r.status + ' ' + (await r.text()).slice(0, 60));
+  const leser = r.body.getReader();
+  let puf = new Uint8Array(0), bilder = 0;
+  try {
+    while (videoAn && kamDa){
+      const {value, done} = await leser.read();
+      if (done) break;
+      const z = new Uint8Array(puf.length + value.length); z.set(puf); z.set(value, puf.length); puf = z;
+      for (;;){
+        const i = suche(puf, LAENGE, 0); if (i < 0) break;
+        const j = suche(puf, KOPFENDE, i); if (j < 0) break;
+        const n = parseInt(new TextDecoder().decode(puf.subarray(i + LAENGE.length, j)), 10);
+        if (puf.length < j + 4 + n) break;                 // Bild noch nicht vollstaendig
+        zeigeBild(new Blob([puf.slice(j + 4, j + 4 + n)], {type: 'image/jpeg'}));
+        puf = puf.slice(j + 4 + n); bilder++;
+      }
+    }
+  } finally { abbruch.abort(); videoStoppen = null; }
+  return bilder;
+}
 async function bildSchleife(){
   if (bildSchleifeLaeuft) return;
   bildSchleifeLaeuft = true;
-  let fehlerZahl = 0, vorher = '';
+  let fehlerZahl = 0, stromFehler = 0;
   while (videoAn && kamDa){
     const start = Date.now();
-    try {
+    if (appStromGeht){
+      try {
+        if (await stromLesen() === 0 && videoAn && kamDa && ++stromFehler >= 2) appStromGeht = false;   // Strom kommt nicht an
+      } catch (e) {
+        if (e.name !== 'AbortError'){ videoFehler = e.message || String(e); zeigeVideoText(); if (++stromFehler >= 3) appStromGeht = false; }
+        await warte(1000);
+      }
+      continue;
+    }
+    try {                                                  // Rueckfall: Einzelbilder nacheinander
       const r = await fetch(medien('/bild?t=' + start), {cache: 'no-store'});
       if (!r.ok) throw new Error('HTTP ' + r.status + ' ' + (await r.text()).slice(0, 60));
-      const url = URL.createObjectURL(await r.blob());
-      video.src = url; video.hidden = false;
-      if (vorher) URL.revokeObjectURL(vorher);      // das vorletzte Bild freigeben (das letzte wird gerade angezeigt)
-      vorher = url; fehlerZahl = 0; videoFehler = '';
+      zeigeBild(await r.blob());
+      fehlerZahl = 0;
     } catch (e) {
       videoFehler = e.message || String(e);
-      if (++fehlerZahl >= 3) video.hidden = true;   // erst nach mehreren Fehlschlaegen ausblenden (kein Flackern)
+      if (++fehlerZahl >= 3) video.hidden = true;          // erst nach mehreren Fehlschlaegen ausblenden (kein Flackern)
       zeigeVideoText();
       await warte(1000);
     }
-    await warte(Math.max(0, 90 - (Date.now() - start)));   // hoechstens ca. 11 Bilder pro Sekunde
+    await warte(Math.max(0, 45 - (Date.now() - start)));
   }
   video.hidden = true;
-  if (vorher) URL.revokeObjectURL(vorher);
+  if (videoVorher){ URL.revokeObjectURL(videoVorher); videoVorher = ''; }
   bildSchleifeLaeuft = false;
 }
 function zeigeVideoText(){
@@ -1161,7 +1208,7 @@ function zeigeVideoText(){
 }
 function zeigeVideo(){
   const an = videoAn && kamDa && !!medienHost;
-  if (videoEinzelbilder){ if (an) bildSchleife(); else video.hidden = true; }
+  if (videoEinzelbilder){ if (an) bildSchleife(); else { video.hidden = true; if (videoStoppen) videoStoppen.abort(); } }
   else {
     if (an && video.hidden){ video.src = medien('/stream?t=' + Date.now()); video.hidden = false; }
     if (!an && !video.hidden){ video.hidden = true; video.src = 'data:image/gif;base64,R0lGODlhAQABAAAAACw='; }   // trennt den Stream

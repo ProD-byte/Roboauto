@@ -14,6 +14,10 @@ int  kameraZuschauer();      // wie viele Browser gerade das Live-Video ansehen
 void kameraAufloesung(int stufe);
 int  kameraAufloesungStufe();
 
+// JPEG-Qualitaet 4..40 (kleiner = schoener, aber groessere Bilder = weniger Bilder pro Sekunde)
+void kameraQualitaet(int q);
+int  kameraQualitaetWert();
+
 // Ein Bild holen (JPEG) - danach unbedingt kameraBildFrei() aufrufen!
 camera_fb_t* kameraBild();
 void kameraBildFrei(camera_fb_t* bild);
