@@ -18,6 +18,11 @@ int  kameraAufloesungStufe();
 void kameraQualitaet(int q);
 int  kameraQualitaetWert();
 
+// Autofokus (nur OV5640): -1 = keiner, 0 = stellt dauernd nach, 1 = einmal scharfgestellt und fest
+int  kameraFokusArt();
+void kameraFokus(bool fest);   // fest = jetzt scharfstellen und halten, sonst wieder dauernd automatisch
+bool kameraScharf();           // meldet der Sensor "scharf"?
+
 // Ein Bild holen (JPEG) - danach unbedingt kameraBildFrei() aufrufen!
 camera_fb_t* kameraBild();
 void kameraBildFrei(camera_fb_t* bild);

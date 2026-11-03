@@ -2,6 +2,7 @@
 #include <esp_camera.h>
 #include <esp_http_server.h>
 #include <atomic>
+#include <ESP32_OV5640_AF.h>
 #include "config.h"
 #include "kamera.h"
 #include "medien.h"
@@ -16,6 +17,8 @@
 static bool da = false;
 static std::atomic<int> zuschauer{0};       // mehrere Browser = mehrere Aufgaben gleichzeitig
 static int stufe = 1;
+static int fokusArt = -1;                   // -1 = kein Autofokus, 0 = laeuft dauernd, 1 = einmal scharf und fest
+static OV5640 ov5640;
 
 static const framesize_t GROESSEN[] = { FRAMESIZE_QVGA, FRAMESIZE_VGA, FRAMESIZE_SVGA, FRAMESIZE_HD };
 constexpr int STUFEN = sizeof(GROESSEN) / sizeof(GROESSEN[0]);
@@ -49,6 +52,13 @@ bool kameraStarten() {
   if (s && KAMERA_DREHEN) { s->set_vflip(s, 1); s->set_hmirror(s, 1); }
   if (s) s->set_framesize(s, GROESSEN[stufe]);
   da = true;
+  // OV5640: Autofokus-Firmware in den Sensor laden (ca. 4 KB), dann scharfstellen lassen
+  if (s && ov5640.start(s)) {
+    unsigned long t0 = millis();
+    uint8_t r = ov5640.focusInit();
+    if (r == 0 && ov5640.autoFocusMode() == 0) fokusArt = 0;
+    Serial.printf(">> Kamera: Autofokus %s (%lu ms)\n", fokusArt == 0 ? "an" : "startet nicht", millis() - t0);
+  }
   camera_sensor_info_t* info = s ? esp_camera_sensor_get_info(&s->id) : nullptr;   // OV2640, OV3660, OV5640 ...
   Serial.printf(">> Kamera bereit (Sensor %s)\n", info ? info->name : "unbekannt");
   return true;
@@ -74,6 +84,37 @@ void kameraAufloesung(int neu) {
   sensor_t* s = esp_camera_sensor_get();
   int r = s ? s->set_framesize(s, GROESSEN[stufe]) : -1;
   Serial.printf(">> Kamera: Aufloesung Stufe %d -> %s\n", stufe, r == 0 ? "ok" : "abgelehnt");
+}
+
+// Autofokus-Befehl an den Sensor schicken (wie in der Bibliothek: erst Quittung loeschen, dann Befehl)
+static void fokusBefehl(uint8_t befehl) {
+  sensor_t* s = esp_camera_sensor_get();
+  if (!s) return;
+  s->set_reg(s, OV5640_CMD_ACK, 0xff, 0x01);
+  s->set_reg(s, OV5640_CMD_MAIN, 0xff, befehl);
+}
+
+int kameraFokusArt() { return fokusArt; }
+
+void kameraFokus(bool fest) {
+  if (fokusArt < 0) return;
+  fokusArt = fest ? 1 : 0;
+  // fest: jetzt einmal scharfstellen und die Linse dort lassen;  sonst: dauernd nachstellen
+  fokusBefehl(fest ? AF_TRIG_SINGLE_AUTO_FOCUS : AF_CONTINUE_AUTO_FOCUS);
+  Serial.printf(">> Kamera: Fokus %s\n", fest ? "einmal scharfstellen, dann fest" : "dauernd automatisch");
+}
+
+bool kameraScharf() {
+  if (fokusArt < 0) return false;
+  static unsigned long zuletzt = 0;          // Sensor hoechstens 4x pro Sekunde fragen
+  static bool scharf = false;
+  if (millis() - zuletzt > 250) {
+    zuletzt = millis();
+    // 0x10 = scharf (laut Anleitung); diese Firmware meldet nach dem Scharfstellen 0x20 - am Auto ausprobiert
+    uint8_t z = ov5640.getFWStatus();
+    scharf = z == FW_STATUS_S_FOCUSED || z == 0x20;
+  }
+  return scharf;
 }
 
 camera_fb_t* kameraBild() { return da ? esp_camera_fb_get() : nullptr; }

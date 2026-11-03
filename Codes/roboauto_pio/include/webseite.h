@@ -463,6 +463,7 @@ const char WEBSEITE[] PROGMEM = R"==(<!doctype html>
         <button id="k-foto" class="klein" data-aktion="71">&#128248; Foto</button>
         <button id="k-rec" class="klein" title="Video auf die SD-Karte aufnehmen (mit Ton, wenn Ton an ist)">&#9210; Video</button>
         <button id="k-dreh" class="klein" title="Bild 90&deg; nach links drehen">&#10226; Drehen</button>
+        <button id="k-fokus" class="klein" hidden title="Autofokus: tippen = jetzt scharfstellen und festhalten, nochmal = wieder automatisch">&#127919; Fokus</button>
         <select id="k-aufl" title="Aufl&ouml;sung"><option value="0">320&times;240</option><option value="1">640&times;480</option><option value="2">800&times;600</option><option value="3">1280&times;720 HD</option></select>
       </div>
     </div>
@@ -1089,6 +1090,9 @@ Object.assign(FR, {"Video: {0}": "Vidéo : {0}", "Verbindung abgerissen": "conne
 Object.assign(EN, {"Dateien": "Files", "📷 Fotos": "📷 Photos", "🎬 Videos": "🎬 Videos", "🧠 Lernen": "🧠 Learning", "Neueste zuerst": "Newest first", "Älteste zuerst": "Oldest first", "Name A–Z": "Name A–Z", "Größte zuerst": "Largest first", "📁 Dateien": "📁 Files", "⏺ Video": "⏺ Video", "Video": "Video", "Videos sind AVI-Dateien (MJPEG + Ton) – zum Ansehen herunterladen, z. B. mit VLC. Fotos und Videos landen in einem Ordner pro Tag.": "Videos are AVI files (MJPEG + sound) – download them to watch, e.g. with VLC. Photos and videos go into one folder per day.", "ohne Datum": "no date", "herunterladen": "download", "umbenennen": "rename", "löschen": "delete", "Neuer Name für {0}:": "New name for {0}:", "Umbenennen ging nicht: {0}": "Renaming failed: {0}", "Löschen ging nicht.": "Deleting failed.", "{0} wirklich löschen?": "Really delete {0}?", "{0} Dateien · {1}": "{0} files · {1}", "leer": "empty", "Liste konnte nicht geladen werden": "Could not load the list", "ganzen Tag löschen": "delete whole day", "Alle Dateien vom {0} löschen?": "Delete all files from {0}?", "ältere Dateien": "older files", "{0} Fotos · {1} Videos · {2} Fahrten": "{0} photos · {1} videos · {2} runs"});
 Object.assign(ES, {"Dateien": "Archivos", "📷 Fotos": "📷 Fotos", "🎬 Videos": "🎬 Vídeos", "🧠 Lernen": "🧠 Aprender", "Neueste zuerst": "Más recientes primero", "Älteste zuerst": "Más antiguos primero", "Name A–Z": "Nombre A–Z", "Größte zuerst": "Más grandes primero", "📁 Dateien": "📁 Archivos", "⏺ Video": "⏺ Vídeo", "Video": "Vídeo", "Videos sind AVI-Dateien (MJPEG + Ton) – zum Ansehen herunterladen, z. B. mit VLC. Fotos und Videos landen in einem Ordner pro Tag.": "Los vídeos son archivos AVI (MJPEG + sonido) – descárgalos para verlos, p. ej. con VLC. Fotos y vídeos se guardan en una carpeta por día.", "ohne Datum": "sin fecha", "herunterladen": "descargar", "umbenennen": "renombrar", "löschen": "borrar", "Neuer Name für {0}:": "Nuevo nombre para {0}:", "Umbenennen ging nicht: {0}": "No se pudo renombrar: {0}", "Löschen ging nicht.": "No se pudo borrar.", "{0} wirklich löschen?": "¿Borrar {0}?", "{0} Dateien · {1}": "{0} archivos · {1}", "leer": "vacío", "Liste konnte nicht geladen werden": "No se pudo cargar la lista", "ganzen Tag löschen": "borrar el día entero", "Alle Dateien vom {0} löschen?": "¿Borrar todos los archivos del {0}?", "ältere Dateien": "archivos antiguos", "{0} Fotos · {1} Videos · {2} Fahrten": "{0} fotos · {1} vídeos · {2} recorridos"});
 Object.assign(FR, {"Dateien": "Fichiers", "📷 Fotos": "📷 Photos", "🎬 Videos": "🎬 Vidéos", "🧠 Lernen": "🧠 Apprendre", "Neueste zuerst": "Plus récents d’abord", "Älteste zuerst": "Plus anciens d’abord", "Name A–Z": "Nom A–Z", "Größte zuerst": "Plus grands d’abord", "📁 Dateien": "📁 Fichiers", "⏺ Video": "⏺ Vidéo", "Video": "Vidéo", "Videos sind AVI-Dateien (MJPEG + Ton) – zum Ansehen herunterladen, z. B. mit VLC. Fotos und Videos landen in einem Ordner pro Tag.": "Les vidéos sont des fichiers AVI (MJPEG + son) – à télécharger pour les regarder, p. ex. avec VLC. Photos et vidéos vont dans un dossier par jour.", "ohne Datum": "sans date", "herunterladen": "télécharger", "umbenennen": "renommer", "löschen": "supprimer", "Neuer Name für {0}:": "Nouveau nom pour {0} :", "Umbenennen ging nicht: {0}": "Échec du renommage : {0}", "Löschen ging nicht.": "Échec de la suppression.", "{0} wirklich löschen?": "Supprimer vraiment {0} ?", "{0} Dateien · {1}": "{0} fichiers · {1}", "leer": "vide", "Liste konnte nicht geladen werden": "Impossible de charger la liste", "ganzen Tag löschen": "supprimer toute la journée", "Alle Dateien vom {0} löschen?": "Supprimer tous les fichiers du {0} ?", "ältere Dateien": "fichiers plus anciens", "{0} Fotos · {1} Videos · {2} Fahrten": "{0} photos · {1} vidéos · {2} trajets"});
+Object.assign(EN, {"Fokus": "Focus", "Fokus fest": "Focus locked"});
+Object.assign(ES, {"Fokus": "Enfoque", "Fokus fest": "Enfoque fijo"});
+Object.assign(FR, {"Fokus": "Mise au point", "Fokus fest": "Mise au point fixe"});
 Object.assign(EN, {"Kamera": "Camera", "Kamera aus": "Camera off", "keine Kamera": "no camera", "📷 Video": "📷 Video", "🔈 Ton": "🔈 Sound", "📸 Foto": "📸 Photo", "Mikrofon": "Microphone", "👏 Klatschen = Licht": "👏 Clap = lights", "2x klatschen": "clap twice", "Lernen": "Learning", "🧠 Lernen": "🧠 Learn", "SD-Karte": "SD card", "↻ Liste": "↻ Refresh", "Fahrt {0}: {1} s, {2} Bilder": "Run {0}: {1} s, {2} images", "Schreibt beim Fahren Daten und Kamerabilder auf die SD-Karte.": "Records driving data and camera images to the SD card while you drive.", "keine SD-Karte": "no SD card", "{0} von {1} MB belegt": "{0} of {1} MB used", "{0} Fahrten · {1} Fotos": "{0} runs · {1} photos", "Fahrt {0} wirklich löschen?": "Really delete run {0}?", "noch nichts gespeichert": "nothing saved yet", "Mikrofon wird schon gehört": "someone is already listening"});
 Object.assign(ES, {"Kamera": "Cámara", "Kamera aus": "Cámara apagada", "keine Kamera": "sin cámara", "📷 Video": "📷 Vídeo", "🔈 Ton": "🔈 Sonido", "📸 Foto": "📸 Foto", "Mikrofon": "Micrófono", "👏 Klatschen = Licht": "👏 Palmada = luces", "2x klatschen": "2 palmadas", "Lernen": "Aprender", "🧠 Lernen": "🧠 Aprender", "SD-Karte": "Tarjeta SD", "↻ Liste": "↻ Actualizar", "Fahrt {0}: {1} s, {2} Bilder": "Recorrido {0}: {1} s, {2} imágenes", "Schreibt beim Fahren Daten und Kamerabilder auf die SD-Karte.": "Guarda datos de conducción e imágenes de la cámara en la tarjeta SD.", "keine SD-Karte": "sin tarjeta SD", "{0} von {1} MB belegt": "{0} de {1} MB usados", "{0} Fahrten · {1} Fotos": "{0} recorridos · {1} fotos", "Fahrt {0} wirklich löschen?": "¿Borrar el recorrido {0}?", "noch nichts gespeichert": "aún no hay nada guardado", "Mikrofon wird schon gehört": "alguien ya está escuchando"});
 Object.assign(FR, {"Kamera": "Caméra", "Kamera aus": "Caméra éteinte", "keine Kamera": "pas de caméra", "📷 Video": "📷 Vidéo", "🔈 Ton": "🔈 Son", "📸 Foto": "📸 Photo", "Mikrofon": "Micro", "👏 Klatschen = Licht": "👏 Applaudir = phares", "2x klatschen": "applaudir 2x", "Lernen": "Apprendre", "🧠 Lernen": "🧠 Apprendre", "SD-Karte": "Carte SD", "↻ Liste": "↻ Actualiser", "Fahrt {0}: {1} s, {2} Bilder": "Trajet {0} : {1} s, {2} images", "Schreibt beim Fahren Daten und Kamerabilder auf die SD-Karte.": "Enregistre les données de conduite et les images de la caméra sur la carte SD.", "keine SD-Karte": "pas de carte SD", "{0} von {1} MB belegt": "{0} sur {1} Mo utilisés", "{0} Fahrten · {1} Fotos": "{0} trajets · {1} photos", "Fahrt {0} wirklich löschen?": "Supprimer vraiment le trajet {0} ?", "noch nichts gespeichert": "rien d’enregistré", "Mikrofon wird schon gehört": "quelqu’un écoute déjà"});
@@ -1291,7 +1295,10 @@ async function tonLauf(){
     quelle.buffer = puffer; quelle.connect(tonCtx.destination);
     const jetzt = tonCtx.currentTime;
     // 0,3 s Vorrat: kleine Verzoegerungen im WLAN werden so nicht gleich zur hoerbaren Luecke (Knacken)
-    if (zeit < jetzt + 0.02 || zeit > jetzt + 1.0) zeit = jetzt + 0.3;   // Luecke oder zu viel Verzoegerung -> neu ansetzen
+    if (zeit < jetzt + 0.02 || zeit > jetzt + 1.0){             // Luecke oder zu viel Verzoegerung -> neu ansetzen
+      zeit = jetzt + 0.3;
+      for (let i = 0, m = Math.min(anz, 160); i < m; i++) kanal[i] *= i / m;   // 10 ms weich einblenden statt Knack
+    }
     quelle.start(zeit); zeit += puffer.duration;
   }
 }
@@ -1326,6 +1333,11 @@ document.getElementById('k-dreh').addEventListener('click', () => {
   fetch('/einstellungen?kamDreh=' + neu).catch(()=>{});
 });
 document.getElementById('k-aufl').addEventListener('change', e => fetch('/kamera?aufl=' + e.target.value).catch(()=>{}));
+let afArt = -1;
+document.getElementById('k-fokus').addEventListener('click', () => {
+  afArt = afArt === 1 ? 0 : 1;
+  fetch('/kamera?fokus=' + afArt).catch(()=>{});
+});
 
 async function sdListe(){
   try{
@@ -1480,6 +1492,12 @@ function zeigeSense(s){
   if (document.activeElement !== aufl) aufl.value = s.aufl;
   aufl.disabled = !s.kam;
   document.getElementById('k-foto').disabled = !s.kam || !s.sd;
+  // Autofokus (nur OV5640): "Fokus" = stellt dauernd nach, "Fokus fest" = einmal scharfgestellt; Haken = scharf
+  const fk = document.getElementById('k-fokus');
+  afArt = s.af === undefined ? -1 : s.af;
+  fk.hidden = afArt < 0;
+  fk.classList.toggle('an', afArt === 1);
+  fk.textContent = '🎯 ' + (afArt === 1 ? t('Fokus fest') : t('Fokus')) + (s.afok ? ' ✓' : '');
   if (einst.kamDreh !== undefined) zeigeDrehung(einst.kamDreh);
   document.getElementById('k-ton').disabled = !s.mik;
   document.getElementById('pegel').style.width = (s.mik ? s.pegel : 0) + '%';

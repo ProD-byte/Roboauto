@@ -413,10 +413,10 @@ static String statusJson() {
   snprintf(json + n - 1, sizeof(json) - n + 1,
            ",\"kam\":%d,\"aufl\":%d,\"mik\":%d,\"pegel\":%d,\"klatsch\":%d,\"sd\":%d,"
            "\"lernen\":%d,\"fahrt\":%d,\"bilder\":%d,\"lernsek\":%.0f,\"foto\":%d,\"medien\":%d,"
-           "\"vid\":%d,\"vidsek\":%.0f,\"vidton\":%d,\"vidz\":%d}",
+           "\"vid\":%d,\"vidsek\":%.0f,\"vidton\":%d,\"vidz\":%d,\"af\":%d,\"afok\":%d}",
            kameraDa(), kameraAufloesungStufe(), mikroDa(), mikroPegel(), klatschAn, karteDa(),
            lernenAktiv(), lernenFahrt(), lernenBilder(), lernenSekunden(), lernenLetztesFoto(), MEDIEN_PORT,
-           videoLaeuft(), videoSekunden(), videoMitTon(), videoZaehler());
+           videoLaeuft(), videoSekunden(), videoMitTon(), videoZaehler(), kameraFokusArt(), kameraScharf());
 #else
   (void)n;
 #endif
@@ -453,6 +453,7 @@ static String steuerBefehl(const String& pfad, const Param* p, int n, bool app) 
   if (pfad == "/kamera") {
     if (hatParam(p, n, "aufl")) kameraAufloesung(param(p, n, "aufl").toInt());
     if (hatParam(p, n, "quali")) kameraQualitaet(param(p, n, "quali").toInt());
+    if (hatParam(p, n, "fokus")) kameraFokus(param(p, n, "fokus") == "1");   // 1 = einmal scharf + fest, 0 = automatisch
     return "ok";
   }
   // SD-Karte: Ueberblick (Dateiliste und Downloads laufen ueber den Medien-Server)

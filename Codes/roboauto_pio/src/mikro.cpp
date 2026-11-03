@@ -29,17 +29,21 @@ static void mikroAufgabe(void*) {
   static int16_t ton[BLOCK];
   bool laut = false;
   unsigned long leiseSeit = 0, ersterKlatsch = 0;
-  int32_t mitte = 0;                            // Gleichanteil (das Mikro liefert einen kleinen Versatz)
+  // Gleichanteil und langsames Wandern des Mikros entfernen: Hochpass (ca. 15 Hz), Wert fuer Wert.
+  // (Frueher wurde der Versatz nur einmal pro Block korrigiert - das gab alle 32 ms einen kleinen Sprung,
+  // zu hoeren als Schnurren/Knarzen.)
+  float xAlt = 0, yAlt = 0;
   for (;;) {
     size_t n = i2s.readBytes((char*)ton, sizeof(ton)) / sizeof(int16_t);
     if (n == 0) { delay(5); continue; }
 
     // Lautstaerke: Effektivwert -> grob logarithmisch auf 0..100
-    int64_t summe = 0, summeQ = 0;
-    for (size_t i = 0; i < n; i++) summe += ton[i];
-    mitte += ((int32_t)(summe / (int64_t)n) - mitte) / 8;
+    int64_t summeQ = 0;
     for (size_t i = 0; i < n; i++) {
-      int32_t v = (ton[i] - mitte) * MIKRO_VERSTAERKUNG;
+      float x = ton[i];
+      yAlt = x - xAlt + 0.994f * yAlt;
+      xAlt = x;
+      int32_t v = (int32_t)lroundf(yAlt * MIKRO_VERSTAERKUNG);
       v = constrain(v, -32768, 32767);
       ton[i] = v;
       summeQ += (int64_t)v * v;
