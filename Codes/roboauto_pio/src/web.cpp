@@ -22,6 +22,7 @@
 #include "balance.h"
 #include "gyro.h"
 #include "einstellungen.h"
+#include "neustart.h"
 #ifdef ROBOAUTO_XIAO
 #include "kamera.h"
 #include "mikro.h"
@@ -484,10 +485,14 @@ static String steuerBefehl(const String& pfad, const Param* p, int n, bool app) 
   if (pfad == "/verlauf") return akkuVerlaufJson();
   // Fuer die App: ueber welche Adresse ist das Auto im WLAN erreichbar?
   if (pfad == "/info") {
+    if (param(p, n, "abstuerzeLoeschen") == "1") neustartZaehlerLoeschen();
     bool da = webWlanDa();
     return String("{\"name\":\"") + WEB_NAME + "\",\"ble\":\"" + autoName() + "\",\"wlan\":" + (da ? 1 : 0) +
            ",\"ip\":\"" + (da ? WiFi.localIP().toString() : String("")) + "\",\"fw\":" + autoUpdateBuild() +
-           ",\"udp\":" + APP_UDP_PORT + ",\"board\":\"" + BOARD_NAME + "\"}";   // board: welche Oberflaeche die App zeigt
+           ",\"udp\":" + APP_UDP_PORT + ",\"board\":\"" + BOARD_NAME + "\"" +   // board: welche Oberflaeche die App zeigt
+           // Neustart-Grund, Laufzeit in s und gezaehlte Abstuerze (Webseite: Einstellungen > System)
+           ",\"rst\":" + neustartGrund() + ",\"lauf\":" + (millis() / 1000) +
+           ",\"abst\":" + neustartAbstuerze() + ",\"abstGrund\":" + neustartLetzterAbsturz() + "}";
   }
   return "?";
 }

@@ -43,6 +43,7 @@
 #include "aufnahme.h"
 #include "balance.h"
 #include "einstellungen.h"
+#include "neustart.h"
 #include "ledkette.h"
 #ifdef ROBOAUTO_XIAO
 #include "kamera.h"
@@ -92,6 +93,7 @@ void setup() {
   Serial.setTxTimeoutMs(0);
   delay(1000);
 
+  neustartMerken();                       // Grund des Starts merken, Abstuerze mitzaehlen (Webseite: System)
   autoUpdateStart();                      // nach einem Auto-Update: startet die neue Version sauber? sonst zurueck
   einstellungenLaden();                   // gespeicherte Einstellungen (vor allem anderen)
   antriebStarten();
@@ -120,8 +122,8 @@ void setup() {
 #else
   Serial.println("=== Roboauto - Schritt 40: eigene Roboauto-App statt Dabble ===");
 #endif
-  Serial.printf("Grund fuer Neustart: %d (1=Einschalten, 4=Absturz, 9=Spannungseinbruch)\n",
-                (int)esp_reset_reason());
+  Serial.printf("Grund fuer Neustart: %d (1=Einschalten, 4=Absturz, 6=Watchdog, 9=Spannungseinbruch) - Abstuerze bisher: %d\n",
+                neustartGrund(), neustartAbstuerze());
 }
 
 void loop() {

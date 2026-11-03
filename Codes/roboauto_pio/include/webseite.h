@@ -380,6 +380,7 @@ const char WEBSEITE[] PROGMEM = R"==(<!doctype html>
     <div class="pille"><span class="t" data-ico="&#128246;">WLAN</span><b id="wlan">-</b></div>
     <div class="pille nurpc"><span class="t">Motoren L / R</span><b id="mot">-</b></div>
     <div class="pille upd" id="upd-pille" hidden>&#11014;&#65039; <span>Update</span></div>
+    <div class="pille" id="absturz-pille" hidden style="cursor:pointer;border-color:#e0892a;color:#ffc27a">&#9888;&#65039; <span>Absturz</span></div>
   </div>
   <button id="b-einst" title="Einstellungen">&#9881;&#65039; <span>Einstellungen</span></button>
   <select id="b-sprache" class="sprachwahl" title="Sprache / Language / Idioma / Langue"><option value="de">&#127760; Deutsch</option><option value="en">&#127760; English</option><option value="es">&#127760; Espa&ntilde;ol</option><option value="fr">&#127760; Fran&ccedil;ais</option></select>
@@ -584,6 +585,7 @@ const char WEBSEITE[] PROGMEM = R"==(<!doctype html>
     <div class="karte" style="grid-column:1/-1;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:space-between">
       <h3 style="margin:0">&#128421;&#65039; System</h3>
       <span id="e-status"></span>
+      <span class="leise" id="sys-neustart" style="flex-basis:100%;font-size:13px"></span>
       <div class="reihe" style="flex:0 1 auto">
         <select class="sprachwahl" title="Sprache / Language / Idioma / Langue"><option value="de">&#127760; Deutsch</option><option value="en">&#127760; English</option><option value="es">&#127760; Espa&ntilde;ol</option><option value="fr">&#127760; Fran&ccedil;ais</option></select>
         <button class="klein" onclick="location.href='/wlan'">&#128246; WLAN &auml;ndern</button>
@@ -1055,6 +1057,10 @@ Object.assign(EN, {"Kamera": "Camera", "Kamera aus": "Camera off", "keine Kamera
 Object.assign(ES, {"Kamera": "Cámara", "Kamera aus": "Cámara apagada", "keine Kamera": "sin cámara", "📷 Video": "📷 Vídeo", "🔈 Ton": "🔈 Sonido", "📸 Foto": "📸 Foto", "Mikrofon": "Micrófono", "👏 Klatschen = Licht": "👏 Palmada = luces", "2x klatschen": "2 palmadas", "Lernen": "Aprender", "🧠 Lernen": "🧠 Aprender", "SD-Karte": "Tarjeta SD", "↻ Liste": "↻ Actualizar", "Fahrt {0}: {1} s, {2} Bilder": "Recorrido {0}: {1} s, {2} imágenes", "Schreibt beim Fahren Daten und Kamerabilder auf die SD-Karte.": "Guarda datos de conducción e imágenes de la cámara en la tarjeta SD.", "keine SD-Karte": "sin tarjeta SD", "{0} von {1} MB belegt": "{0} de {1} MB usados", "{0} Fahrten · {1} Fotos": "{0} recorridos · {1} fotos", "Fahrt {0} wirklich löschen?": "¿Borrar el recorrido {0}?", "noch nichts gespeichert": "aún no hay nada guardado", "Mikrofon wird schon gehört": "alguien ya está escuchando"});
 Object.assign(FR, {"Kamera": "Caméra", "Kamera aus": "Caméra éteinte", "keine Kamera": "pas de caméra", "📷 Video": "📷 Vidéo", "🔈 Ton": "🔈 Son", "📸 Foto": "📸 Photo", "Mikrofon": "Micro", "👏 Klatschen = Licht": "👏 Applaudir = phares", "2x klatschen": "applaudir 2x", "Lernen": "Apprendre", "🧠 Lernen": "🧠 Apprendre", "SD-Karte": "Carte SD", "↻ Liste": "↻ Actualiser", "Fahrt {0}: {1} s, {2} Bilder": "Trajet {0} : {1} s, {2} images", "Schreibt beim Fahren Daten und Kamerabilder auf die SD-Karte.": "Enregistre les données de conduite et les images de la caméra sur la carte SD.", "keine SD-Karte": "pas de carte SD", "{0} von {1} MB belegt": "{0} sur {1} Mo utilisés", "{0} Fahrten · {1} Fotos": "{0} trajets · {1} photos", "Fahrt {0} wirklich löschen?": "Supprimer vraiment le trajet {0} ?", "noch nichts gespeichert": "rien d’enregistré", "Mikrofon wird schon gehört": "quelqu’un écoute déjà"});
 /*/XIAO*/
+// Neustart-Anzeige (beide Autos)
+Object.assign(EN, {"Absturz": "Crash", "Einschalten": "power on", "Reset-Taste": "reset button", "Neustart (Software/Update)": "restart (software/update)", "Absturz (Programmfehler)": "crash (program error)", "Absturz (Watchdog)": "crash (watchdog)", "Aufwachen": "wake-up", "Spannungseinbruch (Akku/Motoren?)": "voltage drop (battery/motors?)", "Neustart über USB": "restart via USB", "unbekannt ({0})": "unknown ({0})", "{0} s": "{0} s", "{0} min": "{0} min", "{0} h": "{0} h", "Letzter Start: {0} · läuft seit {1}": "Last start: {0} · running for {1}", "Abstürze gezählt: {0} (zuletzt: {1})": "Crashes counted: {0} (last: {1})", "Zähler löschen": "reset counter"});
+Object.assign(ES, {"Absturz": "Fallo", "Einschalten": "encendido", "Reset-Taste": "botón reset", "Neustart (Software/Update)": "reinicio (software/actualización)", "Absturz (Programmfehler)": "fallo (error de programa)", "Absturz (Watchdog)": "fallo (watchdog)", "Aufwachen": "despertar", "Spannungseinbruch (Akku/Motoren?)": "caída de tensión (¿batería/motores?)", "Neustart über USB": "reinicio por USB", "unbekannt ({0})": "desconocido ({0})", "{0} s": "{0} s", "{0} min": "{0} min", "{0} h": "{0} h", "Letzter Start: {0} · läuft seit {1}": "Último arranque: {0} · funcionando desde hace {1}", "Abstürze gezählt: {0} (zuletzt: {1})": "Fallos contados: {0} (último: {1})", "Zähler löschen": "borrar contador"});
+Object.assign(FR, {"Absturz": "Plantage", "Einschalten": "mise sous tension", "Reset-Taste": "bouton reset", "Neustart (Software/Update)": "redémarrage (logiciel/mise à jour)", "Absturz (Programmfehler)": "plantage (erreur de programme)", "Absturz (Watchdog)": "plantage (watchdog)", "Aufwachen": "réveil", "Spannungseinbruch (Akku/Motoren?)": "chute de tension (batterie/moteurs ?)", "Neustart über USB": "redémarrage par USB", "unbekannt ({0})": "inconnu ({0})", "{0} s": "{0} s", "{0} min": "{0} min", "{0} h": "{0} h", "Letzter Start: {0} · läuft seit {1}": "Dernier démarrage : {0} · en marche depuis {1}", "Abstürze gezählt: {0} (zuletzt: {1})": "Plantages comptés : {0} (dernier : {1})", "Zähler löschen": "remettre à zéro"});
 const SPRACHEN = {de: null, en: EN, es: ES, fr: FR};
 let sprache = 'de';
 // Beim ersten Besuch: Sprache des Handys/Browsers, sonst Englisch
@@ -1359,5 +1365,38 @@ async function status(){
   setTimeout(status, 250);   // 4x pro Sekunde - fluessigere Live-Anzeigen
 }
 status();
+
+// ---------- Neustart-Grund und Abstuerze (Einstellungen > System, Warn-Pille oben) ----------
+const NEUSTART = {1: 'Einschalten', 2: 'Reset-Taste', 3: 'Neustart (Software/Update)', 4: 'Absturz (Programmfehler)',
+                  5: 'Absturz (Watchdog)', 6: 'Absturz (Watchdog)', 7: 'Absturz (Watchdog)', 8: 'Aufwachen',
+                  9: 'Spannungseinbruch (Akku/Motoren?)', 11: 'Neustart über USB', 12: 'Neustart über USB'};
+const ABSTURZ = [4, 5, 6, 7, 9];
+function grundText(g){ return t(NEUSTART[g] || 'unbekannt ({0})', g); }
+function dauerText(s){ return s < 120 ? t('{0} s', s) : s < 7200 ? t('{0} min', Math.round(s / 60)) : t('{0} h', (s / 3600).toFixed(1)); }
+async function zeigeNeustart(){
+  try {
+    const i = await (await fetch('/info')).json();
+    if (i.rst === undefined) return;
+    const absturz = ABSTURZ.includes(i.rst);
+    let text = t('Letzter Start: {0} · läuft seit {1}', grundText(i.rst), dauerText(i.lauf));
+    if (i.abst > 0) text += ' · ' + t('Abstürze gezählt: {0} (zuletzt: {1})', i.abst, grundText(i.abstGrund));
+    const z = document.getElementById('sys-neustart');
+    z.textContent = text;
+    if (i.abst > 0){
+      const k = document.createElement('a'); k.href = '#'; k.textContent = ' ' + t('Zähler löschen');
+      k.addEventListener('click', e => { e.preventDefault(); fetch('/info?abstuerzeLoeschen=1').then(zeigeNeustart); });
+      z.appendChild(k);
+    }
+    const pille = document.getElementById('absturz-pille');
+    pille.hidden = !absturz;
+    pille.title = text;
+  } catch(e){}
+}
+document.getElementById('absturz-pille').addEventListener('click', () => {
+  const d = document.getElementById('einst'); d.open = true;
+  document.getElementById('sys-neustart').scrollIntoView({behavior: 'smooth', block: 'center'});
+});
+zeigeNeustart();
+setInterval(zeigeNeustart, 60000);
 </script>
 </body></html>)==";
