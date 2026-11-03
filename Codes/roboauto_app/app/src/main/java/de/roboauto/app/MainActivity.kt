@@ -112,11 +112,17 @@ class MainActivity : ComponentActivity(), BleVerbindung.Ereignisse, WlanVerbindu
             .build()
         web.settings.javaScriptEnabled = true
         web.settings.domStorageEnabled = true          // Sprache wird im localStorage gemerkt
-        // XIAO: Video, Ton und SD-Dateien kommen per http direkt vom Auto (die Seite selbst ist https)
+        // XIAO: Video, Ton und SD-Dateien holt die App selbst und reicht sie unter .../medien/... durch
+        // (ein direkter http-Zugriff der https-Seite ins Heimnetz wird von der WebView blockiert -> Video flackerte nur)
         web.settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
         web.webViewClient = object : WebViewClient() {
-            override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? =
-                lader.shouldInterceptRequest(request.url)
+            override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? {
+                val url = request.url
+                val pfad = url.encodedPath ?: ""
+                if (url.host == "appassets.androidplatform.net" && pfad.startsWith("/medien/"))
+                    return wlan.medien(pfad.removePrefix("/medien") + (url.encodedQuery?.let { "?$it" } ?: ""))
+                return lader.shouldInterceptRequest(url)
+            }
 
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                 val url = request.url

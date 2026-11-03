@@ -7,6 +7,8 @@ import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.webkit.WebResourceResponse
+import java.io.ByteArrayInputStream
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.HttpURLConnection
@@ -22,6 +24,10 @@ import java.util.concurrent.atomic.AtomicReference
  * Browser-Sicherheitsregeln. Das Auto wird per mDNS gefunden (es meldet sich als "roboauto").
  */
 class WlanVerbindung(ctx: Context, private val ereignis: Ereignisse) {
+
+    companion object {
+        const val MEDIEN_PORT = 81                       // wie MEDIEN_PORT in der Firmware (config.h)
+    }
 
     interface Ereignisse {
         fun wlanGefunden(name: String, host: String)
@@ -69,6 +75,33 @@ class WlanVerbindung(ctx: Context, private val ereignis: Ereignisse) {
             v.disconnect()
         }
     }
+
+    /**
+     * XIAO: Live-Video, Live-Ton und SD-Dateien vom Medien-Server des Autos (Port 81) an die Seite durchreichen.
+     * Die Seite kommt von https://appassets... - einen direkten http-Zugriff ins Heimnetz blockiert die WebView
+     * (gemischte Inhalte / privates Netz). Ueber die App ist es dieselbe Adresse wie die Seite.
+     * Laeuft im Hintergrund-Faden der WebView; Video und Ton werden fortlaufend weitergereicht.
+     */
+    fun medien(pfad: String): WebResourceResponse {
+        val h = host?.substringBefore(':') ?: return leer(503, "nicht ueber WLAN verbunden")
+        return try {
+            val v = URL("http://$h:$MEDIEN_PORT$pfad").openConnection() as HttpURLConnection
+            v.connectTimeout = 3000
+            v.readTimeout = 15000                        // Ton/Video: so lange darf eine Pause zwischen zwei Paketen sein
+            val code = v.responseCode
+            // vollstaendiger Typ - beim Video steht darin die "boundary", an der die Einzelbilder getrennt werden
+            val typ = v.contentType ?: "application/octet-stream"
+            val daten = if (code < 400) v.inputStream else (v.errorStream ?: ByteArrayInputStream(ByteArray(0)))
+            WebResourceResponse(typ, null, code, v.responseMessage ?: "OK",
+                mapOf("Cache-Control" to "no-store", "Access-Control-Allow-Origin" to "*"), daten)
+        } catch (e: Exception) {
+            leer(502, "Auto nicht erreichbar")
+        }
+    }
+
+    private fun leer(code: Int, grund: String) =
+        WebResourceResponse("text/plain", "utf-8", code, grund, mapOf("Access-Control-Allow-Origin" to "*"),
+            ByteArrayInputStream(grund.toByteArray()))
 
     /** Ist unter dieser Adresse ein Roboauto? Antwort von /info oder null. */
     fun pruefen(h: String, fertig: (String?) -> Unit) {

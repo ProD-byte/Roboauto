@@ -1110,7 +1110,11 @@ let medienPort = 81;
 // In der Roboauto-App ist location.hostname die App selbst - die App nennt die Adresse des Autos
 // (per Bluetooth gibt es keine: dann kein Video/Ton, dafuer ist die Funkverbindung zu duenn)
 const medienHost = (window.Roboauto && Roboauto.host) ? Roboauto.host() : location.hostname;
-const medien = p => 'http://' + medienHost + ':' + medienPort + p;
+// Direkte Adresse beim Auto - fuer Links, die in einem eigenen Browserfenster aufgehen (Downloads)
+const medienLink = p => 'http://' + medienHost + ':' + medienPort + p;
+// Video, Ton, Vorschaubilder und Listen: in der App reicht die App sie durch (gleiche https-Adresse
+// wie die Seite - ein direkter http-Zugriff ins Heimnetz wird von der WebView blockiert)
+const medien = (window.Roboauto && medienHost) ? (p => location.origin + '/medien' + p) : medienLink;
 const video = document.getElementById('video'), ton = new Audio();
 let videoAn = true, tonAn = false, kamDa = false, sdDa = false, letztesFoto = -1, warLernen = false;
 try { videoAn = localStorage.getItem('video') !== '0'; } catch(e){}
@@ -1215,8 +1219,8 @@ async function sdListe(){
     for (const n of fahrten){
       const z = document.createElement('div'); z.className = 'sdzeile';
       const nr = parseInt(n.split('_')[1], 10);
-      z.innerHTML = '<span>&#129504; ' + n + '</span><a href="' + medien('/datei?pfad=/lernen/' + n + '/daten.csv') + '">CSV</a>'
-                  + '<a href="' + medien('/dateien?pfad=/lernen/' + n) + '" target="_blank">&#128193;</a><span class="weg" title="l&ouml;schen" style="flex:none">&#10005;</span>';
+      z.innerHTML = '<span>&#129504; ' + n + '</span><a href="' + medienLink('/datei?pfad=/lernen/' + n + '/daten.csv') + '">CSV</a>'
+                  + '<a href="' + medienLink('/dateien?pfad=/lernen/' + n) + '" target="_blank">&#128193;</a><span class="weg" title="l&ouml;schen" style="flex:none">&#10005;</span>';
       z.querySelector('.weg').addEventListener('click', async () => {
         if (!confirm(t('Fahrt {0} wirklich löschen?', nr))) return;
         await fetch(medien('/datei?pfad=/lernen/' + n + '&weg=1')).catch(()=>{});
@@ -1226,8 +1230,8 @@ async function sdListe(){
     }
     const bilder = (await (await fetch(medien('/dateien?pfad=/fotos'))).json()).filter(f => !f.o).map(f => f.n).sort().reverse().slice(0, 12);
     for (const n of bilder){
-      const a = document.createElement('a'); a.href = medien('/datei?pfad=/fotos/' + n); a.target = '_blank';
-      a.innerHTML = '<img loading="lazy" alt="' + n + '" src="' + a.href + '">';
+      const a = document.createElement('a'); a.href = medienLink('/datei?pfad=/fotos/' + n); a.target = '_blank';
+      a.innerHTML = '<img loading="lazy" alt="' + n + '" src="' + medien('/datei?pfad=/fotos/' + n) + '">';
       fotos.appendChild(a);
     }
     if (!fahrten.length && !bilder.length) liste.innerHTML = '<span class="hinweis" style="margin:0;text-align:left">' + t('noch nichts gespeichert') + '</span>';
