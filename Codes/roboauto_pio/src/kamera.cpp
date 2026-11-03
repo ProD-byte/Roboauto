@@ -71,7 +71,6 @@ static const char* STREAM_KOPF  = "Content-Type: image/jpeg\r\nContent-Length: %
 esp_err_t kameraStreamSenden(httpd_req_t* req) {
   if (!da) { httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "keine Kamera"); return ESP_FAIL; }
   httpd_resp_set_type(req, STREAM_TYP);
-  httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
   httpd_resp_set_hdr(req, "Cache-Control", "no-store");
   zuschauer++;
   esp_err_t ok = ESP_OK;
@@ -96,7 +95,6 @@ esp_err_t kameraBildSenden(httpd_req_t* req) {
   camera_fb_t* fb = kameraBild();
   if (!fb) { httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "kein Bild"); return ESP_FAIL; }
   httpd_resp_set_type(req, "image/jpeg");
-  httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
   httpd_resp_set_hdr(req, "Content-Disposition", "inline; filename=roboauto.jpg");
   esp_err_t ok = httpd_resp_send(req, (const char*)fb->buf, fb->len);
   kameraBildFrei(fb);

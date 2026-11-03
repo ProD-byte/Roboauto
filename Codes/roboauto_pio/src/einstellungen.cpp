@@ -11,6 +11,11 @@ static void motorStandardwerte() {
   e.motorLInv    = MOTOR_L_INVERTIERT;
   e.motorRInv    = MOTOR_R_INVERTIERT;
   e.motorTausch  = false;
+#ifdef ROBOAUTO_XIAO
+  e.kamDreh      = KAMERA_DREHUNG;        // nur der XIAO hat eine Kamera
+#else
+  e.kamDreh      = 0;
+#endif
 }
 
 static void standardwerte() {
@@ -52,6 +57,7 @@ void einstellungenLaden() {
   e.lautstaerke  = p.getInt("laut", e.lautstaerke);
   e.autoUpdate   = p.getBool("autoUpd", e.autoUpdate);
   e.disco        = p.getBool("disco", e.disco);
+  e.kamDreh      = p.getInt("kamDreh", e.kamDreh);
   p.getString("name", e.name, sizeof(e.name));   // fehlt -> bleibt leer
   p.end();
 }
@@ -75,6 +81,7 @@ void einstellungenSpeichern() {
   p.putInt("laut", e.lautstaerke);
   p.putBool("autoUpd", e.autoUpdate);
   p.putBool("disco", e.disco);
+  p.putInt("kamDreh", e.kamDreh);
   p.putString("name", e.name);
   p.end();
 }
@@ -124,21 +131,22 @@ bool einstellungSetzen(const String& name, const String& wert) {
   else if (name == "lautstaerke")  e.lautstaerke  = constrain(i, 5, 100);
   else if (name == "autoUpdate")   e.autoUpdate   = i != 0;
   else if (name == "disco")        e.disco        = i != 0;
+  else if (name == "kamDreh")      e.kamDreh      = ((i % 360 + 360) % 360) / 90 * 90;
   else if (name == "name")         setzeName(wert);
   else return false;
   return true;
 }
 
 String einstellungenJson() {
-  char json[512];
+  char json[640];
   snprintf(json, sizeof(json),
            "{\"tempo\":%d,\"lenkung\":%d,\"lenkungStand\":%d,\"geradeaus\":%d,\"crash\":%d,"
            "\"crashG\":%.1f,\"ringHell\":%d,\"lichtHell\":%d,\"toene\":%d,\"figurGroesse\":%d,"
-           "\"motorL\":%d,\"motorR\":%d,\"motorTausch\":%d,\"lautstaerke\":%d,\"autoUpdate\":%d,\"disco\":%d,"
+           "\"motorL\":%d,\"motorR\":%d,\"motorTausch\":%d,\"lautstaerke\":%d,\"autoUpdate\":%d,\"disco\":%d,\"kamDreh\":%d,"
            "\"name\":\"%s\",\"autoName\":\"%s\"}",
            e.tempo, e.lenkung, e.lenkungStand, e.geradeaus, e.crash,
            e.crashG, e.ringHell, e.lichtHell, e.toene, e.figurGroesse,
-           e.motorLInv, e.motorRInv, e.motorTausch, e.lautstaerke, e.autoUpdate, e.disco,
+           e.motorLInv, e.motorRInv, e.motorTausch, e.lautstaerke, e.autoUpdate, e.disco, e.kamDreh,
            e.name, autoName());
   return String(json);
 }

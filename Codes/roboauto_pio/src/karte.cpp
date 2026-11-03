@@ -158,7 +158,6 @@ static bool holePfad(httpd_req_t* req, char* pfad, size_t groesse, bool* loesche
 // /dateien?pfad=/lernen  ->  [{"n":"fahrt_0001","g":0,"o":1}, ...]   (o = Ordner)
 esp_err_t karteListeSenden(httpd_req_t* req) {
   char pfad[160];
-  httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
   if (!da) { httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "keine SD-Karte"); return ESP_FAIL; }
   if (!holePfad(req, pfad, sizeof(pfad))) { httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "pfad?"); return ESP_FAIL; }
   File d = SD.open(pfad);
@@ -204,7 +203,6 @@ static bool loescheAlles(const char* pfad) {
 esp_err_t karteDateiSenden(httpd_req_t* req) {
   char pfad[160];
   bool loeschen = false;
-  httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
   if (!da) { httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "keine SD-Karte"); return ESP_FAIL; }
   if (!holePfad(req, pfad, sizeof(pfad), &loeschen) || strcmp(pfad, "/") == 0) {
     httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "pfad?");

@@ -25,6 +25,7 @@ struct Einstellungen {
   bool disco;            // Lichter blitzen bei Musik im Takt       // automatisch neue Versionen von GitHub installieren
   int  lautstaerke;      // Buzzer-Lautstaerke in Prozent (5..100)
   bool motorTausch;      // Motoren an den falschen Ausgaengen -> links/rechts tauschen
+  int  kamDreh;          // Kamerabild drehen: 0/90/180/270 Grad im Uhrzeigersinn (haengt am Einbau)
   char name[17];         // eigener Name ("" = Chip-Nummer) -> "Roboauto-Blitz". Gilt nach einem Neustart.
 };
 

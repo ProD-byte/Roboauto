@@ -96,7 +96,6 @@ esp_err_t mikroTonSenden(httpd_req_t* req) {
   // Der Tonpuffer hat nur einen Ausgang -> immer nur ein Zuhoerer gleichzeitig
   if (zuhoerer > 0) { httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "es hoert schon jemand zu"); return ESP_FAIL; }
   httpd_resp_set_type(req, "audio/wav");
-  httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
   httpd_resp_set_hdr(req, "Cache-Control", "no-store");
   uint8_t kopf[44];
   wavKopf(kopf);

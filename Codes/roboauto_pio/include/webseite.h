@@ -348,7 +348,9 @@ const char WEBSEITE[] PROGMEM = R"==(<!doctype html>
   .kamraster .knoepfe{grid-template-columns:1fr}
   .kamraster .gruppe{display:flex;flex-direction:column;gap:8px}
   .video{position:relative;aspect-ratio:4/3;border-radius:14px;overflow:hidden;background:#07090c;border:1px solid var(--rand);display:grid;place-items:center}
-  .video img{width:100%;height:100%;object-fit:contain;display:block}
+  .video img{width:100%;height:100%;object-fit:contain;display:block;transform:rotate(var(--dreh,0deg))}
+  .video.hoch{aspect-ratio:3/4;max-height:70vh;margin:0 auto}
+  .video.hoch img{position:absolute;left:50%;top:50%;width:133.34%;height:75%;transform:translate(-50%,-50%) rotate(var(--dreh,0deg))}
   .video img[hidden]{display:none}
   #video-aus{position:absolute}
   #rec-punkt{position:absolute;top:10px;left:12px;font-size:12.5px;font-weight:700;color:#fff;background:#d32f2fcc;padding:3px 9px;border-radius:999px;animation:recblink 1.2s ease-in-out infinite}
@@ -365,7 +367,8 @@ const char WEBSEITE[] PROGMEM = R"==(<!doctype html>
   .sdzeile a{color:var(--akzent)}
   .sdzeile .weg{cursor:pointer;color:var(--leise)}
   .sdfotos{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px}
-  .sdfotos img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px;border:1px solid var(--rand)}
+  .sdfotos a{display:block;overflow:hidden;border-radius:8px;border:1px solid var(--rand);aspect-ratio:4/3}
+  .sdfotos img{width:100%;height:100%;object-fit:cover;display:block;transform:rotate(var(--dreh,0deg)) scale(var(--drehzoom,1))}
 /*/XIAO*/
 </style></head><body>
 <header class="kopf">
@@ -437,6 +440,7 @@ const char WEBSEITE[] PROGMEM = R"==(<!doctype html>
         <button id="k-video" class="klein">&#128247; Video</button>
         <button id="k-ton" class="klein">&#128264; Ton</button>
         <button id="k-foto" class="klein" data-aktion="71">&#128248; Foto</button>
+        <button id="k-dreh" class="klein" title="Bild 90&deg; nach links drehen">&#10226; Drehen</button>
         <select id="k-aufl" title="Aufl&ouml;sung"><option value="0">320&times;240</option><option value="1">640&times;480</option><option value="2">800&times;600</option></select>
       </div>
     </div>
@@ -1043,9 +1047,9 @@ const ES = {"Name des Autos": "Nombre del coche", "Speichern": "Guardar", "So he
 const FR = {"Name des Autos": "Nom de la voiture", "Speichern": "Enregistrer", "So heißt das Auto per Bluetooth und im eigenen WLAN. Leer = Chip-Nummer. Zum Speichern startet das Auto kurz neu.": "C'est le nom de la voiture en Bluetooth et sur son propre Wi-Fi. Vide = numéro de puce. L'enregistrement redémarre brièvement la voiture.", "Neustart – gleich wieder da": "Redémarrage – de retour dans un instant", "Kippen": "Inclinaison", "Feld halten und Handy kippen": "Maintiens la zone et incline le téléphone", "keine Verbindung": "pas de connexion", "verbinde...": "connexion...", "verbunden": "connecté", "Akku": "Batterie", "Motoren L / R": "Moteurs G / D", "Licht": "Phares", "Fernlicht": "Pleins phares", "Warnblinker": "Warnings", "180° Wende": "Demi-tour 180°", "◀ Blinker": "◀ Clignotant", "Blinker ▶": "Clignotant ▶", "Q halten": "maintenir Q", "E halten": "maintenir E", "Hupe": "Klaxon", "Sirene": "Sirène", "H / Leertaste": "H / Espace", "Tank": "Jauge de batterie", "WLAN": "Wi-Fi", "T halten": "maintenir T", "Normal": "Normal", "Polizei": "Police", "Team Blau": "Équipe bleue", "Team Grün": "Équipe verte", "Team Gelb": "Équipe jaune", "Team Rot": "Équipe rouge", "Live-Ansicht von oben · Lichter und Ring leuchten wie am Auto": "Vue de dessus en direct · les phares et l’anneau s’allument comme sur la voiture", "vorne": "avant", "🔧 Motortest-Assistent": "🔧 Assistant de test moteurs", "Richtung": "Cap", "Neigung vorn/hinten": "Inclinaison (avant/arrière)", "Neigung seitlich": "Inclinaison latérale", "Motorleistung": "Puissance moteurs", "Akkuverlauf (letzte Stunde)": "Historique batterie (dernière heure)", "Figuren:": "Figures :", "▢ Quadrat": "▢ Carré", "∞ Acht": "∞ Huit", "∿ Slalom": "∿ Slalom", "Fahrweg:": "Trajet :", "● Aufnahme": "● Enregistrer", "▶ Abspielen": "▶ Rejouer", "Experiment:": "Expérience :", "⚖ Balancieren": "⚖ Équilibre", "Auto am Balancierpunkt halten, dann klicken. Nochmal klicken = aus.": "Tiens la voiture à son point d’équilibre, puis clique. Recliquer = arrêt.", "Modus wechseln: Knopf anklicken oder": "Changer de mode : clique sur un bouton ou appuie sur", "(nächster Modus)": "(mode suivant)", "WLAN ändern": "Changer de Wi-Fi", "⚙ Einstellungen": "⚙ Réglages", "Höchstgeschwindigkeit": "Vitesse max.", "Figurengröße": "Taille des figures", "Lenkung beim Fahren": "Direction en roulant", "Drehen auf der Stelle": "Rotation sur place", "Helligkeit LED-Ring": "Luminosité anneau LED", "Helligkeit Lichter": "Luminosité des phares", "Crash-Empfindlichkeit": "Sensibilité aux chocs", "Gyro-Geradeauslauf": "Ligne droite par gyroscope", "Crash- und Umkipp-Erkennung": "Détection de chocs et de renversement", "🎯 Gyro neu kalibrieren": "🎯 Recalibrer le gyroscope", "Auto dazu auf den Boden stellen und 1 Sekunde nicht berühren. Setzt auch den Kompass auf 0°.": "Pose la voiture au sol et ne la touche pas pendant 1 seconde. Remet aussi la boussole à 0°.", "Töne": "Sons", "Alle": "Tous", "Nur wichtige": "Importants seulement", "Stumm": "Muet", "⚙️ Motoren – falls falsch angeschlossen": "⚙️ Moteurs – si mal branchés", "Linke Seite umkehren": "Inverser le côté gauche", "Rechte Seite umkehren": "Inverser le côté droit", "Links und rechts tauschen": "Échanger gauche et droite", "🔧 Motortest-Assistent starten": "🔧 Lancer l’assistant de test moteurs", "Der Assistent dreht nacheinander kurz jede Seite und fragt, was passiert ist. Die richtigen Schalter stellt er dann selbst ein. Auto dazu am besten hochheben.": "L’assistant fait tourner brièvement chaque côté et te demande ce qui s’est passé. Il règle ensuite lui-même les bons interrupteurs. Le mieux est de soulever la voiture.", "Standard wiederherstellen": "Réinitialiser", "Software: Schritt": "Logiciel : étape", "Fahren:": "Conduire :", "Pfeiltasten": "flèches", "oder den blauen Knopf ziehen. Loslassen = Stopp.": "ou fais glisser le bouton bleu. Relâcher = stop.", "rückwärts": "marche arrière", "vorwärts": "avant", "steht": "à l’arrêt", "sammelt Daten... (alle {0} s ein Punkt)": "collecte des données... (un point toutes les {0} s)", "jetzt": "maintenant", "vor {0} min": "il y a {0} min", "(sehr empfindlich)": "(très sensible)", "(normal)": "(normal)", "(unempfindlich)": "(peu sensible)", "(nur heftige Stöße)": "(chocs violents seulement)", "speichert...": "enregistrement...", "✓ gespeichert": "✓ enregistré", "Fehler beim Speichern": "Erreur d’enregistrement", "Alle Einstellungen auf Standard zurücksetzen?": "Réinitialiser tous les réglages ?", "Messwert {0}": "Valeur mesurée {0}", "nimmt auf...": "enregistre...", "gespeichert: {0} s": "enregistré : {0} s", "noch keine Aufnahme": "pas encore d’enregistrement", "rechts": "droite", "links": "gauche", "dreht {0}°/s": "tourne {0}°/s", "mt.los": "Soulève la voiture ou place-la pour que les roues tournent librement. Ensuite, c’est parti.", "mt.start": "C’est parti", "Abbrechen": "Annuler", "mt.schritt0": "Étape 1 sur 2 : la voiture fait tourner les <b>roues GAUCHES en avant pendant 1,5 seconde</b> &ndash; comme la flèche verte. Qu’as-tu vu ?", "mt.schritt1": "Étape 2 sur 2 : la voiture fait tourner les <b>roues DROITES en avant pendant 1,5 seconde</b> &ndash; comme la flèche verte. Qu’as-tu vu ?", "mt.vor0": "Roues gauches en avant ✓", "mt.vor1": "Roues droites en avant ✓", "mt.rueck0": "Roues gauches en arrière", "mt.rueck1": "Roues droites en arrière", "mt.andere0": "Ce sont les roues droites qui ont tourné", "mt.andere1": "Ce sont les roues gauches qui ont tourné", "Nichts / nochmal zeigen": "Rien / montrer encore", "mt.passtnicht": "Hmm, cela ne correspond pas à l’étape 1. Vérifie le câblage et relance le test.", "Neu starten": "Recommencer", "Schließen": "Fermer", "Richtung umgedreht.": "Sens inversé.", "Links und rechts getauscht.": "Gauche et droite échangées.", "mt.nochmal": "Nouveau test dans un instant&hellip;", "mt.fertig": "&#127881; <b>Terminé !</b> Les deux côtés tournent dans le bon sens. Le réglage est enregistré dans la voiture. Pour vérifier, avance simplement.", "Steuerung": "Pilotage", "Loslassen = Stopp": "Relâcher = stop", "Beleuchtung": "Éclairage", "Signale": "Signaux", "Manöver & Anzeige": "Manœuvres et affichage", "🎯 Kalibrieren": "🎯 Calibrer", "Gyro": "Gyroscope", "Modus ·": "Mode ·", "= nächster": "= suivant", "Live": "Direct", "Programme": "Programmes", "✨ Figuren": "✨ Figures", "Nochmal klicken oder lenken = Stopp.": "Recliquer ou diriger = stop.", "🎬 Fahrweg": "🎬 Trajet", "🧪 Experiment": "🧪 Expérience", "Einstellungen": "Réglages", "🏎️ Fahren": "🏎️ Conduite", "🛡️ Sicherheit": "🛡️ Sécurité", "Gyro kalibrieren: Auto dazu auf den Boden stellen und 1 Sekunde nicht berühren. Setzt auch den Kompass auf 0°.": "Calibrer le gyroscope : pose la voiture au sol et ne la touche pas pendant 1 seconde. Remet aussi la boussole à 0°.", "💡 Licht & Ton": "💡 Lumière et son", "⚙️ Motoren": "⚙️ Moteurs", "🖥️ System": "🖥️ Système", "📶 WLAN ändern": "📶 Changer de Wi-Fi", "↺ Standard wiederherstellen": "↺ Réinitialiser", "Tastatur:": "Clavier :", "Wende": "Demi-tour", "Blinker": "Clignotants", "Modus": "Mode", "↺ Motoren auf Standard": "↺ Réinitialiser les moteurs", "Alle Einstellungen auf Standard zurücksetzen? (Die Motoren bleiben, wie sie sind.)": "Réinitialiser tous les réglages ? (Les moteurs restent tels quels.)", "Motoren auf Standard zurücksetzen? (keine Seite umgekehrt, nicht getauscht)": "Réinitialiser les moteurs ? (aucun côté inversé, pas d’échange)", "Traurige Spieluhr": "Boîte à musique triste", "Bittersüße Geschichte": "Histoire douce-amère", "Prinzessin": "Princesse", "Wiegenlied": "Berceuse", "Schicksal": "Destin", "Spieluhr-Walzer": "Valse de boîte à musique", "JRPG-Hauptthema": "Thème principal JRPG", "JRPG-Kampf": "Combat JRPG", "18 Chiptunes · Disco-Lichter im Takt": "18 chiptunes · lumières disco en rythme", "Tempo, Lenkung, Sicherheit, Licht & Ton, Motoren, WLAN": "Vitesse, direction, sécurité, lumière et son, moteurs, Wi-Fi", "🎵 Musik": "🎵 Musique", "Jukebox": "Jukebox", "Jetzt läuft": "En cours", "■ Stopp": "■ Stop", "nichts": "rien", "–": "–", "🔊 Lautstärke": "🔊 Volume", "🔄 Updates": "🔄 Mises à jour", "Installiert": "Installée", "Auf GitHub": "Sur GitHub", "Status": "État", "Automatisch aktualisieren": "Mettre à jour automatiquement", "🔍 Nach Updates suchen": "🔍 Rechercher des mises à jour", "⬇️ Jetzt installieren": "⬇️ Installer maintenant", "Update": "Mise à jour", "Neue Versionen kommen automatisch von GitHub. Installiert wird nur, wenn das Auto 2 Minuten unbenutzt steht und der Akku reicht. Startet eine neue Version nicht sauber, schaltet das Auto von selbst auf die alte zurück.": "Les nouvelles versions arrivent automatiquement depuis GitHub. Elles ne s’installent que si la voiture est inutilisée depuis 2 minutes et que la batterie suffit. Si une nouvelle version ne démarre pas correctement, la voiture revient d’elle-même à l’ancienne.", "sucht…": "recherche…", "lädt…": "téléchargement…", "✓ aktuell": "✓ à jour", "nicht erreichbar": "injoignable", "Update verfügbar!": "Mise à jour disponible !", "selbst gebaut": "compilé soi-même", "Update jetzt installieren? Das Auto lädt ca. 1 Minute und startet dann neu.": "Installer la mise à jour maintenant ? La voiture télécharge env. 1 minute puis redémarre.", "Das Auto lädt das Update und startet neu – die Seite verbindet sich danach von selbst wieder.": "La voiture télécharge la mise à jour et redémarre – la page se reconnecte ensuite toute seule.", "🎉 Disco-Lichter zur Musik": "🎉 Lumières disco avec la musique", "Spielt über den Buzzer im Auto, LED-Ring und Lichter machen die Disco dazu. Nochmal auf das Lied klicken = Stopp.": "Joue sur le buzzer de la voiture, l’anneau LED et les phares font la disco. Recliquer sur le morceau = stop.", "Weiße Taube": "Colombe blanche", "ProDMusicKI · Chiptune-Fassung": "ProDMusicKI · version chiptune", "RPG-Titelthema": "Thème titre RPG", "Luftschiff": "Dirigeable", "Kampf": "Combat", "Stadt": "Ville"};
 /*XIAO*/
 // XIAO Sense: Kamera, Mikrofon, SD-Karte, Lernen
-Object.assign(EN, {"🧹 SD-Karte formatieren": "🧹 Format SD card", "Formatiere als FAT32 … bitte warten (bis 1 Minute).": "Formatting as FAT32 … please wait (up to 1 minute).", "SD-Karte gefunden, aber nicht FAT32 (z. B. exFAT) – bitte formatieren.": "SD card found, but not FAT32 (e.g. exFAT) – please format it.", "Formatieren fehlgeschlagen.": "Formatting failed.", "SD-Karte formatieren? ALLES auf der Karte wird gelöscht (Fahrten, Fotos, Fahrweg) und sie wird als FAT32 neu angelegt.": "Format the SD card? EVERYTHING on the card will be erased (runs, photos, route) and it will be set up again as FAT32."});
-Object.assign(ES, {"🧹 SD-Karte formatieren": "🧹 Formatear tarjeta SD", "Formatiere als FAT32 … bitte warten (bis 1 Minute).": "Formateando como FAT32 … espera (hasta 1 minuto).", "SD-Karte gefunden, aber nicht FAT32 (z. B. exFAT) – bitte formatieren.": "Tarjeta SD encontrada, pero no es FAT32 (p. ej. exFAT) – formátala.", "Formatieren fehlgeschlagen.": "Error al formatear.", "SD-Karte formatieren? ALLES auf der Karte wird gelöscht (Fahrten, Fotos, Fahrweg) und sie wird als FAT32 neu angelegt.": "¿Formatear la tarjeta SD? Se borrará TODO (recorridos, fotos, ruta) y se creará de nuevo como FAT32."});
-Object.assign(FR, {"🧹 SD-Karte formatieren": "🧹 Formater la carte SD", "Formatiere als FAT32 … bitte warten (bis 1 Minute).": "Formatage en FAT32 … patiente (jusqu’à 1 minute).", "SD-Karte gefunden, aber nicht FAT32 (z. B. exFAT) – bitte formatieren.": "Carte SD trouvée, mais pas en FAT32 (p. ex. exFAT) – formate-la.", "Formatieren fehlgeschlagen.": "Échec du formatage.", "SD-Karte formatieren? ALLES auf der Karte wird gelöscht (Fahrten, Fotos, Fahrweg) und sie wird als FAT32 neu angelegt.": "Formater la carte SD ? TOUT sera effacé (trajets, photos, parcours) et elle sera recréée en FAT32."});
+Object.assign(EN, {"⟲ Drehen": "⟲ Rotate", "🧹 SD-Karte formatieren": "🧹 Format SD card", "Formatiere als FAT32 … bitte warten (bis 1 Minute).": "Formatting as FAT32 … please wait (up to 1 minute).", "SD-Karte gefunden, aber nicht FAT32 (z. B. exFAT) – bitte formatieren.": "SD card found, but not FAT32 (e.g. exFAT) – please format it.", "Formatieren fehlgeschlagen.": "Formatting failed.", "SD-Karte formatieren? ALLES auf der Karte wird gelöscht (Fahrten, Fotos, Fahrweg) und sie wird als FAT32 neu angelegt.": "Format the SD card? EVERYTHING on the card will be erased (runs, photos, route) and it will be set up again as FAT32."});
+Object.assign(ES, {"⟲ Drehen": "⟲ Girar", "🧹 SD-Karte formatieren": "🧹 Formatear tarjeta SD", "Formatiere als FAT32 … bitte warten (bis 1 Minute).": "Formateando como FAT32 … espera (hasta 1 minuto).", "SD-Karte gefunden, aber nicht FAT32 (z. B. exFAT) – bitte formatieren.": "Tarjeta SD encontrada, pero no es FAT32 (p. ej. exFAT) – formátala.", "Formatieren fehlgeschlagen.": "Error al formatear.", "SD-Karte formatieren? ALLES auf der Karte wird gelöscht (Fahrten, Fotos, Fahrweg) und sie wird als FAT32 neu angelegt.": "¿Formatear la tarjeta SD? Se borrará TODO (recorridos, fotos, ruta) y se creará de nuevo como FAT32."});
+Object.assign(FR, {"⟲ Drehen": "⟲ Pivoter", "🧹 SD-Karte formatieren": "🧹 Formater la carte SD", "Formatiere als FAT32 … bitte warten (bis 1 Minute).": "Formatage en FAT32 … patiente (jusqu’à 1 minute).", "SD-Karte gefunden, aber nicht FAT32 (z. B. exFAT) – bitte formatieren.": "Carte SD trouvée, mais pas en FAT32 (p. ex. exFAT) – formate-la.", "Formatieren fehlgeschlagen.": "Échec du formatage.", "SD-Karte formatieren? ALLES auf der Karte wird gelöscht (Fahrten, Fotos, Fahrweg) und sie wird als FAT32 neu angelegt.": "Formater la carte SD ? TOUT sera effacé (trajets, photos, parcours) et elle sera recréée en FAT32."});
 Object.assign(EN, {"Kamera": "Camera", "Kamera aus": "Camera off", "keine Kamera": "no camera", "📷 Video": "📷 Video", "🔈 Ton": "🔈 Sound", "📸 Foto": "📸 Photo", "Mikrofon": "Microphone", "👏 Klatschen = Licht": "👏 Clap = lights", "2x klatschen": "clap twice", "Lernen": "Learning", "🧠 Lernen": "🧠 Learn", "SD-Karte": "SD card", "↻ Liste": "↻ Refresh", "Fahrt {0}: {1} s, {2} Bilder": "Run {0}: {1} s, {2} images", "Schreibt beim Fahren Daten und Kamerabilder auf die SD-Karte.": "Records driving data and camera images to the SD card while you drive.", "keine SD-Karte": "no SD card", "{0} von {1} MB belegt": "{0} of {1} MB used", "{0} Fahrten · {1} Fotos": "{0} runs · {1} photos", "Fahrt {0} wirklich löschen?": "Really delete run {0}?", "noch nichts gespeichert": "nothing saved yet", "Mikrofon wird schon gehört": "someone is already listening"});
 Object.assign(ES, {"Kamera": "Cámara", "Kamera aus": "Cámara apagada", "keine Kamera": "sin cámara", "📷 Video": "📷 Vídeo", "🔈 Ton": "🔈 Sonido", "📸 Foto": "📸 Foto", "Mikrofon": "Micrófono", "👏 Klatschen = Licht": "👏 Palmada = luces", "2x klatschen": "2 palmadas", "Lernen": "Aprender", "🧠 Lernen": "🧠 Aprender", "SD-Karte": "Tarjeta SD", "↻ Liste": "↻ Actualizar", "Fahrt {0}: {1} s, {2} Bilder": "Recorrido {0}: {1} s, {2} imágenes", "Schreibt beim Fahren Daten und Kamerabilder auf die SD-Karte.": "Guarda datos de conducción e imágenes de la cámara en la tarjeta SD.", "keine SD-Karte": "sin tarjeta SD", "{0} von {1} MB belegt": "{0} de {1} MB usados", "{0} Fahrten · {1} Fotos": "{0} recorridos · {1} fotos", "Fahrt {0} wirklich löschen?": "¿Borrar el recorrido {0}?", "noch nichts gespeichert": "aún no hay nada guardado", "Mikrofon wird schon gehört": "alguien ya está escuchando"});
 Object.assign(FR, {"Kamera": "Caméra", "Kamera aus": "Caméra éteinte", "keine Kamera": "pas de caméra", "📷 Video": "📷 Vidéo", "🔈 Ton": "🔈 Son", "📸 Foto": "📸 Photo", "Mikrofon": "Micro", "👏 Klatschen = Licht": "👏 Applaudir = phares", "2x klatschen": "applaudir 2x", "Lernen": "Apprendre", "🧠 Lernen": "🧠 Apprendre", "SD-Karte": "Carte SD", "↻ Liste": "↻ Actualiser", "Fahrt {0}: {1} s, {2} Bilder": "Trajet {0} : {1} s, {2} images", "Schreibt beim Fahren Daten und Kamerabilder auf die SD-Karte.": "Enregistre les données de conduite et les images de la caméra sur la carte SD.", "keine SD-Karte": "pas de carte SD", "{0} von {1} MB belegt": "{0} sur {1} Mo utilisés", "{0} Fahrten · {1} Fotos": "{0} trajets · {1} photos", "Fahrt {0} wirklich löschen?": "Supprimer vraiment le trajet {0} ?", "noch nichts gespeichert": "rien d’enregistré", "Mikrofon wird schon gehört": "quelqu’un écoute déjà"});
@@ -1127,14 +1131,66 @@ document.getElementById('k-video').addEventListener('click', () => {
   try { localStorage.setItem('video', videoAn ? '1' : '0'); } catch(e){}
   zeigeVideo();
 });
+// Chrome & Co. spielen einen endlosen WAV-Strom im <audio>-Element nicht ab ("Format error").
+// Deshalb holt die Seite den Ton selbst (16 kHz, 16 Bit, mono) und spielt ihn ueber Web Audio.
+let tonCtx = null, tonStopp = null;
+async function tonLauf(){
+  tonCtx = new (window.AudioContext || window.webkitAudioContext)();
+  await tonCtx.resume();
+  tonStopp = new AbortController();
+  const r = await fetch(medien('/ton?t=' + Date.now()), {signal: tonStopp.signal, cache: 'no-store'});
+  if (!r.ok) throw new Error(r.status === 500 ? t('Mikrofon wird schon gehört') : 'HTTP ' + r.status);
+  const leser = r.body.getReader();
+  let kopf = 44, rest = null, zeit = 0;
+  for (;;){
+    const {value, done} = await leser.read();
+    if (done || !tonCtx) break;
+    let d = value;
+    if (rest){ const z = new Uint8Array(rest.length + d.length); z.set(rest); z.set(d, rest.length); d = z; rest = null; }
+    if (kopf > 0){ const n = Math.min(kopf, d.length); d = d.subarray(n); kopf -= n; }
+    const n = d.length & ~1;
+    if (n < d.length) rest = d.slice(n);
+    if (!n) continue;
+    const roh = new DataView(d.buffer, d.byteOffset, n), anz = n / 2;
+    const puffer = tonCtx.createBuffer(1, anz, 16000), kanal = puffer.getChannelData(0);
+    for (let i = 0; i < anz; i++) kanal[i] = roh.getInt16(i * 2, true) / 32768;
+    const quelle = tonCtx.createBufferSource();
+    quelle.buffer = puffer; quelle.connect(tonCtx.destination);
+    const jetzt = tonCtx.currentTime;
+    if (zeit < jetzt + 0.03 || zeit > jetzt + 0.8) zeit = jetzt + 0.15;   // Luecke oder zu viel Verzoegerung -> neu ansetzen
+    quelle.start(zeit); zeit += puffer.duration;
+  }
+}
 function tonSchalten(an){
   tonAn = an;
-  if (an){ ton.src = medien('/ton?t=' + Date.now()); ton.play().catch(() => tonSchalten(false)); }
-  else { ton.pause(); ton.removeAttribute('src'); ton.load(); }
   document.getElementById('k-ton').classList.toggle('an', tonAn);
+  if (an){
+    tonLauf().catch(e => { if (tonAn){ if (e.name !== 'AbortError') console.warn('Ton:', e); tonSchalten(false); } })
+             .then(() => { if (tonAn) tonSchalten(false); });          // Strom zu Ende (Auto neu gestartet?)
+  } else {
+    if (tonStopp) tonStopp.abort();
+    if (tonCtx) tonCtx.close().catch(()=>{});
+    tonStopp = null; tonCtx = null;
+  }
 }
-ton.addEventListener('error', () => { if (tonAn) tonSchalten(false); });
 document.getElementById('k-ton').addEventListener('click', () => tonSchalten(!tonAn));
+// Kamerabild drehen: jeder Klick 90 Grad nach links, wird im Auto gespeichert (einst.kamDreh)
+let kamDreh = -1;
+function zeigeDrehung(grad){
+  if (grad === kamDreh) return;
+  kamDreh = grad;
+  const hoch = grad === 90 || grad === 270;
+  for (const el of [document.querySelector('.video'), document.getElementById('sd-fotos')]){
+    el.style.setProperty('--dreh', grad + 'deg');
+    el.style.setProperty('--drehzoom', hoch ? 1.34 : 1);
+  }
+  document.querySelector('.video').classList.toggle('hoch', hoch);
+}
+document.getElementById('k-dreh').addEventListener('click', () => {
+  const neu = ((kamDreh < 0 ? 0 : kamDreh) + 270) % 360;
+  zeigeDrehung(neu); einst.kamDreh = neu;
+  fetch('/einstellungen?kamDreh=' + neu).catch(()=>{});
+});
 document.getElementById('k-aufl').addEventListener('change', e => fetch('/kamera?aufl=' + e.target.value).catch(()=>{}));
 
 async function sdListe(){
@@ -1192,6 +1248,7 @@ function zeigeSense(s){
   if (document.activeElement !== aufl) aufl.value = s.aufl;
   aufl.disabled = !s.kam;
   document.getElementById('k-foto').disabled = !s.kam || !s.sd;
+  if (einst.kamDreh !== undefined) zeigeDrehung(einst.kamDreh);
   document.getElementById('k-ton').disabled = !s.mik;
   document.getElementById('pegel').style.width = (s.mik ? s.pegel : 0) + '%';
   const kl = document.getElementById('k-klatsch');
