@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <freertos/idf_additions.h>
 #include <SD.h>
 #include "config.h"
 #include "lernen.h"
@@ -122,5 +123,6 @@ static void lernAufgabe(void*) {
 void lernenStarten() {
   static bool laeuft = false;                   // darf mehrfach aufgerufen werden (z.B. nach dem Formatieren)
   if (!karteDa() || laeuft) return;
-  laeuft = xTaskCreatePinnedToCore(lernAufgabe, "lernen", 8192, nullptr, 1, nullptr, 0) == pdPASS;
+  // Stapelspeicher im PSRAM - der interne Arbeitsspeicher wird fuer WLAN, Bluetooth und Kamera gebraucht
+  laeuft = xTaskCreatePinnedToCoreWithCaps(lernAufgabe, "lernen", 8192, nullptr, 1, nullptr, 0, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT) == pdPASS;
 }

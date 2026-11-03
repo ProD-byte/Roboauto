@@ -114,7 +114,9 @@ void setup() {
   Serial.println();
 #ifdef ROBOAUTO_XIAO
   Serial.println("=== Roboauto XIAO ESP32S3 Sense - Kamera, Mikrofon, SD-Karte, eine LED-Kette ===");
-  Serial.printf("PSRAM: %u KB frei, Flash: %u MB\n", (unsigned)(ESP.getFreePsram() / 1024), (unsigned)(ESP.getFlashChipSize() / (1024 * 1024)));
+  // "intern" ist der knappe Speicher fuer WLAN, Bluetooth, Kamera und Webserver - unter ca. 20 KB wird es eng
+  Serial.printf("PSRAM: %u KB frei, intern: %u KB frei, Flash: %u MB\n", (unsigned)(ESP.getFreePsram() / 1024),
+                (unsigned)(heap_caps_get_free_size(MALLOC_CAP_INTERNAL) / 1024), (unsigned)(ESP.getFlashChipSize() / (1024 * 1024)));
 #else
   Serial.println("=== Roboauto - Schritt 40: eigene Roboauto-App statt Dabble ===");
 #endif

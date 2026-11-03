@@ -76,6 +76,10 @@ static const char* STREAM_KOPF  = "Content-Type: image/jpeg\r\nContent-Length: %
 
 esp_err_t kameraStreamSenden(httpd_req_t* req) {
   if (!da) { httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "keine Kamera"); return ESP_FAIL; }
+  if (zuschauer >= 2) {                        // mehr schafft das WLAN nicht fluessig - und haelt Verbindungen frei
+    httpd_resp_set_status(req, "503 Service Unavailable");
+    return httpd_resp_sendstr(req, "schon 2 Zuschauer");
+  }
   httpd_resp_set_type(req, STREAM_TYP);
   httpd_resp_set_hdr(req, "Cache-Control", "no-store");
   zuschauer++;

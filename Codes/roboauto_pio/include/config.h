@@ -245,9 +245,10 @@ constexpr int  KAMERA_JPEG_QUALI  = 12;          // 10 = schoen, 20 = klein und 
 constexpr unsigned long KAMERA_STREAM_MS = 66;   // ca. 15 Bilder pro Sekunde
 constexpr bool KAMERA_DREHEN      = false;       // Bild steht auf dem Kopf? -> true (dreht um 180 Grad)
 // So viel wird das Bild auf der Webseite im Uhrzeigersinn gedreht (0/90/180/270). Der Sensor kann nur
-// spiegeln, nicht um 90 Grad drehen - das macht der Browser. 270 = 90 Grad nach links (so sitzt die
-// Kamera im V7). Auf der Webseite unter Kamera mit "Drehen" aenderbar, wird im Auto gespeichert.
-constexpr int  KAMERA_DREHUNG     = 270;
+// spiegeln, nicht um 90 Grad drehen - das macht der Browser. 0 passt fuer die OV5640 im V7
+// (die alte OV3660 brauchte 270 = 90 Grad nach links). Auf der Webseite unter Kamera mit "Drehen"
+// aenderbar, wird im Auto gespeichert - gilt nur, solange noch nichts gespeichert ist.
+constexpr int  KAMERA_DREHUNG     = 0;
 
 // --- Mikrofon (PDM, Sense-Board) ---
 constexpr int  MIKRO_TAKT_PIN     = 42;

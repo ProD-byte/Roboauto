@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <freertos/idf_additions.h>
 #include <ESP_I2S.h>
 #include <esp_http_server.h>
 #include <freertos/stream_buffer.h>
@@ -68,7 +69,8 @@ bool mikroStarten() {
     return false;
   }
   puffer = xStreamBufferCreate(MIKRO_RATE, 1024);   // MIKRO_RATE Bytes = eine halbe Sekunde Ton (16 Bit)
-  xTaskCreatePinnedToCore(mikroAufgabe, "mikro", 4096, nullptr, 3, nullptr, 0);
+  // Stapelspeicher im PSRAM - der interne Arbeitsspeicher wird fuer WLAN, Bluetooth und Kamera gebraucht
+  xTaskCreatePinnedToCoreWithCaps(mikroAufgabe, "mikro", 4096, nullptr, 3, nullptr, 0, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
   da = true;
   Serial.println(">> Mikrofon bereit");
   return true;
