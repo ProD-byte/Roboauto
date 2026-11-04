@@ -446,13 +446,15 @@ static String netzListe(int n) {
   }
   for (int a = 1; a < anzahl; a++)
     for (int b = a; b > 0 && WiFi.RSSI(idx[b]) > WiFi.RSSI(idx[b - 1]); b--) { int z = idx[b]; idx[b] = idx[b - 1]; idx[b - 1] = z; }
+  const bool verbunden = WiFi.status() == WL_CONNECTED;   // v = damit ist das Auto gerade verbunden
   String r = "{\"netze\":[";
   for (int k = 0; k < anzahl; k++) {
     int i = idx[k];
     if (k) r += ',';
     r += "{\"n\":" + jsonText(WiFi.SSID(i)) + ",\"s\":" + String(WiFi.RSSI(i)) +
          ",\"z\":" + (WiFi.encryptionType(i) == WIFI_AUTH_OPEN ? "0" : "1") +
-         ",\"g\":" + (netzFinde(WiFi.SSID(i)) >= 0 ? "1" : "0") + "}";
+         ",\"g\":" + (netzFinde(WiFi.SSID(i)) >= 0 ? "1" : "0") +
+         ",\"v\":" + (verbunden && WiFi.SSID(i) == WiFi.SSID() ? "1" : "0") + "}";
   }
   return r + "]}";
 }
@@ -550,8 +552,8 @@ static String steuerBefehl(const String& pfad, const Param* p, int n, bool app) 
   if (pfad == "/verlauf") return akkuVerlaufJson();
   // WLAN einrichten aus der App ueber Bluetooth (das Auto braucht dafuer noch kein WLAN).
   // Nur ueber Bluetooth: das Passwort soll nicht als Adresse durchs Heimnetz gehen.
-  //   /netze[?neu=1]            -> {"suche":1} oder {"netze":[{"n":"Name","s":-60,"z":1,"g":1},...]}
-  //                                (s = Signal in dBm, z = mit Passwort, g = schon gespeichert)
+  //   /netze[?neu=1]            -> {"suche":1} oder {"netze":[{"n":"Name","s":-60,"z":1,"g":1,"v":1},...]}
+  //                                (s = Signal in dBm, z = mit Passwort, g = schon gespeichert, v = gerade verbunden)
   //   /wlanspeichern?n=Name&p=Passwort  -> "ok" (startet neu und verbindet sich), leeres Passwort = gespeichertes behalten
   if (app && pfad == "/netze") return netzeJson(param(p, n, "neu") == "1");
   if (app && pfad == "/wlanspeichern") {

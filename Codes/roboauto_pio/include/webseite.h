@@ -280,6 +280,8 @@ const char WEBSEITE[] PROGMEM = R"==(<!doctype html>
   .wl-liste button{display:flex;flex-direction:row;justify-content:space-between;align-items:center;gap:10px;height:46px;padding:0 14px;font-size:14.5px;text-align:left}
   .wl-liste button.an{border-color:var(--akzent);box-shadow:0 0 0 1px var(--akzent) inset}
   .wl-liste .leise{font-size:12.5px;white-space:nowrap}
+  .wl-liste button.verbunden{border-color:var(--gut)}
+  .wl-liste button.verbunden .leise{color:var(--gut);font-weight:600}
   #wl-form{flex-wrap:wrap}
   #wl-form .namefeld{flex:1 1 180px;width:auto}
   /* ---- Einstellungen ---- */
@@ -1114,7 +1116,8 @@ async function wlSuchen(){
       const b = document.createElement('button'); b.type = 'button';
       const links = document.createElement('span'); links.textContent = (n.z ? '\ud83d\udd12 ' : '') + n.n;
       const rechts = document.createElement('span'); rechts.className = 'leise';
-      rechts.textContent = (n.g ? '\u2713 ' + t('gespeichert') + '  ' : '') + wlBalken(n.s);
+      rechts.textContent = (n.v ? '\u2713 ' + t('verbunden') + '  ' : n.g ? '\u2713 ' + t('gespeichert') + '  ' : '') + wlBalken(n.s);
+      if (n.v) b.classList.add('verbunden');                 // damit ist das Auto gerade verbunden -> gruen
       b.append(links, rechts);
       b.addEventListener('click', () => wlWaehlen(n.n, !!n.z, !!n.g, b));
       liste.append(b);
@@ -1149,6 +1152,7 @@ async function wlSpeichern(){
         const w = wl('wechseln'); w.hidden = false;
         w.onclick = () => Roboauto.verbindeWlan(info.ip);
         wl('hinweis').hidden = true; wl('speichern').disabled = false;
+        wlSuchen().then(() => wlText(t('Verbunden mit „{0}“ (Adresse {1}).', name, info.ip)));   // Liste neu: jetzt gruen
         return;
       }
     } catch (e) {}
