@@ -29,7 +29,7 @@ Fahrweg, Balancieren, Jukebox, Auto-Update). Neu dazu kommen:
 | D8–D10 | 7–9 | – | **belegt von der SD-Karte** (nichts anschließen!) |
 | intern | | Kamera, Mikrofon, SD-Karte | auf dem Sense-Aufsteckboard |
 | BAT+/BAT− (Unterseite) | | Akku (nach Schalter), MAX17048 CELL | der XIAO lädt den Akku über USB-C selbst |
-| 5V | | LED-Kette (+) | Versorgung der LEDs |
+| BAT+ (hinter dem Schalter) | | LED-Kette (+) | Versorgung der LEDs aus dem Akku (3,5–4,2 V). Nicht an 5V: der Pin hat nur Spannung, solange USB steckt. Nicht an 3V3: zu wenig, dann leuchtet nur die erste LED |
 | 3V3 | | MPU6050 VCC, MAX17048 VDD (falls das Board es braucht) | |
 
 Alle Pins stehen in [`include/config.h`](../include/config.h) (Abschnitte `#ifdef ROBOAUTO_XIAO`).
@@ -45,8 +45,8 @@ Reihenfolge in der Kette: **0–7 Ring, 8–9 Frontlicht, 10–11 Rücklicht**. 
 vertauscht, `FRONT_LED_LINKS` bzw. `REAR_LED_LINKS` in `config.h` auf `1` stellen. Ring und Lichter
 haben trotzdem weiter getrennte Helligkeitsregler.
 
-> Vorwiderstand in der Datenleitung und Elko an 5V/GND sitzen bei den verbauten LED-Platinen schon drauf.
-> Bei LEDs ohne diese Teile: 330 Ω vor den Ring und 470–1000 µF an 5V/GND.
+> Vorwiderstand in der Datenleitung und Kondensator an Plus/GND sitzen bei den verbauten LED-Platinen schon drauf.
+> Bei LEDs ohne diese Teile: 330 Ω vor den Ring und 470–1000 µF an Plus/GND.
 
 ### Warum ein Akkuwächter?
 Mit SD-Karte bleiben am XIAO nur 8 freie Pins (D0–D7). Gebraucht werden 4 × Motor, LED, Buzzer, SDA, SCL – und
