@@ -175,7 +175,8 @@ static void zeigeTank(unsigned long jetzt, int akku) {
 }
 
 // Ladeanzeige: Balken bis zum Ladestand (Farben wie die Tankanzeige), die naechste LED atmet,
-// alle 3 s laeuft ein heller Punkt den Balken hoch. Voll: ganzer Ring ruhig gruen.
+// alle 3 s laeuft eine Aufhellung den vollen Teil hoch (in Balkenfarbe, kein Weiss - die LEDs
+// haengen am Akku, jedes mA geht vom Laden ab). Voll: ganzer Ring ruhig gruen.
 static void zeigeLaden(unsigned long jetzt, int prozent) {
   if (prozent >= 99) {
     float h = 0.55f + 0.45f * atmen(jetzt, 4000);
@@ -184,15 +185,16 @@ static void zeigeLaden(unsigned long jetzt, int prozent) {
   }
   float stand = constrain(prozent, 0, 100) / 100.0f * LED_RING_ANZAHL;
   int voll = (int)stand;
+  unsigned long takt = jetzt % 3000;
+  float lauf = (voll > 0 && takt < 1200) ? takt / 1200.0f * voll : -9;   // Position der Aufhellung (nur im vollen Teil)
   for (int i = 0; i < LED_RING_ANZAHL; i++) {
     float t = i / (float)(LED_RING_ANZAHL - 1);              // 0 = unten (rot) .. 1 = oben (gruen)
     float r = t < 0.5f ? 255 : 255 * (1 - (t - 0.5f) * 2);
     float g = t < 0.5f ? 255 * t * 2 : 255;
-    float h = i < voll ? 0.6f : i == voll ? 0.1f + 0.9f * atmen(jetzt, 1600) : 0.0f;
+    float h = i < voll ? 0.5f : i == voll ? 0.1f + 0.9f * atmen(jetzt, 1600) : 0.0f;
+    if (i < voll) h += 0.5f * max(0.0f, 1.0f - fabsf(i - lauf));   // Aufhellung bleibt im vollen Teil
     setze(i, r * h + 2, g * h + 2, 2);                       // leere LEDs glimmen ganz schwach
   }
-  unsigned long takt = jetzt % 3000;                         // heller Punkt laeuft den Balken hoch
-  if (takt < 1200) lichtpunkt(takt / 1200.0f * (voll + 1) - 0.5f, 120, 120, 120, 0.8f);
 }
 
 // Polizei: blau/rot Blitzer - bewusst hart
