@@ -46,5 +46,8 @@ void ringKalibrierung(float fortschritt);
 // Musik-Lichtshow: hz = aktueller Ton (0 = Pause), note = Notenzaehler, an = Musik laeuft
 void ringMusik(bool an, int hz, int note);
 
+// Akku laedt und das Auto steht: Ring zeigt den Ladestand (0..100 %), -1 = aus
+void ringLaden(int prozent);
+
 // Aktuelle Farbe einer Ring-LED (fuer das Live-Auto auf der Webseite)
 uint32_t ringAnzeigeFarbe(int i);

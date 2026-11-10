@@ -32,6 +32,7 @@ static bool alarmAn = false;               // ("alarm" allein ist schon eine Sys
 static int  aufnahmeZustand = 0;
 static float kalFortschritt = -1;
 static unsigned long tankSeit = 0;
+static int ladenProzent = -1;               // >= 0: Akku laedt, Auto steht -> Ladeanzeige
 static bool musikAn = false;
 static int  musikHz = 0, musikNote = -1, musikNoteVorher = -1;
 static unsigned long musikNoteSeit = 0;
@@ -173,6 +174,27 @@ static void zeigeTank(unsigned long jetzt, int akku) {
   }
 }
 
+// Ladeanzeige: Balken bis zum Ladestand (Farben wie die Tankanzeige), die naechste LED atmet,
+// alle 3 s laeuft ein heller Punkt den Balken hoch. Voll: ganzer Ring ruhig gruen.
+static void zeigeLaden(unsigned long jetzt, int prozent) {
+  if (prozent >= 99) {
+    float h = 0.55f + 0.45f * atmen(jetzt, 4000);
+    for (int i = 0; i < LED_RING_ANZAHL; i++) setze(i, 0, 255 * h, 40 * h);
+    return;
+  }
+  float stand = constrain(prozent, 0, 100) / 100.0f * LED_RING_ANZAHL;
+  int voll = (int)stand;
+  for (int i = 0; i < LED_RING_ANZAHL; i++) {
+    float t = i / (float)(LED_RING_ANZAHL - 1);              // 0 = unten (rot) .. 1 = oben (gruen)
+    float r = t < 0.5f ? 255 : 255 * (1 - (t - 0.5f) * 2);
+    float g = t < 0.5f ? 255 * t * 2 : 255;
+    float h = i < voll ? 0.6f : i == voll ? 0.1f + 0.9f * atmen(jetzt, 1600) : 0.0f;
+    setze(i, r * h + 2, g * h + 2, 2);                       // leere LEDs glimmen ganz schwach
+  }
+  unsigned long takt = jetzt % 3000;                         // heller Punkt laeuft den Balken hoch
+  if (takt < 1200) lichtpunkt(takt / 1200.0f * (voll + 1) - 0.5f, 120, 120, 120, 0.8f);
+}
+
 // Polizei: blau/rot Blitzer - bewusst hart
 static void zeigePolizei(unsigned long jetzt) {
   int stufe = (jetzt / 50) % 12;
@@ -262,6 +284,7 @@ static void zeigeMusik(unsigned long jetzt) {
 }
 
 void ringMusik(bool an, int hz, int note) { musikAn = an; musikHz = hz; musikNote = note; }
+void ringLaden(int prozent) { ladenProzent = prozent; }
 
 void ringStatus(RingQuelle quelle, bool tankanzeige, int akkuProzent, int modus) {
   unsigned long jetzt = millis();
@@ -282,6 +305,7 @@ void ringStatus(RingQuelle quelle, bool tankanzeige, int akkuProzent, int modus)
   else if (signalAktiv && zeigeSignal(jetzt)) {}
   else if (musikAn)                           zeigeMusik(jetzt);
   else if (aufnahmeZustand != 0)              zeigeAufnahme(jetzt);
+  else if (ladenProzent >= 0)                 zeigeLaden(jetzt, ladenProzent);
   else if (quelle == RING_NIEMAND)            { if (einrichtung) zeigeEinrichtung(jetzt); else zeigeWarten(jetzt); }
   else if (tankanzeige)                       zeigeTank(jetzt, akkuProzent);
   else if (modus == MODUS_POLIZEI)            zeigePolizei(jetzt);

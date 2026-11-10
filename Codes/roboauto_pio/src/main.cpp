@@ -228,6 +228,11 @@ void loop() {
 
   ringEinrichtung(webEinrichtung());                 // orange atmend = WLAN einrichten
   ringMusik(musikNummer() >= 0, musikTon(), musikNotenNummer());
+  // Akku laedt (Akkuwaechter misst) und das Auto steht seit 3 s: Ring zeigt den Ladestand
+  static unsigned long zuletztBewegt = 0;
+  if (antriebLinks() != 0 || antriebRechts() != 0) zuletztBewegt = millis();
+  bool laden = akkuUsb() && akkuWert() > 0 && millis() - zuletztBewegt > 3000;
+  ringLaden(laden ? akkuProzent() : -1);
   ringStatus(quelle, startTaste, akkuUsb() ? -1 : akkuProzent(), modus);
 
   // --- Einmal-Aktionen von der Webseite ---
