@@ -20,7 +20,7 @@ Geschrieben mit **VS Code + PlatformIO**, Schritt für Schritt aufgebaut.
 ## 🔌 Hardware
 
 - ESP32-S3 Super Mini (4 MB Flash)
-- 4 × N20-Getriebemotor 1000 U/min, Motortreiber (MX1508 / DRV8833)
+- 4 × N20-Getriebemotor 3 V, 500 U/min, Motortreiber (MX1508 / DRV8833)
 - MPU6050 (Gyro + Beschleunigung)
 - WS2812-LED-Ring (8 LEDs) + Front-/Rücklicht-LEDs
 - Passiver Buzzer

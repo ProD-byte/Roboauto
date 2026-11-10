@@ -6,11 +6,46 @@
 // Die Ketten selbst laufen immer mit voller Helligkeit - jeder Bereich wird beim Setzen
 // mit seiner eigenen Helligkeit verrechnet (sonst gaebe es nur einen Regler fuer alles).
 #ifdef ROBOAUTO_XIAO
+#include <driver/rmt_tx.h>
+#include <driver/rmt_encoder.h>
 // XIAO: alle LEDs hintereinander an einem Pin
 static Adafruit_NeoPixel ketten[] = {
   Adafruit_NeoPixel(LED_KETTE_ANZAHL, LED_KETTE_PIN, NEO_GRB + NEO_KHZ800),
 };
 static int kettenNr(int& nr) { return 0; }
+
+// Senden per RMT mit DMA statt ueber Adafruit show(): die Bibliothek fuellt den kleinen RMT-Speicher
+// waehrend des Sendens per Interrupt nach. Sind Kamera/WLAN gerade beschaeftigt, kommt das zu spaet -
+// die Luecke wirkt wie "Ende der Daten", und nur die erste LED uebernimmt ihre Farbe.
+// Mit DMA liegt das ganze Bild vorher im Speicher und geht ohne Pause raus.
+static rmt_channel_handle_t rmtKanal = nullptr;
+static rmt_encoder_handle_t rmtKodierer = nullptr;
+
+static bool dmaStarten() {
+  rmt_tx_channel_config_t k = {};
+  k.gpio_num = (gpio_num_t)LED_KETTE_PIN;
+  k.clk_src = RMT_CLK_SRC_DEFAULT;
+  k.resolution_hz = 10000000;                 // 0,1 us pro Takt
+  k.mem_block_symbols = 512;                  // mit DMA: Puffer fuer ein ganzes Bild (12 LEDs = 288 Bits)
+  k.trans_queue_depth = 2;
+  k.flags.with_dma = 1;
+  if (rmt_new_tx_channel(&k, &rmtKanal) != ESP_OK) { rmtKanal = nullptr; return false; }
+  rmt_bytes_encoder_config_t b = {};
+  b.bit0 = {3, 1, 9, 0};                      // 0: 0,3 us an, 0,9 us aus
+  b.bit1 = {9, 1, 3, 0};                      // 1: 0,9 us an, 0,3 us aus
+  b.flags.msb_first = 1;
+  if (rmt_new_bytes_encoder(&b, &rmtKodierer) != ESP_OK || rmt_enable(rmtKanal) != ESP_OK) {
+    rmt_del_channel(rmtKanal); rmtKanal = nullptr; return false;
+  }
+  return true;
+}
+
+static void zeigeKette(Adafruit_NeoPixel& k) {
+  if (!rmtKanal) { k.show(); return; }        // DMA ging nicht -> wie bisher
+  rmt_transmit_config_t t = {};
+  rmt_tx_wait_all_done(rmtKanal, 10);         // letztes Bild fertig (+ Pause = Uebernahme)
+  rmt_transmit(rmtKanal, rmtKodierer, k.getPixels(), k.numPixels() * 3, &t);
+}
 #else
 // Super Mini: Ring, Front- und Ruecklicht an drei eigenen Pins - nach aussen trotzdem eine Kette
 static Adafruit_NeoPixel ketten[] = {
@@ -23,17 +58,26 @@ static int kettenNr(int& nr) {   // Platz in der Kette -> welcher Pin, nr wird z
   if (nr >= LED_KETTE_FRONT) { nr -= LED_KETTE_FRONT; return 1; }
   nr -= LED_KETTE_RING; return 0;
 }
+static void zeigeKette(Adafruit_NeoPixel& k) { k.show(); }
 #endif
 constexpr int KETTEN = sizeof(ketten) / sizeof(ketten[0]);
 static bool geaendert[KETTEN] = {};
 static unsigned long letzteAusgabe = 0;
 
 void ketteStarten() {
+#ifdef ROBOAUTO_XIAO
+  bool dma = dmaStarten();
+  Serial.printf(">> LED-Kette: %s\n", dma ? "Ausgabe per DMA" : "DMA geht nicht - Ausgabe wie bisher");
+#endif
   for (auto& k : ketten) {
+#ifdef ROBOAUTO_XIAO
+    if (!rmtKanal) k.begin();                 // mit DMA gehoert der Pin dem eigenen RMT-Kanal
+#else
     k.begin();
+#endif
     k.setBrightness(255);
     k.clear();
-    k.show();
+    zeigeKette(k);
   }
 }
 
@@ -55,7 +99,7 @@ void ketteZeigen(bool sofort) {
   for (int k = 0; k < KETTEN; k++) {
     if (!geaendert[k]) continue;
     geaendert[k] = false;
-    ketten[k].show();
+    zeigeKette(ketten[k]);
     gezeigt = true;
   }
   if (gezeigt) letzteAusgabe = jetzt;

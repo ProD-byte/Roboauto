@@ -4,17 +4,22 @@
 #include "akku.h"
 
 // ============================================================
-//  Akku ueber den Akkuwaechter MAX17048 (I2C, gleicher Bus wie das Gyro).
-//  Der Chip rechnet den Ladestand selbst aus - genauer als eine Spannungsmessung,
-//  weil er auch Last und Alterung beruecksichtigt.
+//  Akku ueber den Akkuwaechter MAX17048 oder den aelteren MAX17043 (I2C, gleicher Bus wie das Gyro,
+//  beide auf Adresse 0x36). Der Chip rechnet den Ladestand selbst aus - genauer als eine
+//  Spannungsmessung, weil er auch Last und Alterung beruecksichtigt.
+//  Unterschiede: der MAX17043 zaehlt die Spannung anders und kennt keine Lade-/Entladerate -
+//  die rechnet die Firmware dann selbst aus dem Ladestand.
 // ============================================================
 
-constexpr uint8_t REG_SPANNUNG = 0x02;   // 78,125 uV pro Bit
+constexpr uint8_t REG_SPANNUNG = 0x02;   // MAX17048: 78,125 uV pro Bit, MAX17043: obere 12 Bit, 1,25 mV pro Bit
 constexpr uint8_t REG_LADUNG   = 0x04;   // oberes Byte = %, unteres Byte = 1/256 %
-constexpr uint8_t REG_VERSION  = 0x08;
-constexpr uint8_t REG_RATE     = 0x16;   // Lade-/Entladerate, 0,208 %/Stunde pro Bit (mit Vorzeichen)
+constexpr uint8_t REG_VERSION  = 0x08;   // MAX17043: 0x0002/0x0003, MAX17048: 0x001x
+constexpr uint8_t REG_RATE     = 0x16;   // nur MAX17048: Lade-/Entladerate, 0,208 %/Stunde pro Bit (mit Vorzeichen)
 
 static bool  gefunden = false;
+static bool  alt = false;                // MAX17043 (ohne Raten-Register)
+static float rateProzent = -1;           // MAX17043: Ladestand beim letzten Raten-Messpunkt
+static unsigned long rateZeit = 0;
 static int   millivolt = 0;
 static float prozent = 0;
 static float rate = 0;                   // %/Stunde, + = laedt
@@ -34,9 +39,16 @@ static void messen() {
   uint16_t v, l, r;
   gefunden = lies16(REG_SPANNUNG, v) && lies16(REG_LADUNG, l);
   if (!gefunden) return;
-  millivolt = (int)(v * 78.125f / 1000.0f);
+  millivolt = alt ? (int)((v >> 4) * 1.25f) : (int)(v * 78.125f / 1000.0f);
   prozent = constrain(l / 256.0f, 0.0f, 100.0f);
-  rate = lies16(REG_RATE, r) ? (int16_t)r * 0.208f : 0;
+  if (!alt) { rate = lies16(REG_RATE, r) ? (int16_t)r * 0.208f : 0; return; }
+  // MAX17043: Rate selbst aus dem Ladestand (alle 60 s ein Messpunkt, %/Stunde)
+  unsigned long jetzt = millis();
+  if (rateProzent < 0) { rateProzent = prozent; rateZeit = jetzt; }
+  else if (jetzt - rateZeit >= 60000) {
+    rate = (prozent - rateProzent) * 3600000.0f / (jetzt - rateZeit);
+    rateProzent = prozent; rateZeit = jetzt;
+  }
 }
 
 void akkuStarten() {
@@ -44,10 +56,12 @@ void akkuStarten() {
   uint16_t version = 0;
   gefunden = lies16(REG_VERSION, version);
   if (gefunden) {
+    alt = version < 0x0010;
     messen();
-    Serial.printf(">> Akkuwaechter (MAX17048, Version %04X) gefunden: %d mV, %.0f %%\n", version, millivolt, prozent);
+    Serial.printf(">> Akkuwaechter (%s, Version %04X) gefunden: %d mV, %.0f %%\n",
+                  alt ? "MAX17043" : "MAX17048", version, millivolt, prozent);
   } else {
-    Serial.println(">> FEHLER: Akkuwaechter (MAX17048) nicht gefunden - zeige USB an");
+    Serial.println(">> FEHLER: Akkuwaechter (MAX17048/MAX17043) nicht gefunden - zeige USB an");
   }
 }
 

@@ -50,7 +50,7 @@ Es gibt zwei Varianten:
 ## 3. Hardware (Hauptauto)
 
 - ESP32-S3 Super Mini (4 MB Flash)
-- 4 × N20-Getriebemotor 1000 U/min, Motortreiber MX1508 / DRV8833 (Motoren einer Seite parallel)
+- 4 × N20-Getriebemotor 3 V, 500 U/min, Motortreiber MX1508 / DRV8833 (Motoren einer Seite parallel)
 - MPU6050 (Gyro + Beschleunigung) an I²C
 - WS2812-LED-Ring (8 LEDs), 2 Front-LEDs, 2 Rück-LEDs (auch WS2812)
 - passiver Buzzer (Ton und Lautstärke per PWM)
