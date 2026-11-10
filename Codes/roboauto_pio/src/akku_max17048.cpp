@@ -19,6 +19,7 @@ constexpr uint8_t REG_RATE     = 0x16;   // nur MAX17048: Lade-/Entladerate, 0,2
 static bool  gefunden = false;
 static bool  alt = false;                // MAX17043 (ohne Raten-Register)
 static float rateProzent = -1;           // MAX17043: Ladestand beim letzten Raten-Messpunkt
+static int   rateMillivolt = 0;          // MAX17043: Spannung beim letzten Raten-Messpunkt
 static unsigned long rateZeit = 0;
 static int   millivolt = 0;
 static float prozent = 0;
@@ -42,12 +43,16 @@ static void messen() {
   millivolt = alt ? (int)((v >> 4) * 1.25f) : (int)(v * 78.125f / 1000.0f);
   prozent = constrain(l / 256.0f, 0.0f, 100.0f);
   if (!alt) { rate = lies16(REG_RATE, r) ? (int16_t)r * 0.208f : 0; return; }
-  // MAX17043: Rate selbst aus dem Ladestand (alle 60 s ein Messpunkt, %/Stunde)
+  // MAX17043: Rate selbst aus dem Ladestand (alle 60 s ein Messpunkt, %/Stunde).
+  // Ganz unten und ganz oben im Akku bewegt sich der Ladestand kaum - steigt die Spannung
+  // spuerbar (ab 5 mV pro Minute), haengt trotzdem USB dran und der Akku laedt.
   unsigned long jetzt = millis();
-  if (rateProzent < 0) { rateProzent = prozent; rateZeit = jetzt; }
+  if (rateProzent < 0) { rateProzent = prozent; rateMillivolt = millivolt; rateZeit = jetzt; }
   else if (jetzt - rateZeit >= 60000) {
     rate = (prozent - rateProzent) * 3600000.0f / (jetzt - rateZeit);
-    rateProzent = prozent; rateZeit = jetzt;
+    float mvProMinute = (millivolt - rateMillivolt) * 60000.0f / (jetzt - rateZeit);
+    if (mvProMinute >= 5 && rate <= AKKU_LAEDT_RATE) rate = AKKU_LAEDT_RATE + 1;
+    rateProzent = prozent; rateMillivolt = millivolt; rateZeit = jetzt;
   }
 }
 

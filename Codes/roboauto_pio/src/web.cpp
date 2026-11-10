@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <WiFi.h>
+#include <Wire.h>
 #include <WebServer.h>
 #include <ESPmDNS.h>
 #include <ArduinoOTA.h>
@@ -540,6 +541,35 @@ static String steuerBefehl(const String& pfad, const Param* p, int n, bool app) 
     return "ok";
   }
   if (pfad == "/verlauf") return akkuVerlaufJson();
+  // Fehlersuche: welche Geraete antworten am I2C-Bus (D4/D5)? 0x68 = Gyro, 0x36 = Akkuwaechter
+  // /i2c?tausch=1 sucht mit vertauschten Leitungen (SDA an D5, SCL an D4)
+  if (pfad == "/i2c") {
+    bool tausch = param(p, n, "tausch") == "1";
+    int sda = tausch ? GYRO_SCL_PIN : GYRO_SDA_PIN, scl = tausch ? GYRO_SDA_PIN : GYRO_SCL_PIN;
+    Wire.end();
+    Wire.begin(sda, scl);
+    String r = "{\"sda\":" + String(digitalRead(sda)) + ",\"scl\":" + String(digitalRead(scl)) + ",\"geraete\":[";
+    bool erstes = true;
+    for (uint8_t a = 1; a < 127; a++) {
+      Wire.beginTransmission(a);
+      if (Wire.endTransmission() == 0) { r += (erstes ? "\"0x" : ",\"0x") + String(a, HEX) + "\""; erstes = false; }
+    }
+    if (tausch) { Wire.end(); Wire.begin(GYRO_SDA_PIN, GYRO_SCL_PIN); }   // wieder normal
+    return r + "]}";
+  }
+  // Fehlersuche: einen I2C-Pin ohne I2C pruefen - /pintest?nr=6
+  // liest ihn mit internem Pull-up, mit Pull-down und als Ausgang auf High
+  if (pfad == "/pintest") {
+    int nr = param(p, n, "nr").toInt();
+    if (nr != GYRO_SDA_PIN && nr != GYRO_SCL_PIN) return "nur die I2C-Pins";
+    Wire.end();
+    pinMode(nr, INPUT_PULLUP);   delay(5); int hoch = digitalRead(nr);
+    pinMode(nr, INPUT_PULLDOWN); delay(5); int runter = digitalRead(nr);
+    pinMode(nr, OUTPUT); digitalWrite(nr, HIGH); delay(5); int ausgang = digitalRead(nr);
+    pinMode(nr, INPUT);
+    Wire.begin(GYRO_SDA_PIN, GYRO_SCL_PIN);
+    return "{\"pin\":" + String(nr) + ",\"pullup\":" + hoch + ",\"pulldown\":" + runter + ",\"ausgangHigh\":" + ausgang + "}";
+  }
   // WLAN einrichten aus der App ueber Bluetooth (das Auto braucht dafuer noch kein WLAN).
   // Nur ueber Bluetooth: das Passwort soll nicht als Adresse durchs Heimnetz gehen.
   //   /netze[?neu=1]            -> {"suche":1} oder {"netze":[{"n":"Name","s":-60,"z":1,"g":1,"v":1},...]}
@@ -677,7 +707,7 @@ void webStarten() {
   });
 
   // --- Steuerung (gleiche Befehle kommen von der App auch ueber Bluetooth) ---
-  for (const char* pfad : {"/fahr", "/aktion", "/status", "/kamera", "/karte", "/video", "/zeit", "/einstellungen", "/update", "/verlauf", "/info"})
+  for (const char* pfad : {"/fahr", "/aktion", "/status", "/kamera", "/karte", "/video", "/zeit", "/einstellungen", "/update", "/verlauf", "/info", "/i2c", "/pintest"})
     server.on(pfad, HTTP_GET, httpSteuerung);
 
   // Alles andere: im Einrichtungsmodus auf die Einrichtungsseite umleiten.
