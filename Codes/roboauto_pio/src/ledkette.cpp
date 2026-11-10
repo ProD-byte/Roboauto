@@ -1,18 +1,16 @@
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
+#include <driver/rmt_tx.h>
+#include <driver/rmt_encoder.h>
 #include "config.h"
 #include "ledkette.h"
 
-// Die Ketten selbst laufen immer mit voller Helligkeit - jeder Bereich wird beim Setzen
-// mit seiner eigenen Helligkeit verrechnet (sonst gaebe es nur einen Regler fuer alles).
-#ifdef ROBOAUTO_XIAO
-#include <driver/rmt_tx.h>
-#include <driver/rmt_encoder.h>
-// XIAO: alle LEDs hintereinander an einem Pin
-static Adafruit_NeoPixel ketten[] = {
-  Adafruit_NeoPixel(LED_KETTE_ANZAHL, LED_KETTE_PIN, NEO_GRB + NEO_KHZ800),
-};
-static int kettenNr(int& nr) { return 0; }
+// Alle LEDs hintereinander an einem Pin. Die Kette selbst laeuft immer mit voller Helligkeit -
+// jeder Bereich wird beim Setzen mit seiner eigenen Helligkeit verrechnet
+// (sonst gaebe es nur einen Regler fuer alles).
+static Adafruit_NeoPixel kette(LED_KETTE_ANZAHL, LED_KETTE_PIN, NEO_GRB + NEO_KHZ800);
+static bool geaendert = false;
+static unsigned long letzteAusgabe = 0;
 
 // Senden per RMT mit DMA statt ueber Adafruit show(): die Bibliothek fuellt den kleinen RMT-Speicher
 // waehrend des Sendens per Interrupt nach. Sind Kamera/WLAN gerade beschaeftigt, kommt das zu spaet -
@@ -40,67 +38,37 @@ static bool dmaStarten() {
   return true;
 }
 
-static void zeigeKette(Adafruit_NeoPixel& k) {
-  if (!rmtKanal) { k.show(); return; }        // DMA ging nicht -> wie bisher
+static void ausgeben() {
+  if (!rmtKanal) { kette.show(); return; }    // DMA ging nicht -> ueber die Bibliothek
   rmt_transmit_config_t t = {};
   rmt_tx_wait_all_done(rmtKanal, 10);         // letztes Bild fertig (+ Pause = Uebernahme)
-  rmt_transmit(rmtKanal, rmtKodierer, k.getPixels(), k.numPixels() * 3, &t);
+  rmt_transmit(rmtKanal, rmtKodierer, kette.getPixels(), kette.numPixels() * 3, &t);
 }
-#else
-// Super Mini: Ring, Front- und Ruecklicht an drei eigenen Pins - nach aussen trotzdem eine Kette
-static Adafruit_NeoPixel ketten[] = {
-  Adafruit_NeoPixel(LED_RING_ANZAHL,  LED_RING_PIN,  NEO_GRB + NEO_KHZ800),
-  Adafruit_NeoPixel(FRONT_LED_ANZAHL, FRONT_LED_PIN, NEO_GRB + NEO_KHZ800),
-  Adafruit_NeoPixel(REAR_LED_ANZAHL,  REAR_LED_PIN,  NEO_GRB + NEO_KHZ800),
-};
-static int kettenNr(int& nr) {   // Platz in der Kette -> welcher Pin, nr wird zur LED-Nummer dort
-  if (nr >= LED_KETTE_REAR)  { nr -= LED_KETTE_REAR;  return 2; }
-  if (nr >= LED_KETTE_FRONT) { nr -= LED_KETTE_FRONT; return 1; }
-  nr -= LED_KETTE_RING; return 0;
-}
-static void zeigeKette(Adafruit_NeoPixel& k) { k.show(); }
-#endif
-constexpr int KETTEN = sizeof(ketten) / sizeof(ketten[0]);
-static bool geaendert[KETTEN] = {};
-static unsigned long letzteAusgabe = 0;
 
 void ketteStarten() {
-#ifdef ROBOAUTO_XIAO
   bool dma = dmaStarten();
-  Serial.printf(">> LED-Kette: %s\n", dma ? "Ausgabe per DMA" : "DMA geht nicht - Ausgabe wie bisher");
-#endif
-  for (auto& k : ketten) {
-#ifdef ROBOAUTO_XIAO
-    if (!rmtKanal) k.begin();                 // mit DMA gehoert der Pin dem eigenen RMT-Kanal
-#else
-    k.begin();
-#endif
-    k.setBrightness(255);
-    k.clear();
-    zeigeKette(k);
-  }
+  Serial.printf(">> LED-Kette: %s\n", dma ? "Ausgabe per DMA" : "DMA geht nicht - Ausgabe ueber die Bibliothek");
+  if (!rmtKanal) kette.begin();               // mit DMA gehoert der Pin dem eigenen RMT-Kanal
+  kette.setBrightness(255);
+  kette.clear();
+  ausgeben();
 }
 
 void ketteSetze(int nr, uint8_t r, uint8_t g, uint8_t b, uint8_t hell) {
   if (nr < 0 || nr >= LED_KETTE_ANZAHL) return;
-  int k = kettenNr(nr);
   uint16_t h = hell + 1;                                  // wie Adafruit setBrightness
   uint32_t c = Adafruit_NeoPixel::Color((r * h) >> 8, (g * h) >> 8, (b * h) >> 8);
-  if (ketten[k].getPixelColor(nr) != c) {
-    ketten[k].setPixelColor(nr, c);
-    geaendert[k] = true;
+  if (kette.getPixelColor(nr) != c) {
+    kette.setPixelColor(nr, c);
+    geaendert = true;
   }
 }
 
 void ketteZeigen(bool sofort) {
   unsigned long jetzt = millis();
   if (!sofort && jetzt - letzteAusgabe < 5) return;      // 12 LEDs brauchen nur ca. 0,4 ms
-  bool gezeigt = false;
-  for (int k = 0; k < KETTEN; k++) {
-    if (!geaendert[k]) continue;
-    geaendert[k] = false;
-    zeigeKette(ketten[k]);
-    gezeigt = true;
-  }
-  if (gezeigt) letzteAusgabe = jetzt;
+  if (!geaendert) return;
+  geaendert = false;
+  ausgeben();
+  letzteAusgabe = jetzt;
 }

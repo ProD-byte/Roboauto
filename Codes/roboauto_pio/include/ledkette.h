@@ -3,8 +3,7 @@
 
 // ============================================================
 //  Alle WS2812-LEDs als eine Kette: Ring, dann Frontlicht, dann Ruecklicht.
-//  XIAO: wirklich an EINEM Pin (ESP -> Ring DIN -> Ring DOUT -> Front -> Heck).
-//  Super Mini: drei Pins, hier trotzdem wie eine Kette durchnummeriert.
+//  An EINEM Pin (D7 -> Ring DIN -> Ring DOUT -> Front -> Heck).
 //  Ring und Lichter schreiben ihre Farben hier hinein, ausgegeben wird gemeinsam.
 // ============================================================
 

@@ -1,6 +1,6 @@
 # 🚗📷 Roboauto – Seeed Studio XIAO ESP32S3 Sense
 
-Upgrade des Roboautos vom ESP32-S3 Super Mini auf den **XIAO ESP32S3 Sense**.
+Das Roboauto läuft auf dem **XIAO ESP32S3 Sense** (früher ESP32-S3 Super Mini, der wird nicht mehr unterstützt).
 Alle bisherigen Funktionen bleiben erhalten (Roboauto-App, Weboberfläche, Gyro, Lichter, Modi, Figuren,
 Fahrweg, Balancieren, Jukebox, Auto-Update). Neu dazu kommen:
 
@@ -32,7 +32,7 @@ Fahrweg, Balancieren, Jukebox, Auto-Update). Neu dazu kommen:
 | BAT+ (hinter dem Schalter) | | LED-Kette (+) | Versorgung der LEDs aus dem Akku (3,5–4,2 V). Nicht an 5V: der Pin hat nur Spannung, solange USB steckt. Nicht an 3V3: zu wenig, dann leuchtet nur die erste LED |
 | 3V3 | | MPU6050 VCC, MAX17048 VDD (falls das Board es braucht) | |
 
-Alle Pins stehen in [`include/config.h`](../include/config.h) (Abschnitte `#ifdef ROBOAUTO_XIAO`).
+Alle Pins stehen in [`include/config.h`](../include/config.h) .
 
 ### LED-Kette (ein Pin für alle LEDs)
 
@@ -84,22 +84,20 @@ Die Spalte `bild` sagt, welches Kamerabild zu dieser Zeile gehört. So kann am P
 
 ## ⚡ Firmware aufspielen
 
-1. In VS Code den Ordner **`roboauto_pio`** öffnen – beide Autos sind ein Projekt, die Umgebung wählt das Board.
+1. In VS Code den Ordner **`roboauto_pio`** öffnen.
 2. `geheim.beispiel.ini` → `geheim.ini`, `include/wlan_zugang.beispiel.h` → `include/wlan_zugang.h`.
 3. Umgebung **`env:roboauto_xiao`** → Upload (→). Klappt der Upload nicht: **BOOT** gedrückt halten, USB einstecken, loslassen.
 4. Später ohne Kabel: **`env:roboauto_xiao_wlan`**.
 
 ### Ohne Programmieren – Online-Flasher
-Auf der GitHub-Pages-Seite gibt es eine eigene Karte **„Roboauto mit XIAO ESP32S3 Sense“** (Update oder Neuinstallation).
+Auf der GitHub-Pages-Seite: **„Update installieren“** oder **„Löschen & neu installieren“**.
 
 ### Automatischer Build und Auto-Update
-GitHub Actions baut bei jedem Hochladen beide Autos in **zwei unabhängigen Jobs** (gleichzeitig, mit derselben
-Build-Nummer). Scheitert einer, wird das andere Auto trotzdem veröffentlicht. Für das gescheiterte bleiben die
-bisherigen Dateien online. Die XIAO-Dateien landen
+GitHub Actions baut bei jedem Hochladen Firmware und App in **zwei unabhängigen Jobs**. Scheitert einer, wird
+der andere trotzdem veröffentlicht, für den gescheiterten bleiben die bisherigen Dateien online. Die Firmware landet
 auf GitHub Pages im Unterordner **`/xiao/`** (`version.json`, `roboauto-xiao-update.bin`, `roboauto-xiao-komplett.bin`).
-Der XIAO schaut nur dort nach Updates, der Super Mini nur im Hauptordner. So lädt keines der beiden Autos
-die falsche Firmware. Bei einem Versions-Tag (`v1.2.0`) hängen die XIAO-Dateien zusätzlich am Release.
+Dort schaut das Auto nach Updates – der Ordner bleibt deshalb so, auch ohne Super Mini. Bei einem Versions-Tag (`v1.2.0`) hängen die XIAO-Dateien zusätzlich am Release.
 
-In der Roboauto-App heißt das Auto per Bluetooth **„RoboautoXiao-XXXX“**. Die App erkennt den XIAO (`/info` →
-`board: xiao`) und zeigt seine Oberfläche mit Kamera, Mikrofon und SD-Karte. Video, Ton und Dateien gibt es nur
+In der Roboauto-App heißt das Auto per Bluetooth **„RoboautoXiao-XXXX“**. Die App zeigt die Oberfläche mit
+Kamera, Mikrofon und SD-Karte. Video, Ton und Dateien gibt es nur
 über WLAN (Heim-WLAN oder WLAN des Autos), per Bluetooth wäre es zu langsam.

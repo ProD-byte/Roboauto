@@ -387,17 +387,17 @@ class MainActivity : ComponentActivity(), BleVerbindung.Ereignisse, WlanVerbindu
         if (art != "ble") {
             art = "ble"
             seiteGeladen = false
-            // Die Seite kommt mit der /info-Antwort (passend zum Board). Bleibt sie aus: Hauptauto-Seite.
+            // Die Seite kommt mit der /info-Antwort. Bleibt sie aus, nach 2 s trotzdem.
             haupt.postDelayed({ if (art == "ble" && !seiteGeladen) steuerungZeigen("") }, 2000)
         }
     }
 
-    // Hauptauto -> index.html, XIAO Sense -> xiao.html (mit Kamera, Mikrofon, SD-Karte)
+    // Steuerseite (assets/index.html, kommt beim Bauen aus include/webseite.h der Firmware)
     private var seiteGeladen = false
+    @Suppress("UNUSED_PARAMETER")
     private fun steuerungZeigen(info: String) {
         seiteGeladen = true
-        val board = try { JSONObject(info).optString("board") } catch (_: Exception) { "" }
-        web.loadUrl(SEITEN + if (board == "xiao") "xiao.html" else "index.html")
+        web.loadUrl(SEITEN + "index.html")
     }
 
     override fun bleGetrennt() {

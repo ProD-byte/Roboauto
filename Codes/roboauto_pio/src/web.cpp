@@ -24,14 +24,12 @@
 #include "einstellungen.h"
 #include "neustart.h"
 #include "zeit.h"
-#ifdef ROBOAUTO_XIAO
 #include "kamera.h"
 #include "mikro.h"
 #include "karte.h"
 #include "lernen.h"
 #include "medien.h"
 #include "video.h"
-#endif
 
 static WebServer server(80);
 static WiFiUDP appUdp;                        // Fahrbefehle der App im WLAN (gleiches Textformat wie Bluetooth)
@@ -267,9 +265,7 @@ static void starteEinrichtung() {
 static void starteFahrWlan() {
   WiFi.mode(WIFI_AP_STA);
   WiFi.softAP(autoName());
-#ifdef ROBOAUTO_XIAO
   medienServerStarten();                  // Video/Ton auch direkt im Auto-WLAN (nicht erst mit Heim-WLAN)
-#endif
   Serial.printf(">> Eigenes WLAN \"%s\" offen (App direkt verbinden: %s)\n",
                 autoName(), WiFi.softAPIP().toString().c_str());
 }
@@ -408,7 +404,6 @@ static String statusJson() {
            autoUpdateBuild(), autoUpdateNeu(), autoUpdateZustand(), autoUpdateProzent(),
            (unsigned long)lichtAnzeigeFarbe(0), (unsigned long)lichtAnzeigeFarbe(1),
            (unsigned long)lichtAnzeigeFarbe(2), (unsigned long)lichtAnzeigeFarbe(3), ringText);
-#ifdef ROBOAUTO_XIAO
   // XIAO Sense: Kamera, Mikrofon, SD-Karte, Lernen (die schliessende Klammer wird ersetzt)
   snprintf(json + n - 1, sizeof(json) - n + 1,
            ",\"kam\":%d,\"aufl\":%d,\"mik\":%d,\"pegel\":%d,\"klatsch\":%d,\"sd\":%d,"
@@ -417,9 +412,6 @@ static String statusJson() {
            kameraDa(), kameraAufloesungStufe(), mikroDa(), mikroPegel(), klatschAn, karteDa(),
            lernenAktiv(), lernenFahrt(), lernenBilder(), lernenSekunden(), lernenLetztesFoto(), MEDIEN_PORT,
            videoLaeuft(), videoSekunden(), videoMitTon(), videoZaehler(), kameraFokusArt(), kameraScharf());
-#else
-  (void)n;
-#endif
   return String(json);
 }
 
@@ -497,7 +489,6 @@ static String steuerBefehl(const String& pfad, const Param* p, int n, bool app) 
     if (!app) letzteAbfrage = millis();
     return statusJson();
   }
-#ifdef ROBOAUTO_XIAO
   // Kamera-Aufloesung: /kamera?aufl=0..2
   // Video-Aufnahme: /video?an=1&ton=1 (Ton nur, wenn er auf der Seite eingeschaltet ist), /video?an=0
   if (pfad == "/video") {
@@ -520,7 +511,6 @@ static String steuerBefehl(const String& pfad, const Param* p, int n, bool app) 
     }
     return karteJson();
   }
-#endif
   // Einstellungen lesen: /einstellungen   aendern: /einstellungen?tempo=150&toene=1 ...
   if (pfad == "/einstellungen") {
     if (hatParam(p, n, "standard")) {
@@ -802,9 +792,7 @@ void webUpdate() {
     MDNS.addService("http", "tcp", 80);
     starteOta();
     zeitInternet();                         // Uhrzeit aus dem Internet holen
-#ifdef ROBOAUTO_XIAO
     medienServerStarten();                  // Live-Video, Live-Ton, SD-Dateien auf Port 81
-#endif
     serverLaeuft = true;
     ereignis = 1;                           // -> Ring + Piepen in main.cpp
     Serial.printf(">> WLAN verbunden! Im Browser oeffnen: http://%s  oder  http://%s.local\n",

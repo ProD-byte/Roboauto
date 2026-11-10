@@ -11,11 +11,7 @@ static void motorStandardwerte() {
   e.motorLInv    = MOTOR_L_INVERTIERT;
   e.motorRInv    = MOTOR_R_INVERTIERT;
   e.motorTausch  = false;
-#ifdef ROBOAUTO_XIAO
   e.kamDreh      = KAMERA_DREHUNG;        // nur der XIAO hat eine Kamera
-#else
-  e.kamDreh      = 0;
-#endif
 }
 
 static void standardwerte() {

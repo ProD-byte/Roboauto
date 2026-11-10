@@ -4,14 +4,10 @@
 #include "aufnahme.h"
 #include "buzzer.h"
 
-#ifdef ROBOAUTO_XIAO
 #include <SD.h>
 #include "karte.h"
 // Mit SD-Karte liegt der Fahrweg in /aufnahme.bin (bis 10 min), sonst im internen Speicher (bis 2 min)
 static const char* AUFNAHME_DATEI = "/aufnahme.bin";
-#else
-static bool karteDa() { return false; }   // Super Mini: keine SD-Karte, immer interner Speicher
-#endif
 
 // Ein Eintrag = "so lange (dauer) diese Steuerwerte (x, y)"
 struct Eintrag {
@@ -46,13 +42,11 @@ static int maxEintraege()        { return karteDa() ? AUFNAHME_MAX_EINTRAEGE : A
 static unsigned long maxDauer()  { return karteDa() ? AUFNAHME_MAX_MS : AUFNAHME_MAX_MS_INTERN; }
 
 static void speichern() {
-#ifdef ROBOAUTO_XIAO
   if (karteDa()) {
     File f = SD.open(AUFNAHME_DATEI, FILE_WRITE);
     if (f) { f.write((const uint8_t*)spur, anzahl * sizeof(Eintrag)); f.close(); return; }
     Serial.println(">> Aufnahme: SD-Karte geht nicht - speichere intern");
   }
-#endif
   Preferences p;
   p.begin("aufnahme", false);
   int n = min(anzahl, AUFNAHME_MAX_INTERN);
@@ -63,14 +57,12 @@ static void speichern() {
 
 void aufnahmeStarten() {
   anzahl = 0;
-#ifdef ROBOAUTO_XIAO
   File f = karteDa() ? SD.open(AUFNAHME_DATEI) : File();
   if (f) {
     anzahl = min((int)(f.size() / sizeof(Eintrag)), AUFNAHME_MAX_EINTRAEGE);
     f.read((uint8_t*)spur, anzahl * sizeof(Eintrag));
     f.close();
   }
-#endif
   if (anzahl == 0) {
     Preferences p;
     p.begin("aufnahme", true);

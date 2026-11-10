@@ -76,10 +76,7 @@ dependencies {
 
 // ------------------------------------------------------------
 //  Weboberflaeche aus der Firmware uebernehmen: WEBSEITE aus include/webseite.h
-//  wird zu assets/index.html (Super Mini) und assets/xiao.html (XIAO Sense mit Kamera).
-//  Teile nur fuer den XIAO stehen zwischen <!--XIAO--> ... <!--/XIAO--> bzw. /*XIAO*/ ... /*/XIAO*/
-//  (genau wie in scripts/webseite_gz.py der Firmware).
-//  Damit sieht die App immer genauso aus wie die Webseite des jeweiligen Autos.
+//  wird zu assets/index.html. Damit sieht die App immer genauso aus wie die Webseite des Autos.
 //  Dazu kommen die App-eigenen Dateien aus app/web (app.js, verbinden.html).
 // ------------------------------------------------------------
 abstract class WebseiteAusziehen : DefaultTask() {
@@ -90,10 +87,8 @@ abstract class WebseiteAusziehen : DefaultTask() {
     @TaskAction
     fun los() {
         val datei = quelle.get().asFile
-        val alles = Regex("""const char WEBSEITE\[\] PROGMEM = R"==\((.*?)\)==";""", RegexOption.DOT_MATCHES_ALL)
+        val html = Regex("""const char WEBSEITE\[\] PROGMEM = R"==\((.*?)\)==";""", RegexOption.DOT_MATCHES_ALL)
             .find(datei.readText())?.groupValues?.get(1) ?: throw GradleException("WEBSEITE in $datei nicht gefunden")
-        val html = alles.replace(Regex("""<!--XIAO-->.*?<!--/XIAO-->|/\*XIAO\*/.*?/\*/XIAO\*/""", RegexOption.DOT_MATCHES_ALL), "")
-        val xiao = alles.replace(Regex("""<!--/?XIAO-->|/\*/?XIAO\*/"""), "")
         // Auto-Logo aus der Kopfleiste - der Verbinden-Bildschirm benutzt es auch
         val logo = Regex("""<div class="marke">(<svg.*?</svg>)""", RegexOption.DOT_MATCHES_ALL)
             .find(html)?.groupValues?.get(1) ?: ""
@@ -104,7 +99,6 @@ abstract class WebseiteAusziehen : DefaultTask() {
         // app.js als erstes Skript: leitet fetch('/status') usw. an die App weiter
         val mitApp = "<head>\n<script src=\"app.js\"></script>"
         File(ziel, "index.html").writeText(html.replaceFirst("<head>", mitApp))
-        File(ziel, "xiao.html").writeText(xiao.replaceFirst("<head>", mitApp))
         webOrdner.get().asFile.listFiles()!!.forEach { f ->
             File(ziel, f.name).writeText(f.readText().replace("<!--LOGO-->", logo))
         }

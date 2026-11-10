@@ -18,12 +18,9 @@ Das Roboauto ist ein kleines, selbst konstruiertes Roboterauto zum Basteln, Fahr
   Build und Online-Installer. Es wird **keine** fremde Steuer-App mehr benutzt (früher „Dabble“, jetzt entfernt).
 - **Gesteuert wird** per eigener **Roboauto-App** (Android) oder im **Browser** – mit derselben Oberfläche.
 
-Es gibt zwei Varianten:
-
-| Variante | Board | Ordner | Besonderheiten |
-|---|---|---|---|
-| **Hauptauto** | ESP32-S3 Super Mini (4 MB Flash) | `Codes/roboauto_pio` | Standardauto |
-| **XIAO Sense** | Seeed Studio XIAO ESP32S3 Sense (8 MB Flash, 8 MB PSRAM) | `Codes/roboauto_pio` (env `roboauto_xiao`) | zusätzlich Kamera, Mikrofon, SD-Karte, alle LEDs an einem Pin, Akku-Chip MAX17048 |
+Board: **Seeed Studio XIAO ESP32S3 Sense** (8 MB Flash, 8 MB PSRAM) mit Kamera, Mikrofon und SD-Karte,
+alle LEDs an einem Pin, Akkuwächter MAX17048/MAX17043. Projekt: `Codes/roboauto_pio` (env `roboauto_xiao`).
+Den früheren ESP32-S3 Super Mini unterstützt die Firmware seit November 2026 nicht mehr.
 
 ---
 
@@ -43,31 +40,30 @@ Es gibt zwei Varianten:
 | 📶 WLAN | merkt sich bis zu 8 WLANs, Einrichtung per Handy, eigenes WLAN „Roboauto-XXXX“ zum Fahren ohne Router |
 | 🔄 Updates | Auto-Update von GitHub (nur wenn das Auto 2 min steht und der Akku reicht, mit automatischem Zurückfallen auf die alte Version, falls die neue nicht sauber startet); Updates per WLAN aus VS Code (OTA) |
 | 🔧 Einstellungen | Tempo, Lenkung, Drehen auf der Stelle, Figurengröße, Helligkeiten, Lautstärke, Töne, Motor-Richtungen mit Motortest-Assistent – alles im Auto gespeichert |
-| 📷 nur XIAO | Live-Video im Browser, Fotos auf SD-Karte, Live-Ton, Lautstärkepegel, zweimal Klatschen = Licht an/aus, „Lernen“ (schreibt Fahrdaten + Bilder auf die SD-Karte) |
+| 📷 Kamera & Ton | Live-Video in App und Browser, Fahren mit Video im Querformat, Videos mit Ton,, Fotos auf SD-Karte, Live-Ton, Lautstärkepegel, zweimal Klatschen = Licht an/aus, „Lernen“ (schreibt Fahrdaten + Bilder auf die SD-Karte) |
 
 ---
 
-## 3. Hardware (Hauptauto)
+## 3. Hardware
 
-- ESP32-S3 Super Mini (4 MB Flash)
-- 4 × N20-Getriebemotor 3 V, 500 U/min, Motortreiber MX1508 / DRV8833 (Motoren einer Seite parallel)
-- MPU6050 (Gyro + Beschleunigung) an I²C
-- WS2812-LED-Ring (8 LEDs), 2 Front-LEDs, 2 Rück-LEDs (auch WS2812)
+- Seeed Studio XIAO ESP32S3 Sense mit Kamera OV5640 (Autofokus), Mikrofon und microSD-Steckplatz
+- 4 × N20-Getriebemotor 3 V, 500 U/min, Motortreiber DRV8833 (Motoren einer Seite parallel)
+- MPU6050 (Gyro + Beschleunigung) und Akkuwächter MAX17048/MAX17043 an I²C
+- WS2812-LED-Ring (8 LEDs), 2 Front-LEDs, 2 Rück-LEDs – alle als eine Kette an einem Pin
 - passiver Buzzer (Ton und Lautstärke per PWM)
-- 1S-LiPo 3,7 V über Schalter, Spannungsteiler zur Akkumessung
+- 1S-LiPo 3,7 V über Schalter, geladen über USB-C am XIAO
 
-| ESP32-S3 Pin | Anschluss | Funktion |
-|---|---|---|
-| GPIO1 / GPIO4 | Motortreiber IN1 / IN2 | Motoren links vor / zurück (PWM) |
-| GPIO13 / GPIO2 | Motortreiber IN3 / IN4 | Motoren rechts vor / zurück (PWM) |
-| GPIO5 | LED-Ring DIN | 8 × WS2812B |
-| GPIO7 | Frontlicht DIN | 2 × WS2812B |
-| GPIO10 | Rücklicht DIN | 2 × WS2812B (LED 1 = Rückfahrlicht) |
-| GPIO6 | Buzzer | passiver Buzzer |
-| GPIO8 / GPIO9 | MPU6050 SDA / SCL | I²C, Adresse 0x68 |
-| GPIO3 | Spannungsteiler | Akkuspannung (ADC) |
+| XIAO | GPIO | Anschluss | Funktion |
+|---|---|---|---|
+| D0 / D1 | 1 / 2 | Motortreiber IN1 / IN2 | Motoren links vor / zurück (PWM) |
+| D2 / D3 | 3 / 4 | Motortreiber IN3 / IN4 | Motoren rechts vor / zurück (PWM) |
+| D4 / D5 | 5 / 6 | MPU6050 + Akkuwächter SDA / SCL | I²C (0x68 und 0x36) |
+| D6 | 43 | Buzzer | passiver Buzzer |
+| D7 | 44 | LED-Ring DIN | 12 × WS2812B: Ring 0–7, Front 8–9, Heck 10–11 |
+| D8–D10 | 7–9 | SD-Karte | auf dem Sense-Board |
+| BAT+ | | Akku (Schalter), LED-Kette +, Motortreiber | Versorgung |
 
-Alle Pins und Einstellwerte stehen in `include/config.h`.
+Alle Pins und Einstellwerte stehen in `include/config.h`, Einzelheiten in `docs/xiao-sense.md`.
 
 ---
 
@@ -122,7 +118,7 @@ Befehle. Dadurch funktioniert jede neue Funktion sofort überall.
 | `einstellungen.cpp` | Einstellungen im Flash speichern (Preferences) |
 | `autoupdate.cpp` | Auto-Update von GitHub Pages mit Rückfall-Schutz |
 
-Zusätzlich nur bei XIAO: `kamera.cpp`, `mikro.cpp`, `karte.cpp` (SD), `lernen.cpp`, `medien.cpp`
+Dazu: `kamera.cpp`, `mikro.cpp`, `karte.cpp` (SD), `lernen.cpp`, `medien.cpp`
 (Medien-Server Port 81 für Video/Ton/Dateien), `ledkette.cpp` (alle LEDs an einem Pin).
 
 ### 4.2 Die Befehle (gleich für Browser, WLAN-App und Bluetooth-App)
@@ -136,7 +132,7 @@ Zusätzlich nur bei XIAO: `kamera.cpp`, `mikro.cpp`, `karte.cpp` (SD), `lernen.c
 | `/verlauf` | – | JSON | Akkuverlauf |
 | `/update` | `a=suchen` / `a=installieren` | `ok` | Auto-Update |
 | `/info` | – | JSON | Name, Bluetooth-Name, IP, WLAN da?, Firmware-Build, UDP-Port |
-| `/kamera`, `/karte` | nur XIAO | | Kamera-Auflösung, SD-Karten-Übersicht |
+| `/kamera`, `/karte` | | | Kamera-Auflösung, SD-Karten-Übersicht |
 
 Aktionsnummern: 1 Licht · 2 Fernlicht · 3 Warnblinker · 4 Wende · 5 nächster Modus · 10–15 Modus direkt ·
 20–22 Figur (Quadrat, Acht, Slalom) · 30 Aufnahme · 31 Abspielen · 32 Balancieren · 33 Gyro kalibrieren ·
@@ -151,7 +147,7 @@ Aktionsnummern: 1 Licht · 2 Fernlicht · 3 Warnblinker · 4 Wende · 5 nächste
   - Service `8d3a1000-5b7e-4f2a-9c61-2e4b7a9d0c11`
   - Befehl (write) `8d3a1001-…`, Antwort (notify) `8d3a1002-…`
   - Anfrage `"<nr>|<pfad>?<params>"`, Antwort `"<nr>|<text>\n"` (in MTU-Stücken), `nr = 0` = keine Antwort
-  - MTU 517, Gerätename „Roboauto-XXXX“ (XXXX = Chip-Nummer, XIAO: „RoboautoXiao-XXXX“) – so sind mehrere Autos unterscheidbar
+  - MTU 517, Gerätename „RoboautoXiao-XXXX“ (XXXX = Chip-Nummer) – so sind mehrere Autos unterscheidbar
   - Reißt Bluetooth ab, stoppt das Auto sofort.
 - Ausführlich: `docs/app-protokoll.md`.
 
@@ -221,7 +217,7 @@ Modernes dunkles Dashboard, eine Datei, keine externen Bibliotheken:
 ## 7. Build, Verteilung, Updates
 
 - **GitHub-Repository** `prod-byte/Roboauto`, Workflow „Firmware bauen“ (`.github/workflows/build.yml`):
-  baut Hauptauto (`env:roboauto`), XIAO (`env:roboauto_xiao`) und die App.
+  baut die Firmware (`env:roboauto_xiao`) und die App.
 - Ergebnis landet auf **GitHub Pages** `https://prod-byte.github.io/Roboauto/`:
   - **Online-Flasher** (ESP Web Tools): Firmware ohne Programmieren per USB im Browser aufspielen
   - `roboauto.apk` + `app.json` (Version, Größe) zum Herunterladen, QR-Code am PC
@@ -230,7 +226,7 @@ Modernes dunkles Dashboard, eine Datei, keine externen Bibliotheken:
 - **Projektseite:** `https://daveslab.de/basteln/` (WordPress) mit Download-Abschnitten für Roboauto,
   Roboauto XIAO, ESPCam und die Roboauto-App (Version wird live von `app.json` geholt).
 - Selbst bauen: VS Code + PlatformIO, `geheim.beispiel.ini` → `geheim.ini`,
-  `include/wlan_zugang.beispiel.h` → `wlan_zugang.h`, Umgebung `env:roboauto` (USB) oder `env:roboauto_wlan` (OTA).
+  `include/wlan_zugang.beispiel.h` → `wlan_zugang.h`, Umgebung `env:roboauto_xiao` (USB) oder `env:roboauto_xiao_wlan` (OTA).
 
 ---
 
@@ -239,17 +235,17 @@ Modernes dunkles Dashboard, eine Datei, keine externen Bibliotheken:
 ```
 Roboauto/
 ├─ README.md
-├─ .github/workflows/build.yml        automatischer Build (Firmware, XIAO, App, Pages)
+├─ .github/workflows/build.yml        automatischer Build (Firmware, App, Pages)
 ├─ Codes/
-│  ├─ roboauto_pio/                    Firmware für beide Autos (ein PlatformIO-Projekt)
+│  ├─ roboauto_pio/                    Firmware (PlatformIO-Projekt)
 │  │  ├─ src/, include/, scripts/
-│  │  └─ docs/                         Online-Flasher (index.html), app-protokoll.md, xiao-sense.md, Bilder, Schaltpläne
+│  │  └─ docs/                         Online-Flasher (index.html), app-protokoll.md, xiao-sense.md, Bilder
 │  └─ roboauto_app/                    Android-App (Kotlin, Gradle)
 │     ├─ app/src/main/java/de/roboauto/app/   MainActivity, BleVerbindung, WlanVerbindung
 │     └─ app/web/                      verbinden.html, app.js
 ├─ 3D-Druck/                           aktuelle Druckteile (.skp SketchUp, .stl), alte Versionen
 ├─ Modell/                             komplettes Auto als 3D-Modell (V6, V7 in Arbeit)
-└─ Platine/                            Platine, Pinbelegung, Schaltplan (XIAO ESP32-C6, geplant)
+└─ Platine/                            Platine, Pinbelegung, Schaltplan (Seeed Studio XIAO ESP32-S3 Sense)
 ```
 
 ---
@@ -267,7 +263,7 @@ Figuren, Fahrweg, Balancieren → Jukebox → Auto-Update, Online-Flasher → me
 ## 10. Offene Punkte / Ideen
 
 - App in den Google Play Store (Material in `Codes/roboauto_app/playstore/`).
-- Platine mit XIAO ESP32-C6 (Schaltplan liegt in `Platine/`).
+- Platine für den Seeed Studio XIAO ESP32-S3 Sense (Schaltplan liegt in `Platine/`).
 
 ---
 
@@ -277,8 +273,5 @@ Figuren, Fahrweg, Balancieren → Jukebox → Auto-Update, Online-Flasher → me
 - Neue Funktionen immer über `steuerBefehl()` in `web.cpp` anbinden – dann gehen sie in Browser, WLAN-App und
   Bluetooth-App gleichzeitig. Neue Knöpfe kommen in `webseite.h`, die App übernimmt sie beim nächsten Build.
 - Grenzwerte und Pins gehören nach `config.h`, Einstellungen, die der Nutzer ändern kann, nach `einstellungen.cpp`.
-- Flash ist beim Hauptauto knapp (ca. 91 % belegt) – große Bibliotheken vermeiden.
-- Beide Autos sind **ein** Projekt: XIAO-Teile stehen in `#ifdef ROBOAUTO_XIAO` (C++) bzw. zwischen
-  `<!--XIAO-->…<!--/XIAO-->` und `/*XIAO*/…/*/XIAO*/` (webseite.h). Reine XIAO-Dateien (Kamera, Mikro, SD,
-  MAX17048) schließt `build_src_filter` in `platformio.ini` beim Super Mini aus.
+- Nur noch ein Board (XIAO ESP32S3 Sense) – den Super Mini gibt es nicht mehr, keine Board-Weichen mehr einbauen.
 - Sicherheit zuerst: Totmann (400 ms), Stopp bei Verbindungsabbruch, Crash-Erkennung nicht aushebeln.

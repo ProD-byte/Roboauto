@@ -2,36 +2,27 @@
 // ============================================================
 //  Zentrale Einstellungen: Pins und Fahrwerte
 //
-//  Ein Code fuer beide Autos. Die Umgebung in platformio.ini waehlt das Board:
-//    roboauto, roboauto_wlan            -> ESP32-S3 Super Mini
-//    roboauto_xiao, roboauto_xiao_wlan  -> XIAO ESP32S3 Sense (setzt ROBOAUTO_XIAO)
+//  Board: Seeed Studio XIAO ESP32S3 Sense (Umgebung roboauto_xiao bzw. roboauto_xiao_wlan)
 //
-//  XIAO-Pins:
+//  Pins:
 //  Pin   GPIO  Funktion
 //  D0    1     Motor links vor
 //  D1    2     Motor links rueck
 //  D2    3     Motor rechts vor
 //  D3    4     Motor rechts rueck
-//  D4    5     I2C SDA  (MPU6050 + MAX17048)
-//  D5    6     I2C SCL  (MPU6050 + MAX17048)
+//  D4    5     I2C SDA  (MPU6050 + Akkuwaechter)
+//  D5    6     I2C SCL  (MPU6050 + Akkuwaechter)
 //  D6    43    Buzzer
 //  D7    44    LED-Kette DIN (Ring -> Front -> Heck)
 //  D8-10 7-9   SD-Karte (SPI, auf dem Sense-Board, CS = GPIO21)
-//  intern      Kamera (OV2640/OV3660), Mikrofon (PDM: GPIO42 Takt, GPIO41 Daten)
+//  intern      Kamera (OV5640/OV3660/OV2640), Mikrofon (PDM: GPIO42 Takt, GPIO41 Daten)
 // ============================================================
 
 // --- Motoren (H-Bruecke) ---
-#ifdef ROBOAUTO_XIAO
 constexpr int MOTOR_L_VOR    = 1;    // D0
 constexpr int MOTOR_L_RUECK  = 2;    // D1
 constexpr int MOTOR_R_VOR    = 3;    // D2
 constexpr int MOTOR_R_RUECK  = 4;    // D3
-#else
-constexpr int MOTOR_L_VOR    = 1;
-constexpr int MOTOR_L_RUECK  = 4;
-constexpr int MOTOR_R_VOR    = 13;
-constexpr int MOTOR_R_RUECK  = 2;
-#endif
 
 // Drehrichtung je Motor umkehren, falls er falsch herum angeschlossen ist.
 // Im Fahrtest ermittelt: der rechte Motor laeuft "verkehrt herum".
@@ -42,22 +33,12 @@ constexpr int  MOTORTEST_TEMPO = 120;     // Motortest: Staerke
 constexpr unsigned long MOTORTEST_MS = 1500;   // Motortest: Dauer
 
 // --- Weitere Pins ---
-#ifdef ROBOAUTO_XIAO
 // Buzzer auf GPIO43 (TX): beim Einschalten schickt der Chip kurz seine Startmeldung dorthin,
 // das gibt hoechstens ein leises Rauschen. Auf GPIO44 (RX) haetten die LEDs dabei wild geflackert.
 constexpr int BUZZER_PIN     = 43;   // D6
 constexpr int LED_KETTE_PIN  = 44;   // D7: alle WS2812 an EINEM Pin
 constexpr int GYRO_SDA_PIN   = 5;    // D4 (I2C fuer Gyro und Akkuwaechter)
 constexpr int GYRO_SCL_PIN   = 6;    // D5
-#else
-constexpr int LED_RING_PIN   = 5;
-constexpr int BUZZER_PIN     = 6;
-constexpr int FRONT_LED_PIN  = 7;
-constexpr int REAR_LED_PIN   = 10;
-constexpr int GYRO_SDA_PIN   = 8;
-constexpr int GYRO_SCL_PIN   = 9;
-constexpr int AKKU_PIN       = 3;
-#endif
 
 // --- LED-Ring ---
 constexpr int LED_RING_ANZAHL     = 8;
@@ -111,21 +92,11 @@ constexpr int SIRENE_MAX_HZ = 1400;
 constexpr unsigned long SIRENE_RUNDE_MS = 400;   // einmal hoch und runter (kleiner = hektischer)
 constexpr unsigned long DOPPELKLICK_ZEIT = 350;  // ms
 
-#ifdef ROBOAUTO_XIAO
 // --- Akku: Akkuwaechter MAX17048 am I2C-Bus (misst Spannung und Ladestand in %) ---
 constexpr uint8_t AKKU_ADRESSE  = 0x36;
 constexpr int AKKU_ECO_AN       = 15;   // Prozent - darunter: Eco-Modus an
 constexpr int AKKU_ECO_AUS      = 20;   // Prozent - darueber: Eco-Modus wieder aus (Hysterese)
 constexpr float AKKU_LAEDT_RATE = 1.0f; // %/Stunde - steigt der Ladestand schneller, haengt USB dran
-#else
-// --- Akku (ADC-Rohwerte 0..4095, wie in V5 kalibriert) ---
-constexpr int AKKU_LAEDT       = 2300;  // darueber: nur USB/Netzteil (kein Akku) -> Ring komplett blau.
-                                        // (vorher 2000: ein ganz voller Akku lag schon darueber)
-constexpr int AKKU_ANZEIGE_MIN = 1400;  // = 0 LEDs (leer)
-constexpr int AKKU_ANZEIGE_MAX = 1950;  // = 8 LEDs (voll)
-constexpr int AKKU_ECO_AN      = 1500;  // darunter: Eco-Modus an
-constexpr int AKKU_ECO_AUS     = 1600;  // darueber: Eco-Modus wieder aus (Hysterese)
-#endif
 constexpr unsigned long AKKU_VERLAUF_MS = 10000;   // alle 10 s ein Wert fuer das Diagramm
 constexpr int AKKU_VERLAUF_PUNKTE      = 360;     // 360 x 10 s = 1 Stunde
 
@@ -174,12 +145,9 @@ constexpr unsigned long WLAN_NEUVERSUCH_MS = 30000; // im Einrichtungsmodus alle
 constexpr unsigned long WLAN_TIMEOUT_MS = 15000;
 
 // --- Auto-Update von GitHub (siehe autoupdate.h) ---
-#ifdef ROBOAUTO_XIAO
-// Eigener Unterordner: das XIAO-Auto darf NIE die Firmware vom Super Mini installieren!
+// Eigener Unterordner /xiao/ (frueher gab es daneben den Super Mini) - nicht aendern,
+// sonst finden die Autos im Feld ihre Updates nicht mehr
 constexpr const char* UPDATE_URL = "https://prod-byte.github.io/Roboauto/xiao/";   // GitHub-Pages-Adresse (mit / am Ende)
-#else
-constexpr const char* UPDATE_URL = "https://prod-byte.github.io/Roboauto/";   // GitHub-Pages-Adresse (mit / am Ende)
-#endif
 constexpr unsigned long UPDATE_ERSTE_SUCHE_MS = 60000;       // so lange nach dem WLAN-Verbinden warten, dann nachsehen
 constexpr unsigned long UPDATE_INTERVALL_MS = 6UL * 3600000; // danach alle 6 Stunden
 constexpr unsigned long UPDATE_RUHE_MS = 120000;             // so lange muss das Auto unbenutzt stehen, bevor es sich aktualisiert
@@ -201,13 +169,8 @@ constexpr unsigned long FIGUR_SEGMENT_MAX_MS = 6000;  // Sicherheits-Abbruch je 
 // XIAO: mit SD-Karte wird der Fahrweg dort gespeichert (lang), ohne Karte im internen Speicher (kurz).
 constexpr int           AUFNAHME_MAX_INTERN    = 500;     // so viele Lenk-/Gas-Aenderungen passen in den internen Speicher
 constexpr unsigned long AUFNAHME_MAX_MS_INTERN = 120000;  // maximal 2 Minuten
-#ifdef ROBOAUTO_XIAO
 constexpr int           AUFNAHME_MAX_EINTRAEGE = 5000;    // mit SD-Karte
 constexpr unsigned long AUFNAHME_MAX_MS        = 600000;  // mit SD-Karte: 10 Minuten
-#else
-constexpr int           AUFNAHME_MAX_EINTRAEGE = AUFNAHME_MAX_INTERN;
-constexpr unsigned long AUFNAHME_MAX_MS        = AUFNAHME_MAX_MS_INTERN;
-#endif
 
 // --- Balancieren (auf zwei Raedern, Schnauze hoch) ---
 // Einschalten: Auto am "schwerelosen" Punkt halten, dann Knopf "Balancieren" in App/Webseite
@@ -232,7 +195,6 @@ constexpr unsigned long CRASH_SPERRE_MS = 1500; // nach einem Aufprall so lange 
 constexpr float UMGEKIPPT_AUFRECHT   = 0.4f;   // darunter (ca. 65 Grad Schraeglage) gilt als umgekippt
 constexpr unsigned long UMGEKIPPT_MS = 600;    // so lange schraeg = wirklich umgekippt (kein Hopser)
 
-#ifdef ROBOAUTO_XIAO
 // --- Medien-Server (eigener Webserver neben der Steuerung, jede Anfrage in eigener Aufgabe) ---
 //   http://roboauto.local:81/stream    Live-Video
 //   http://roboauto.local:81/bild      Einzelbild
@@ -273,15 +235,9 @@ constexpr int SD_MOSI_PIN = 9;
 // Aus diesen Daten kann spaeter (am PC) ein Modell lernen, wie man faehrt.
 constexpr unsigned long LERNEN_DATEN_MS = 100;   // 10 Zeilen pro Sekunde in daten.csv
 constexpr unsigned long LERNEN_BILD_MS  = 250;   // 4 Bilder pro Sekunde
-#endif
 
 // Name fuer Bluetooth und eigenes WLAN, dahinter kommt die Chip-Nummer: z. B. "Roboauto-3F2A"
 // (so lassen sich mehrere Autos am selben Ort auseinanderhalten - die App sucht alles, was mit "Roboauto" anfaengt).
 // Ein eigener Name aus den Einstellungen ersetzt die Chip-Nummer: "Roboauto-Blitz".
-#ifdef ROBOAUTO_XIAO
 constexpr const char* AUTO_NAME_ANFANG = "RoboautoXiao";
 constexpr const char* BOARD_NAME = "xiao";   // fuer /info: welche Oberflaeche die App zeigt (mit Kamera)
-#else
-constexpr const char* AUTO_NAME_ANFANG = "Roboauto";
-constexpr const char* BOARD_NAME = "mini";
-#endif

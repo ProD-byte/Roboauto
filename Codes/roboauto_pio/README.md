@@ -1,6 +1,6 @@
 # 🚗 Roboauto
 
-Ein kleines Roboterauto mit Panzerlenkung (4 Räder, Skid-Steer) mit **ESP32-S3 Super Mini**, gesteuert per eigener **Roboauto-App** (Android, Bluetooth oder WLAN) oder im **Browser über WLAN**.
+Ein kleines vierrädriges Roboterauto (gelenkt über unterschiedliches Tempo links und rechts) mit dem **Seeed Studio XIAO ESP32S3 Sense** – mit Kamera, Mikrofon und SD-Karte – gesteuert per eigener **Roboauto-App** (Android, Bluetooth oder WLAN) oder im **Browser über WLAN**.
 Geschrieben mit **VS Code + PlatformIO**, Schritt für Schritt aufgebaut.
 
 ## ✨ Funktionen
@@ -14,66 +14,52 @@ Geschrieben mit **VS Code + PlatformIO**, Schritt für Schritt aufgebaut.
 | 🚨 **Modi** | Normal, Polizei (Blaulicht + Sirene), Team Blau/Grün/Gelb/Rot |
 | ✨ **Programme** | Figuren (Quadrat, Acht, Slalom), Fahrweg aufnehmen und abspielen, Balancieren (Experiment) |
 | 🎵 **Jukebox** | Chiptune-Musik über den Buzzer mit Lichtshow auf dem LED-Ring |
+| 📷 **Kamera** | Live-Video in App und Browser, Fahren mit Video im Querformat, Fotos und Videos mit Ton auf die SD-Karte, Autofokus (OV5640) |
+| 🎤 **Mikrofon** | Live-Ton, Lautstärkeanzeige, 2× klatschen = Licht an/aus |
 | 📶 **WLAN** | Einrichtung per Handy (Netz „Roboauto-Setup“), merkt sich bis zu 8 Netzwerke, Updates über WLAN (OTA) |
 | 🔧 **Einstellungen** | Tempo, Lenkung, Helligkeit, Lautstärke, Töne, Motor-Richtung mit Motortest-Assistent |
 
 ## 🔌 Hardware
 
-- ESP32-S3 Super Mini (4 MB Flash)
-- 4 × N20-Getriebemotor 3 V, 500 U/min, Motortreiber (MX1508 / DRV8833)
-- MPU6050 (Gyro + Beschleunigung)
-- WS2812-LED-Ring (8 LEDs) + Front-/Rücklicht-LEDs
+- Seeed Studio XIAO ESP32S3 Sense (8 MB Flash, 8 MB PSRAM) mit Kamera OV5640, Mikrofon und microSD-Steckplatz
+- 4 × N20-Getriebemotor 3 V, 500 U/min, Motortreiber DRV8833
+- MPU6050 (Gyro + Beschleunigung) und Akkuwächter MAX17048/MAX17043 am I²C-Bus
+- WS2812-LED-Ring (8 LEDs) + 2 Front- und 2 Rücklicht-LEDs, alle an einem Pin
 - Passiver Buzzer
-- 1S-LiPo 3,7 V (Tipp: 470–1000 µF Elko an die Motorversorgung)
+- 1S-LiPo 3,7 V mit Ein/Aus-Schalter, geladen über die USB-C-Buchse des XIAO
 
-Alle Pins stehen in [`include/config.h`](include/config.h).
+Alle Pins stehen in [`include/config.h`](include/config.h), die ausführliche Anleitung in [`docs/xiao-sense.md`](docs/xiao-sense.md).
 
-### Verdrahtung für Einsteiger
+| XIAO | GPIO | Anschluss an | Funktion |
+|---|---|---|---|
+| D0 | 1 | Motortreiber IN1 | Motoren links vorwärts (PWM) |
+| D1 | 2 | Motortreiber IN2 | Motoren links rückwärts (PWM) |
+| D2 | 3 | Motortreiber IN3 | Motoren rechts vorwärts (PWM) |
+| D3 | 4 | Motortreiber IN4 | Motoren rechts rückwärts (PWM) |
+| D4 | 5 | MPU6050 SDA + Akkuwächter SDA | I²C |
+| D5 | 6 | MPU6050 SCL + Akkuwächter SCL | I²C |
+| D6 | 43 | Buzzer + | Ton und Lautstärke per PWM |
+| D7 | 44 | LED-Ring DIN | alle 12 LEDs: Ring → Front → Heck |
+| D8–D10 | 7–9 | – | belegt von der SD-Karte (nichts anschließen) |
+| BAT+ / BAT− | | Akku über den Schalter, LED-Kette +, Motortreiber VCC | Versorgung, Laden über USB-C |
+| 3V3 | | MPU6050 VCC | |
 
-Kein Schaltplan-Profi? Hier ist jedes Kabel einzeln aufgelistet – einfach von oben nach unten abarbeiten:
-
-![Verdrahtung Schritt für Schritt](docs/verdrahtung.svg)
-
-### Schaltplan (vorläufig)
-
-![Schaltplan](docs/schaltplan.svg)
-
-| ESP32-S3 | Anschluss an | Funktion |
-|---|---|---|
-| GPIO1 | Motortreiber IN1 | Motoren links vorwärts (PWM) |
-| GPIO4 | Motortreiber IN2 | Motoren links rückwärts (PWM) |
-| GPIO13 | Motortreiber IN3 | Motoren rechts vorwärts (PWM) |
-| GPIO2 | Motortreiber IN4 | Motoren rechts rückwärts (PWM) |
-| GPIO5 | LED-Ring DIN | 8 × WS2812B |
-| GPIO7 | Frontlicht DIN | 2 × WS2812B (LED 0 links, LED 1 rechts) |
-| GPIO10 | Rücklicht DIN | 2 × WS2812B (LED 1 = Rückfahrlicht) |
-| GPIO6 | Buzzer + | passiver Buzzer, Ton und Lautstärke per PWM |
-| GPIO8 | MPU6050 SDA | I²C, Adresse 0x68 |
-| GPIO9 | MPU6050 SCL | I²C |
-| GPIO3 | Spannungsteiler-Mitte | Akkuspannung (ADC) |
-| Akku-Pads (Unterseite) | Akku (nach Schalter) + Motortreiber VCC | Versorgung ESP und Motoren |
-| 5V | LED-Ring, Front- und Rücklicht (+) | Versorgung der LEDs |
-| 3V3 | MPU6050 VCC | 3,3 V vom ESP |
-
-Die Motoren einer Seite hängen parallel am selben Ausgang. Der Akku kommt über den Schalter an die
-Batterie-Pads auf der Unterseite des Super Mini, von dort geht auch der Motortreiber ab. Die LEDs hängen
-am 5V-Pin des ESP. Alle Massen sind verbunden. **Vorläufig:** Die Werte des Spannungsteilers (R1/R2)
-sind noch nicht nachgemessen. Sind die Motoren falsch herum angeschlossen, hilft der
-Motortest-Assistent in der Weboberfläche.
+Die Motoren einer Seite hängen parallel am selben Ausgang. Die LEDs bekommen ihren Strom aus dem
+Akku (BAT+ hinter dem Schalter) – nicht vom 5V-Pin, der nur mit USB Spannung hat. Alle Massen sind
+verbunden. Sind die Motoren falsch herum angeschlossen, hilft der Motortest-Assistent in der Weboberfläche.
 
 ## ⚡ Firmware aufspielen
 
 ### Ohne Programmieren – Online-Flasher
-Auf der **GitHub-Pages-Seite** dieses Projekts auf „Roboauto installieren“ klicken (Chrome/Edge am PC, Auto per USB-C anschließen).
+Auf der **GitHub-Pages-Seite** dieses Projekts auf „Update installieren“ bzw. „Löschen & neu installieren“ klicken (Chrome/Edge am PC, Auto per USB-C anschließen).
 
 ### Mit VS Code + PlatformIO
 1. Repository klonen und den Ordner in VS Code öffnen (PlatformIO-Erweiterung installiert).
 2. Vorlagen kopieren:
    - `geheim.beispiel.ini` → **`geheim.ini`** (Passwort für WLAN-Updates eintragen oder leer lassen)
    - `include/wlan_zugang.beispiel.h` → **`include/wlan_zugang.h`** (kann leer bleiben)
-3. In `platformio.ini` den COM-Port anpassen (`upload_port`, `monitor_port`).
-4. Umgebung **`env:roboauto`** wählen → Upload (→).
-5. Spätere Updates ohne Kabel: Umgebung **`env:roboauto_wlan`** → Upload.
+3. Umgebung **`env:roboauto_xiao`** wählen → Upload (→). Findet PlatformIO den Anschluss nicht, in `platformio.ini` `upload_port` eintragen.
+4. Spätere Updates ohne Kabel: Umgebung **`env:roboauto_xiao_wlan`** → Upload.
 
 > 🔒 `geheim.ini` und `include/wlan_zugang.h` werden **nicht** hochgeladen (siehe `.gitignore`).
 
@@ -91,13 +77,14 @@ von selbst per Bluetooth und im WLAN. Ohne Router geht es direkt über das WLAN 
 
 Bei jedem Hochladen baut GitHub die Firmware automatisch:
 
-- **Actions** → Lauf anklicken → **Artifacts**: `roboauto-komplett.bin` (Neuinstallation) und `roboauto-update.bin` (Update)
+- **Actions** → Lauf anklicken → **Artifacts**: `roboauto-xiao-komplett.bin` (Neuinstallation) und `roboauto-xiao-update.bin` (Update), dazu die App `roboauto.apk`
 - Ein **Tag** wie `v1.0.0` erstellt ein **Release** mit beiden Dateien.
 - Der **Online-Flasher** (GitHub Pages) bekommt automatisch die neueste Version.
 
 ## 📚 Verwendete Bibliotheken
 
 - [Adafruit NeoPixel](https://github.com/adafruit/Adafruit_NeoPixel)
+- [OV5640 Auto Focus for ESP32 Camera](https://github.com/0015/ESP32-OV5640-AF) für den Autofokus
 - [ESP Web Tools](https://esphome.github.io/esp-web-tools/) für den Online-Flasher
 
 Die Musikstücke der Jukebox sind gemeinfrei (Volkslied/Klassik) oder eigene Kompositionen.

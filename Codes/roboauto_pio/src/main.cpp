@@ -17,7 +17,7 @@
 //  Balancieren (Experiment): Knopf auf der Webseite
 //  Schritt 40: eigene Roboauto-App statt Dabble (Bluetooth + WLAN, gleiche Oberflaeche)
 //
-//  Ein Code fuer beide Autos (Umgebung in platformio.ini). Zusaetzlich beim XIAO ESP32S3 Sense:
+//  Board: XIAO ESP32S3 Sense. Dazu:
 //  - alle LEDs an einem Pin (Ring -> Front -> Heck), siehe ledkette.h
 //  - Akku ueber MAX17048 am I2C-Bus
 //  - Kamera: Live-Video im Browser, Fotos auf die SD-Karte
@@ -46,13 +46,11 @@
 #include "neustart.h"
 #include "zeit.h"
 #include "ledkette.h"
-#ifdef ROBOAUTO_XIAO
 #include "kamera.h"
 #include "mikro.h"
 #include "karte.h"
 #include "lernen.h"
 #include "video.h"
-#endif
 
 static bool verbunden = false;     // App ODER Webseite (fuer Ring, Lichter, Fahren)
 static bool bleVorher = false;
@@ -77,9 +75,7 @@ static void setzeModus(int neu) {
   buzzerTick();
   Serial.printf(">> Modus: %s\n", MODUS_NAME[modus]);
 }
-#ifdef ROBOAUTO_XIAO
 static bool klatschAn = false;     // Doppelklatschen schaltet das Licht (Knopf auf der Webseite)
-#endif
 
 // Fragt den BLE-Server, ob die App per Bluetooth verbunden ist
 static bool handyVerbunden() {
@@ -106,26 +102,20 @@ void setup() {
   lichtStarten();
   if (gyroStarten()) gyroKalibrieren();   // Auto beim Einschalten 1 s still stehen lassen
   akkuStarten();                          // nach dem Gyro: beim XIAO teilen sich beide den I2C-Bus
-#ifdef ROBOAUTO_XIAO
   karteStarten();                         // SD-Karte (vor aufnahmeStarten - der Fahrweg liegt dort)
   kameraStarten();
   mikroStarten();
   lernenStarten();
   videoStarten();                         // Video-Aufnahme auf die SD-Karte
-#endif
   appBleStarten();                        // Bluetooth fuer die Roboauto-App
   webStarten();                           // WLAN + Webseite (oder Einrichtungs-WLAN)
   aufnahmeStarten();                      // gespeicherten Fahrweg laden
 
   Serial.println();
-#ifdef ROBOAUTO_XIAO
   Serial.println("=== Roboauto XIAO ESP32S3 Sense - Kamera, Mikrofon, SD-Karte, eine LED-Kette ===");
   // "intern" ist der knappe Speicher fuer WLAN, Bluetooth, Kamera und Webserver - unter ca. 20 KB wird es eng
   Serial.printf("PSRAM: %u KB frei, intern: %u KB frei, Flash: %u MB\n", (unsigned)(ESP.getFreePsram() / 1024),
                 (unsigned)(heap_caps_get_free_size(MALLOC_CAP_INTERNAL) / 1024), (unsigned)(ESP.getFlashChipSize() / (1024 * 1024)));
-#else
-  Serial.println("=== Roboauto - Schritt 40: eigene Roboauto-App statt Dabble ===");
-#endif
   Serial.printf("Grund fuer Neustart: %d (1=Einschalten, 4=Absturz, 6=Watchdog, 9=Spannungseinbruch) - Abstuerze bisher: %d\n",
                 neustartGrund(), neustartAbstuerze());
 }
@@ -220,12 +210,10 @@ void loop() {
   else if (figurAktiv())                         figurUpdate();
   else                                           antriebFahren(x, y);
 
-#ifdef ROBOAUTO_XIAO
   // --- Lernen: aktuelle Werte an die SD-Aufgabe geben (schreibt nur, wenn Lernen an ist) ---
   lernenDaten({ x, y, antriebLinks(), antriebRechts(), gyroDrehrate(), gyroWinkel(),
                 -gyroNeigungY(), gyroNeigungX(), akkuUsb() ? -1 : akkuProzent(), mikroPegel(),
                 modus, lichtIstAn() });
-#endif
 
   // --- LED-Ring: Verbindungsstatus ---
   // Regenbogen = App per Bluetooth, tuerkiser Komet = ueber den Router, violetter Komet = direkt im WLAN des Autos,
@@ -263,7 +251,6 @@ void loop() {
       if (aktion == WEB_AKTION_BALANCE) { if (balanceUmschalten()) buzzerEin(); else buzzerAus(); }
       if (aktion == WEB_AKTION_AUFNAHME)  aufnahmeUmschalten();
       if (aktion == WEB_AKTION_ABSPIELEN) abspielenUmschalten();
-#ifdef ROBOAUTO_XIAO
       if (aktion == WEB_AKTION_LERNEN) {
         if (!karteDa())               buzzerWarnung();
         else if (lernenUmschalten())  buzzerEin();
@@ -275,7 +262,6 @@ void loop() {
         if (klatschAn) buzzerEin(); else buzzerAus();
         Serial.println(klatschAn ? ">> Klatschsteuerung AN (2x klatschen = Licht)" : ">> Klatschsteuerung AUS");
       }
-#endif
       if (aktion >= WEB_AKTION_FIGUR && aktion < WEB_AKTION_FIGUR + FIGUR_ANZAHL) {
         if (figurAktiv()) figurAbbrechen();                 // nochmal klicken = stoppen
         else if (figurStarten(aktion - WEB_AKTION_FIGUR)) buzzerEin();
@@ -287,13 +273,11 @@ void loop() {
   }
   webSetzeModus(modus);
 
-#ifdef ROBOAUTO_XIAO
   // --- Mikrofon: zweimal klatschen = Licht an/aus (nur wenn eingeschaltet) ---
   // Waehrend Musik oder Hupe laeuft, hoert das Mikro den Buzzer -> dann nicht auswerten
   bool klatsch = mikroDoppelKlatsch();
   if (klatsch && klatschAn && musikNummer() < 0 && !(wt & WEB_HUPE)) lichtBefehl(LICHT_UMSCHALTEN);
   webSetzeKlatschen(klatschAn);
-#endif
 
   // Hupe-Knopf: Polizei = Sirene + Frontblitzer, Teams = eigener Hupenton
   bool hupeGedrueckt = wt & WEB_HUPE;
@@ -315,9 +299,7 @@ void loop() {
   static unsigned long letzteNutzung = 0;
   if (ble || webFaehrt() || antriebLinks() != 0 || antriebRechts() != 0 || figurAktiv() || balanceAktiv() ||
       musikNummer() >= 0 || aufnahmeLaeuft() || abspielenLaeuft() || !sicherheitFahrenErlaubt()
-#ifdef ROBOAUTO_XIAO
       || lernenAktiv() || kameraZuschauer() > 0 || mikroZuhoerer() > 0
-#endif
      )
     letzteNutzung = millis();
   bool ruhig = millis() - letzteNutzung > UPDATE_RUHE_MS && (akkuUsb() || akkuProzent() >= UPDATE_MIN_AKKU);

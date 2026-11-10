@@ -1,9 +1,7 @@
 #pragma once
 #include <Arduino.h>
 
-// Zwei Umsetzungen mit denselben Funktionen:
-//   akku.cpp           Super Mini: Spannungsteiler am ADC
-//   akku_max17048.cpp  XIAO Sense: Akkuwaechter MAX17048 am I2C-Bus
+// Umsetzung: akku_max17048.cpp - Akkuwaechter MAX17048/MAX17043 am I2C-Bus
 
 // Akkumessung vorbereiten (einmal in setup aufrufen)
 void akkuStarten();
@@ -11,7 +9,7 @@ void akkuStarten();
 // In jedem loop-Durchlauf aufrufen (misst regelmaessig und glaettet)
 void akkuUpdate();
 
-// Messwert: Super Mini = geglaetteter ADC-Rohwert (0..4095), XIAO = Akkuspannung in Millivolt
+// Messwert: Akkuspannung in Millivolt
 int akkuWert();
 
 // true = Akku fast leer -> Eco-Modus (Fernlicht gesperrt)
