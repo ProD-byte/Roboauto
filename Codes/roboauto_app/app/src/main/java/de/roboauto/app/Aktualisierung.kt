@@ -25,6 +25,7 @@ import java.util.concurrent.Executors
  * die APK und installiert sie ueber den PackageInstaller von Android.
  *
  * Das erste Mal fragt Android "Apps aus dieser Quelle erlauben?" und "Aktualisieren?".
+ * Ab Android 12 startet MainActivity das Update von selbst, solange kein Auto verbunden ist.
  * Ab Android 12 geht es danach ohne Nachfrage, weil unsere App dann selbst als Installierer gilt.
  * Klappt nur, wenn die neue APK mit demselben Schluessel signiert ist (GitHub-Secrets).
  */

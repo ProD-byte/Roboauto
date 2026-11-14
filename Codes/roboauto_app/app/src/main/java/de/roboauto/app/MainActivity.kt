@@ -431,6 +431,12 @@ class MainActivity : ComponentActivity(), BleVerbindung.Ereignisse, WlanVerbindu
     override fun updateVerfuegbar(version: String, groesse: Long) {
         updateInfo = "$version|$groesse"
         js("window.robo&&robo.update(${JSONObject.quote(version)},$groesse)")
+        // Ab Android 12 installiert Android das Update ohne Rueckfrage (die App ist dann selbst der
+        // Installierer). Dann gleich von selbst - aber nur, solange noch kein Auto verbunden ist,
+        // denn die App startet dabei kurz neu. Sonst bleibt es beim Antippen der Pille.
+        if (art.isEmpty() && Build.VERSION.SDK_INT >= 31 && packageManager.canRequestPackageInstalls()) {
+            aktualisierung.installieren()
+        }
     }
 
     override fun updateFortschritt(prozent: Int) = js("window.robo&&robo.updateFortschritt($prozent)")
