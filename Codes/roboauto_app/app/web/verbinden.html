@@ -159,50 +159,10 @@ const TEXTE = {
        updateErlauben:'Please turn on “Allow from this source” and come back.',
        updateSchluessel:'The new version is signed differently – uninstall the app once and install it again.',
        updateAbgebrochen:'Cancelled – try again?', updateFehler:'Update failed – try again?'},
-  es: {gefunden:'Coches encontrados', hand:'Introducir dirección Wi-Fi a mano', verbinden:'Conectar',
-       handinfo:'Aparece en el monitor serie o en el router, p. ej. 192.168.178.42. El móvil debe estar en la misma Wi-Fi.',
-       tipp:'Enciende el coche: si el anillo LED está azul, espera una conexión.',
-       sucht:'Buscando coches …', suchtU:'Buscando por Bluetooth y Wi-Fi.',
-       erlaubnis:'Falta el permiso de Bluetooth', erlaubnisU:'La app necesita el permiso «Dispositivos cercanos» para encontrar el coche.',
-       erlauben:'Permitir', einstellungen:'Ajustes de la app',
-       keinbt:'Sin Bluetooth', keinbtU:'Este móvil no tiene Bluetooth; por Wi-Fi funciona igual.',
-       btaus:'Bluetooth apagado', btausU:'Activa Bluetooth y vuelve a buscar.', btan:'Activar Bluetooth',
-       standort:'Ubicación apagada', standortU:'Hasta Android 11, la búsqueda Bluetooth solo funciona con la ubicación activada.', standortan:'Activar ubicación',
-       verbinde:'Conectando con {0} …', verbindeU:'Casi listo.',
-       verbindeW:'Conectando por Wi-Fi …', fehler:'No se pudo conectar', fehlerU:'Reintentando. ¿Está el coche encendido y cerca?',
-       wfehler:'No se encontró ningún Roboauto', wfehlerU:'Ningún coche responde en {0}. ¿Está el móvil en la misma Wi-Fi?',
-       neu:'Buscar de nuevo', bt:'Bluetooth', wlan:'Wi-Fi', zuletzt:'última conexión', leer:'Aún no se ha encontrado ningún coche.',
-       direkt:'Sin router', autoWlan:'Wi-Fi del coche «Roboauto-…»', autoWlanU:'Conexión directa: rápida y también al aire libre',
-       autoHand:'Conéctate a «Roboauto-…»', autoHandU:'En los ajustes Wi-Fi toca «Roboauto-…» y vuelve a la app.',
-       autoFehler:'No se encontró la Wi-Fi «Roboauto-…»', autoFehlerU:'¿Está el coche encendido y cerca?',
-       update:'Actualización disponible', updateU:'Versión {0} · {1} MB', updateKnopf:'Actualizar', updateLaedt:'Descargando … {0} %',
-       updateErlauben:'Activa «Permitir de esta fuente» y vuelve a la app.',
-       updateSchluessel:'La nueva versión tiene otra firma: desinstala la app una vez y vuelve a instalarla.',
-       updateAbgebrochen:'Cancelado. ¿Intentar de nuevo?', updateFehler:'La actualización falló. ¿Intentar de nuevo?'},
-  fr: {gefunden:'Voitures trouvées', hand:'Saisir l’adresse Wi-Fi à la main', verbinden:'Connecter',
-       handinfo:'Indiquée dans le moniteur série ou le routeur, p. ex. 192.168.178.42. Le téléphone doit être sur le même Wi-Fi.',
-       tipp:'Allume la voiture : si l’anneau LED est bleu, elle attend une connexion.',
-       sucht:'Recherche de voitures …', suchtU:'Recherche en Bluetooth et Wi-Fi.',
-       erlaubnis:'Autorisation Bluetooth manquante', erlaubnisU:'L’app a besoin de l’autorisation « Appareils à proximité » pour trouver la voiture.',
-       erlauben:'Autoriser', einstellungen:'Réglages de l’app',
-       keinbt:'Pas de Bluetooth', keinbtU:'Ce téléphone n’a pas de Bluetooth – le Wi-Fi fonctionne quand même.',
-       btaus:'Bluetooth désactivé', btausU:'Active le Bluetooth, puis relance la recherche.', btan:'Activer le Bluetooth',
-       standort:'Localisation désactivée', standortU:'Jusqu’à Android 11, la recherche Bluetooth ne fonctionne qu’avec la localisation activée.', standortan:'Activer la localisation',
-       verbinde:'Connexion à {0} …', verbindeU:'Presque prêt.',
-       verbindeW:'Connexion par Wi-Fi …', fehler:'Connexion impossible', fehlerU:'Nouvel essai en cours. La voiture est-elle allumée et proche ?',
-       wfehler:'Aucun Roboauto trouvé', wfehlerU:'Aucune voiture ne répond à {0}. Le téléphone est-il sur le même Wi-Fi ?',
-       neu:'Rechercher', bt:'Bluetooth', wlan:'Wi-Fi', zuletzt:'dernière connexion', leer:'Aucune voiture trouvée pour l’instant.',
-       direkt:'Sans routeur', autoWlan:'Wi-Fi de la voiture « Roboauto-… »', autoWlanU:'Connexion directe – rapide, même dehors',
-       autoHand:'Se connecter à « Roboauto-… »', autoHandU:'Dans les réglages Wi-Fi, touche « Roboauto-… », puis reviens dans l’app.',
-       autoFehler:'Wi-Fi « Roboauto-… » introuvable', autoFehlerU:'La voiture est-elle allumée et proche ?',
-       update:'Mise à jour disponible', updateU:'Version {0} · {1} Mo', updateKnopf:'Mettre à jour', updateLaedt:'Téléchargement … {0} %',
-       updateErlauben:'Active « Autoriser cette source », puis reviens dans l’app.',
-       updateSchluessel:'La nouvelle version est signée autrement – désinstalle l’app une fois et réinstalle-la.',
-       updateAbgebrochen:'Annulé – réessayer ?', updateFehler:'La mise à jour a échoué – réessayer ?'}
 };
 let sprache = 'de';
 try { sprache = localStorage.getItem('sprache') || (navigator.language || 'de').slice(0, 2); } catch(e){}
-if (!TEXTE[sprache]) sprache = 'de';
+if (!TEXTE[sprache]) sprache = 'en';   // nur Deutsch und Englisch - andere Handysprachen bekommen Englisch
 document.documentElement.lang = sprache;
 const t = (k, a) => (TEXTE[sprache][k] || k).replace('{0}', a == null ? '' : a);
 document.querySelectorAll('[data-t]').forEach(e => e.textContent = t(e.dataset.t));
