@@ -97,6 +97,10 @@ constexpr uint8_t AKKU_ADRESSE  = 0x36;
 constexpr int AKKU_ECO_AN       = 15;   // Prozent - darunter: Eco-Modus an
 constexpr int AKKU_ECO_AUS      = 20;   // Prozent - darueber: Eco-Modus wieder aus (Hysterese)
 constexpr float AKKU_LAEDT_RATE = 1.0f; // %/Stunde - steigt der Ladestand schneller, haengt USB dran
+// So voll meldet der Akkuwaechter den Akku hoechstens: die Ladeschaltung des XIAO haelt ihn mit den LEDs
+// als Dauerlast bei ca. 4,05 V, das rechnet der Chip in ~84 % um. Dieser Wert wird als 100 % angezeigt.
+// Nur Startwert: nach jedem vollen Laden lernt das Auto den Wert fuer seinen Akku selbst (akku_max17048.cpp).
+constexpr float AKKU_VOLL_PROZENT = 84.0f;
 constexpr unsigned long AKKU_VERLAUF_MS = 10000;   // alle 10 s ein Wert fuer das Diagramm
 constexpr int AKKU_VERLAUF_PUNKTE      = 360;     // 360 x 10 s = 1 Stunde
 

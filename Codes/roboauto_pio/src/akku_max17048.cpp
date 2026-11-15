@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <Wire.h>
+#include <Preferences.h>
 #include "config.h"
 #include "akku.h"
 
@@ -26,6 +27,33 @@ static float prozent = 0;
 static float rate = 0;                   // %/Stunde, + = laedt
 static bool  eco = false;
 static unsigned long letzteMessung = 0;
+
+// "Voll" lernt das Auto selbst: hat es geladen und bleibt die Spannung danach lange gleich, ist die
+// Ladeschaltung fertig - der Rohwert des Chips in diesem Moment gilt kuenftig als 100 %.
+// So passt die Anzeige zu jedem Akku (und zu einem Akku, der mit der Zeit weniger aufnimmt).
+constexpr unsigned long VOLL_RUHE_MS = 20UL * 60000;   // so lange ohne Anstieg = fertig geladen
+constexpr int VOLL_MIN_MV = 3900;                       // darunter ist der Akku sicher nicht voll
+static float vollRaw = AKKU_VOLL_PROZENT;               // Rohwert, der als 100 % gilt (gespeichert)
+static bool  hatGeladen = false;                        // seit dem letzten Lernen geladen?
+static int   ruheMv = 0;
+static unsigned long ruheSeit = 0;
+
+static void vollLernen(unsigned long jetzt) {
+  if (rate > AKKU_LAEDT_RATE) hatGeladen = true;
+  if (!hatGeladen || millivolt < VOLL_MIN_MV) { ruheSeit = 0; return; }
+  if (ruheSeit == 0 || millivolt > ruheMv + 8) { ruheMv = millivolt; ruheSeit = jetzt; return; }   // steigt noch
+  if (millivolt < ruheMv - 30) { hatGeladen = false; ruheSeit = 0; return; }   // faellt: Kabel ab / faehrt
+  if (jetzt - ruheSeit < VOLL_RUHE_MS) return;
+  float neu = constrain(prozent, 50.0f, 100.0f);
+  hatGeladen = false; ruheSeit = 0;
+  if (fabsf(neu - vollRaw) < 0.5f) return;
+  vollRaw = neu;
+  Preferences p;
+  p.begin("akku", false);
+  p.putFloat("vollRaw", vollRaw);
+  p.end();
+  Serial.printf(">> Akku: fertig geladen bei %d mV - %.1f %% (Chip) gelten jetzt als 100 %%\n", millivolt, vollRaw);
+}
 
 static bool lies16(uint8_t reg, uint16_t& wert) {
   Wire.beginTransmission(AKKU_ADRESSE);
@@ -60,11 +88,15 @@ void akkuStarten() {
   Wire.begin(GYRO_SDA_PIN, GYRO_SCL_PIN);   // schon offen, wenn das Gyro zuerst gestartet hat
   uint16_t version = 0;
   gefunden = lies16(REG_VERSION, version);
+  Preferences p;
+  p.begin("akku", true);
+  vollRaw = p.getFloat("vollRaw", AKKU_VOLL_PROZENT);
+  p.end();
   if (gefunden) {
     alt = version < 0x0010;
     messen();
-    Serial.printf(">> Akkuwaechter (%s, Version %04X) gefunden: %d mV, %.0f %%\n",
-                  alt ? "MAX17043" : "MAX17048", version, millivolt, prozent);
+    Serial.printf(">> Akkuwaechter (%s, Version %04X) gefunden: %d mV, %.0f %% (voll = %.0f %%)\n",
+                  alt ? "MAX17043" : "MAX17048", version, millivolt, prozent, vollRaw);
   } else {
     Serial.println(">> FEHLER: Akkuwaechter (MAX17048/MAX17043) nicht gefunden - zeige USB an");
   }
@@ -78,6 +110,7 @@ void akkuUpdate() {
   if (jetzt - letzteMessung < 500) return;   // der Chip rechnet ohnehin nur ca. 1x pro Sekunde neu
   letzteMessung = jetzt;
   messen();
+  if (gefunden) vollLernen(jetzt);
 
   // Eco-Modus mit Hysterese, damit er an der Grenze nicht hin- und herspringt
   int p = akkuProzent();
@@ -92,7 +125,8 @@ void akkuUpdate() {
 
 int  akkuWert()    { return millivolt; }
 bool akkuEco()     { return eco; }
-int  akkuProzent() { return (int)(prozent + 0.5f); }
+// Angezeigter Ladestand: auf "voll geladen" bei diesem Akku umgerechnet (gelernt, siehe vollLernen)
+int  akkuProzent() { return (int)min(100.0f, prozent * 100.0f / vollRaw + 0.5f); }
 bool akkuUsb()     { return !gefunden || rate > AKKU_LAEDT_RATE; }
 
 // ---------- Verlauf: alle AKKU_VERLAUF_MS ein Prozentwert, die letzten AKKU_VERLAUF_PUNKTE ----------
